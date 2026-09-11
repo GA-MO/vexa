@@ -10,16 +10,12 @@ export const metadata = {
 export default function CatalogPage() {
   return (
     <main className="relative min-h-dvh bg-[#F8FAFC] text-slate-900">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-24 top-0 size-[28rem] rounded-full bg-indigo-500/15 blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-16 top-32 size-[24rem] rounded-full bg-violet-500/15 blur-3xl"
-      />
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-24 top-0 size-[28rem] rounded-full bg-indigo-500/15 blur-3xl" />
+        <div className="absolute -right-16 top-32 size-[24rem] rounded-full bg-violet-500/15 blur-3xl" />
+      </div>
 
-      <div className="relative mx-auto max-w-3xl px-6 py-10 sm:px-10">
+      <div className="relative mx-auto max-w-6xl px-6 py-10 sm:px-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-indigo-600">Catalog gallery</p>
@@ -51,24 +47,9 @@ export default function CatalogPage() {
           </div>
         </div>
 
-        <nav className="mt-8 flex flex-wrap gap-2 border-b border-slate-200/80 pb-4 text-sm">
-          {[
-            ["#composed", "Composed"],
-            ["#chat-chrome", "Chat chrome"],
-            ["#interactive", "Interactive"],
-            ["#primitives", "Primitives"],
-          ].map(([href, label]) => (
-            <a
-              key={href}
-              href={href}
-              className="rounded-full px-3 py-1.5 text-slate-600 transition hover:bg-white hover:text-indigo-700"
-            >
-              {label}
-            </a>
-          ))}
-        </nav>
+        <div className="mt-8 border-t border-slate-200/80" />
 
-        <div className="mt-10">
+        <div className="mt-8">
           <CatalogGallery />
         </div>
       </div>

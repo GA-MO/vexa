@@ -7,23 +7,38 @@ import {
   Alert,
   Avatar,
   Badge,
+  BarChart,
   Button,
   Callout,
   Card,
   Carousel,
   Chart,
+  Checkbox,
   Code,
+  Column,
+  Divider,
   Form,
+  FromTo,
   Grid,
   Heading,
+  Icon,
+  IconText,
   Image,
   Input,
+  KeyValue,
+  LineChart,
+  LineItems,
   List,
   Map,
   Metric,
   Progress,
+  RadioGroup,
+  Rating,
+  Row,
+  Select,
   Separator,
   Stack,
+  Switch,
   Table,
   Tabs,
   Text,
@@ -72,6 +87,33 @@ export const { registry, handlers: registryHandlers } = defineRegistry(
       Callout: ({ props }) => <Callout props={props as never} />,
       Accordion: ({ props }) => <Accordion props={props as never} />,
       Video: ({ props }) => <Video props={props as never} />,
+      Checkbox: ({ props, bindings }) => (
+        <Checkbox props={props as never} bindings={bindings} />
+      ),
+      Switch: ({ props, bindings }) => (
+        <Switch props={props as never} bindings={bindings} />
+      ),
+      RadioGroup: ({ props, bindings }) => (
+        <RadioGroup props={props as never} bindings={bindings} />
+      ),
+      Select: ({ props, bindings }) => (
+        <Select props={props as never} bindings={bindings} />
+      ),
+      Rating: ({ props }) => <Rating props={props as never} />,
+      Divider: ({ props }) => <Divider props={props as never} />,
+      Column: ({ props, children }) => (
+        <Column props={props as never} children={children} />
+      ),
+      Row: ({ props, children }) => (
+        <Row props={props as never} children={children} />
+      ),
+      BarChart: ({ props }) => <BarChart props={props as never} />,
+      LineChart: ({ props }) => <LineChart props={props as never} />,
+      Icon: ({ props }) => <Icon props={props as never} />,
+      IconText: ({ props }) => <IconText props={props as never} />,
+      LineItems: ({ props }) => <LineItems props={props as never} />,
+      FromTo: ({ props }) => <FromTo props={props as never} />,
+      KeyValue: ({ props }) => <KeyValue props={props as never} />,
     },
     actions: registryActions,
   },

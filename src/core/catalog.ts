@@ -129,7 +129,7 @@ export const catalog = defineCatalog(schema, {
     Chart: {
       props: z.object({
         title: z.string().nullable(),
-        kind: z.enum(["bar", "line"]).nullable(),
+        kind: z.enum(["bar", "line", "pie", "spark"]).nullable(),
         points: z.array(
           z.object({
             label: z.string(),
@@ -137,7 +137,8 @@ export const catalog = defineCatalog(schema, {
           }),
         ),
       }),
-      description: "Simple bar or line chart for trends and comparisons",
+      description:
+        "Bar for comparisons, line for trends, pie for share of total, spark for a compact inline trend",
       example: {
         title: "Revenue",
         kind: "bar",
@@ -416,6 +417,285 @@ export const catalog = defineCatalog(schema, {
         poster: null,
         caption: "Sample walkthrough",
         aspect: "wide",
+      },
+    },
+    Checkbox: {
+      props: z.object({
+        label: z.string(),
+        name: z.string(),
+        hint: z.string().nullable(),
+        checked: z.boolean().nullable(),
+        disabled: z.boolean().nullable(),
+      }),
+      description:
+        "Single boolean checkbox with label. Bind with checked: { $bindState: '/form/agree' }.",
+      example: {
+        label: "I agree to the terms",
+        name: "agree",
+        hint: null,
+        checked: false,
+        disabled: false,
+      },
+    },
+    Switch: {
+      props: z.object({
+        label: z.string(),
+        name: z.string(),
+        hint: z.string().nullable(),
+        checked: z.boolean().nullable(),
+        disabled: z.boolean().nullable(),
+      }),
+      description:
+        "Toggle switch for on/off settings. Bind with checked: { $bindState: '/settings/notify' }.",
+      example: {
+        label: "Email notifications",
+        name: "notify",
+        hint: "Send a digest every morning",
+        checked: true,
+        disabled: false,
+      },
+    },
+    RadioGroup: {
+      props: z.object({
+        label: z.string().nullable(),
+        name: z.string(),
+        options: z.array(z.object({ value: z.string(), label: z.string() })),
+        value: z.string().nullable(),
+        disabled: z.boolean().nullable(),
+      }),
+      description:
+        "Pick exactly one option from 2-6 choices. Bind with value: { $bindState: '/form/plan' }.",
+      example: {
+        label: "Plan",
+        name: "plan",
+        options: [
+          { value: "free", label: "Free" },
+          { value: "pro", label: "Pro" },
+        ],
+        value: "pro",
+        disabled: false,
+      },
+    },
+    Select: {
+      props: z.object({
+        label: z.string().nullable(),
+        name: z.string(),
+        placeholder: z.string().nullable(),
+        options: z.array(z.object({ value: z.string(), label: z.string() })),
+        value: z.string().nullable(),
+        disabled: z.boolean().nullable(),
+      }),
+      description:
+        "Dropdown for choosing one option from a longer list. Bind with value: { $bindState: '/form/country' }.",
+      example: {
+        label: "Country",
+        name: "country",
+        placeholder: "Choose a country",
+        options: [
+          { value: "th", label: "Thailand" },
+          { value: "sg", label: "Singapore" },
+        ],
+        value: null,
+        disabled: false,
+      },
+    },
+    Rating: {
+      props: z.object({
+        label: z.string().nullable(),
+        value: z.number(),
+        max: z.number().nullable(),
+        count: z.number().nullable(),
+        showValue: z.boolean().nullable(),
+      }),
+      description:
+        "Star rating display (supports half stars) with optional review count. Read-only.",
+      example: {
+        label: "Customer rating",
+        value: 4.5,
+        max: 5,
+        count: 1280,
+        showValue: true,
+      },
+    },
+    Divider: {
+      props: z.object({
+        label: z.string().nullable(),
+      }),
+      description: "Horizontal divider with optional centered label (e.g. 'or', 'Today')",
+      example: { label: "Today" },
+    },
+    Column: {
+      props: z.object({
+        gap: z.enum(["none", "xs", "sm", "md", "lg"]).nullable(),
+        align: z.enum(["start", "center", "end", "stretch"]).nullable(),
+      }),
+      slots: ["default"],
+      description: "Lay children out top-to-bottom. Tighter than Stack; use for dense groups.",
+      example: { gap: "sm", align: "stretch" },
+    },
+    Row: {
+      props: z.object({
+        gap: z.enum(["none", "xs", "sm", "md", "lg"]).nullable(),
+        align: z.enum(["start", "center", "end", "stretch"]).nullable(),
+        justify: z.enum(["start", "center", "end", "between"]).nullable(),
+        wrap: z.boolean().nullable(),
+      }),
+      slots: ["default"],
+      description:
+        "Lay children out left-to-right; wraps on narrow widths unless wrap=false. Use justify='between' for label/value pairs.",
+      example: { gap: "sm", align: "center", justify: "between", wrap: true },
+    },
+    BarChart: {
+      props: z.object({
+        title: z.string().nullable(),
+        labels: z.array(z.string()),
+        series: z.array(
+          z.object({
+            name: z.string(),
+            values: z.array(z.number()),
+          }),
+        ),
+        horizontal: z.boolean().nullable(),
+        stacked: z.boolean().nullable(),
+        showValues: z.boolean().nullable(),
+        format: z.enum(["number", "currency", "percent"]).nullable(),
+        height: z.enum(["sm", "md", "lg"]).nullable(),
+      }),
+      description:
+        "Bar chart comparing categories. 1-4 series (values align with labels). horizontal=true reads best in chat; stacked=true for part-of-whole.",
+      example: {
+        title: "Sales by region",
+        labels: ["Bangkok", "Chiang Mai", "Phuket"],
+        series: [
+          { name: "2025", values: [120, 80, 64] },
+          { name: "2026", values: [150, 92, 71] },
+        ],
+        horizontal: true,
+        stacked: false,
+        showValues: true,
+        format: "number",
+        height: "md",
+      },
+    },
+    LineChart: {
+      props: z.object({
+        title: z.string().nullable(),
+        labels: z.array(z.string()),
+        series: z.array(
+          z.object({
+            name: z.string(),
+            values: z.array(z.number()),
+          }),
+        ),
+        area: z.boolean().nullable(),
+        showDots: z.boolean().nullable(),
+        format: z.enum(["number", "currency", "percent"]).nullable(),
+        height: z.enum(["sm", "md", "lg"]).nullable(),
+      }),
+      description:
+        "Line chart for trends over time. 1-4 series; handles 14-60 points and thins axis labels automatically. area=true fills under the line.",
+      example: {
+        title: "Weekly active users",
+        labels: ["W1", "W2", "W3", "W4"],
+        series: [{ name: "Users", values: [420, 480, 465, 530] }],
+        area: true,
+        showDots: true,
+        format: "number",
+        height: "md",
+      },
+    },
+    Icon: {
+      props: z.object({
+        name: z.enum([
+          "phone", "mail", "pin", "clock", "star", "check", "alert", "plane", "cart", "user",
+          "calendar", "tag", "box", "receipt", "truck", "arrowRight", "arrowLeft", "search", "edit", "trash",
+          "info", "play", "music", "coffee", "home", "chart", "list", "send", "heart",
+        ]),
+        tone: z.enum(["default", "muted", "primary", "success", "warning", "danger"]).nullable(),
+        size: z.enum(["sm", "md", "lg"]).nullable(),
+      }),
+      description: "Single decorative icon next to a heading or inside a Row (not a button)",
+      example: { name: "truck", tone: "primary", size: "md" },
+    },
+    IconText: {
+      props: z.object({
+        icon: z.enum([
+          "phone", "mail", "pin", "clock", "star", "check", "alert", "plane", "cart", "user",
+          "calendar", "tag", "box", "receipt", "truck", "arrowRight", "arrowLeft", "search", "edit", "trash",
+          "info", "play", "music", "coffee", "home", "chart", "list", "send", "heart",
+        ]),
+        text: z.string(),
+        hint: z.string().nullable(),
+      }),
+      description: "Icon + text row for contact details, addresses, opening hours",
+      example: { icon: "phone", text: "02-123-4567", hint: "Mon-Fri 9:00-18:00" },
+    },
+    LineItems: {
+      props: z.object({
+        items: z.array(
+          z.object({
+            name: z.string(),
+            detail: z.string().nullable(),
+            qty: z.number().nullable(),
+            amount: z.number(),
+          }),
+        ),
+        summary: z
+          .array(
+            z.object({
+              label: z.string(),
+              amount: z.number(),
+              emphasis: z.enum(["total"]).nullable(),
+            }),
+          )
+          .nullable(),
+        currency: z.string().nullable(),
+      }),
+      description:
+        "Receipt/order lines with qty x name and amount, plus summary lines (subtotal, tax, total). currency is a prefix symbol, default ฿.",
+      example: {
+        items: [
+          { name: "Latte", detail: "Oat milk", qty: 2, amount: 180 },
+          { name: "Croissant", detail: null, qty: 1, amount: 85 },
+        ],
+        summary: [
+          { label: "Subtotal", amount: 265, emphasis: null },
+          { label: "VAT 7%", amount: 18.55, emphasis: null },
+          { label: "Total", amount: 283.55, emphasis: "total" },
+        ],
+        currency: "฿",
+      },
+    },
+    FromTo: {
+      props: z.object({
+        from: z.string(),
+        to: z.string(),
+        via: z.string().nullable(),
+        icon: z.enum(["arrowRight", "plane", "truck", "send"]).nullable(),
+      }),
+      description:
+        "Large origin -> destination display (warehouse -> customer, old -> new value) with optional via label",
+      example: { from: "BKK", to: "CNX", via: "TG 102", icon: "plane" },
+    },
+    KeyValue: {
+      props: z.object({
+        pairs: z.array(
+          z.object({
+            label: z.string(),
+            value: z.string(),
+          }),
+        ),
+        size: z.enum(["sm", "md"]).nullable(),
+      }),
+      description:
+        "Two-column label: value list for details of one record (order, profile, config). Use Table for many records.",
+      example: {
+        pairs: [
+          { label: "Order", value: "#A-1042" },
+          { label: "Status", value: "Shipped" },
+          { label: "Total", value: "฿283.55" },
+        ],
+        size: "sm",
       },
     },
   },

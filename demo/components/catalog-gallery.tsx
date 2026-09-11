@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { SpecView } from "agentic-ui/react";
 import {
   CATALOG_TYPES,
-  COMPOSED_DASHBOARD_SPEC,
+  COMPOSED_EXAMPLES,
   GALLERY_SECTIONS,
   INTERACTIVE_SECTIONS,
+  type GallerySection,
 } from "@/lib/catalog-gallery";
 import {
   Message,
@@ -13,132 +15,309 @@ import {
   MessageResponse,
 } from "agentic-ui/ai-elements/message";
 import { ChatChromeSamples } from "@/components/chat-chrome-samples";
+import { cn } from "agentic-ui/lib/utils";
 
-function Section({
-  id,
-  title,
-  eyebrow,
+type TabId = "composed" | "primitives" | "interactive" | "chrome";
+
+const TABS: Array<{ id: TabId; label: string; hint: string }> = [
+  { id: "composed", label: "Composed", hint: "Answer shapes as they appear in chat" },
+  { id: "primitives", label: "Primitives", hint: `${CATALOG_TYPES.length} catalog types` },
+  { id: "interactive", label: "Interactive", hint: "Binding, visibility, repeat, watchers" },
+  { id: "chrome", label: "Chat chrome", hint: "AI Elements around specs" },
+];
+
+/** Primitive sections grouped by what the LLM reaches for. */
+const PRIMITIVE_GROUPS: Array<{ id: string; label: string; sections: string[] }> = [
+  { id: "layout", label: "Layout", sections: ["card-grid", "column-row", "divider", "separator-button", "tabs", "accordion"] },
+  { id: "text", label: "Text & status", sections: ["heading-text", "badge", "alert", "callout", "list", "code"] },
+  { id: "data", label: "Data display", sections: ["metric", "table", "key-value", "line-items", "from-to", "progress", "timeline", "rating"] },
+  { id: "charts", label: "Charts", sections: ["bar-chart", "line-chart", "chart"] },
+  { id: "inputs", label: "Inputs", sections: ["input-form", "checkbox-switch", "radio-group", "select"] },
+  { id: "media", label: "Media & icons", sections: ["icon-icontext", "avatar", "image", "video", "map", "carousel", "carousel-cards"] },
+];
+
+function readHash(): { tab: TabId; item: string | null } {
+  if (typeof window === "undefined") return { tab: "composed", item: null };
+  const raw = window.location.hash.replace(/^#/, "");
+  const [tab, item] = raw.split("/");
+  const known = TABS.find((t) => t.id === tab);
+  return { tab: known ? known.id : "composed", item: item ?? null };
+}
+
+function SideLink({
+  active,
+  href,
   children,
 }: {
-  id: string;
-  title: string;
-  eyebrow?: string;
+  active?: boolean;
+  href: string;
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-24 space-y-4">
-      <div>
-        {eyebrow ? (
-          <p className="text-xs font-medium uppercase tracking-wide text-indigo-600">
-            {eyebrow}
-          </p>
-        ) : null}
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">
-          {title}
-        </h2>
-      </div>
+    <a
+      href={href}
+      className={cn(
+        "block truncate rounded-md border-l-2 px-2.5 py-1 text-[13px] transition",
+        active
+          ? "border-indigo-600 bg-indigo-50 font-medium text-indigo-700"
+          : "border-transparent text-slate-600 hover:bg-white hover:text-slate-900",
+      )}
+    >
       {children}
-    </section>
+    </a>
+  );
+}
+
+function ItemHeader({
+  id,
+  title,
+  note,
+  code,
+}: {
+  id: string;
+  title: string;
+  note: string;
+  code?: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-2">
+      <div>
+        <h3 className="text-base font-semibold text-slate-900">
+          <a href={`#${id}`} className="hover:text-indigo-700">
+            {title}
+          </a>
+        </h3>
+        <p className="text-sm text-slate-500">{note}</p>
+      </div>
+      {code ? (
+        <code className="rounded-md bg-slate-100 px-2 py-1 text-[11px] text-slate-600">
+          {code}
+        </code>
+      ) : null}
+    </div>
+  );
+}
+
+function PrimitiveArticle({ section }: { section: GallerySection }) {
+  return (
+    <article id={`primitives/${section.id}`} className="scroll-mt-24 space-y-3">
+      <ItemHeader
+        id={`primitives/${section.id}`}
+        title={section.title}
+        note={section.note}
+        code={section.component}
+      />
+      <SpecView showDevtools={false} spec={section.spec} />
+    </article>
   );
 }
 
 export function CatalogGallery() {
+  const [{ tab, item }, setHash] = useState<{ tab: TabId; item: string | null }>({
+    tab: "composed",
+    item: null,
+  });
+
+  useEffect(() => {
+    const sync = () => setHash(readHash());
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+
+  // Scroll to the deep-linked item once the tab has rendered it.
+  useEffect(() => {
+    if (!item) return;
+    const el = document.getElementById(`${tab}/${item}`);
+    el?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [tab, item]);
+
+  // Scroll spy: highlight the sidebar entry for the article nearest the top.
+  const [active, setActive] = useState<string | null>(null);
+  useEffect(() => {
+    setActive(item);
+    const articles = Array.from(
+      document.querySelectorAll<HTMLElement>(`article[id^="${tab}/"]`),
+    );
+    if (articles.length === 0) return;
+    const pick = () => {
+      const line = 120;
+      let best: HTMLElement | null = null;
+      for (const el of articles) {
+        if (el.getBoundingClientRect().top - line <= 0) best = el;
+        else break;
+      }
+      const target = best ?? articles[0];
+      setActive(target.id.slice(tab.length + 1));
+    };
+    pick();
+    window.addEventListener("scroll", pick, { passive: true });
+    window.addEventListener("resize", pick);
+    return () => {
+      window.removeEventListener("scroll", pick);
+      window.removeEventListener("resize", pick);
+    };
+  }, [tab, item]);
+
+  const sectionById = useMemo(
+    () => new Map(GALLERY_SECTIONS.map((s) => [s.id, s] as const)),
+    [],
+  );
+  const grouped = useMemo(
+    () =>
+      PRIMITIVE_GROUPS.map((g) => ({
+        ...g,
+        items: g.sections
+          .map((id) => sectionById.get(id))
+          .filter((s): s is GallerySection => Boolean(s)),
+      })),
+    [sectionById],
+  );
+  const ungrouped = useMemo(() => {
+    const seen = new Set(PRIMITIVE_GROUPS.flatMap((g) => g.sections));
+    return GALLERY_SECTIONS.filter((s) => !seen.has(s.id));
+  }, []);
+
+  const current = TABS.find((t) => t.id === tab) ?? TABS[0];
+
   return (
-    <div className="space-y-16">
-      <Section
-        id="composed"
-        title="Composed answer (as in chat)"
-        eyebrow="End-to-end"
-      >
-        <p className="max-w-2xl text-sm text-slate-600">
-          This is how a generative UI block looks inside an assistant turn —
-          prose first, then a constrained spec.
-        </p>
-        <div className="rounded-[1.35rem] border border-border/70 bg-card p-4 shadow-[0_24px_60px_-28px_rgba(79,70,229,0.35)] sm:p-5">
-          <Message from="assistant">
-            <MessageContent className="w-full max-w-none gap-3 bg-transparent px-0 py-0">
-              <MessageResponse>
-                นี่คือ dashboard สรุปยอดขายรายไตรมาส พร้อม metric และตารางเปรียบเทียบแผน
-              </MessageResponse>
-              <SpecView spec={COMPOSED_DASHBOARD_SPEC} />
-            </MessageContent>
-          </Message>
-        </div>
-      </Section>
-
-      <Section id="chat-chrome" title="Chat chrome samples" eyebrow="Not catalog">
-        <p className="max-w-2xl text-sm text-slate-600">
-          Every AI Element used around specs in the overlay — not catalog types.
-          Use this section for chat UX review.
-        </p>
-        <ChatChromeSamples />
-      </Section>
-
-      <Section id="interactive" title="Interactive runtime" eyebrow="State">
-        <p className="max-w-2xl text-sm text-slate-600">
-          Binding, visibility, repeat, watchers, validation, and computed /
-          directives — open DevTools with{" "}
-          <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px]">
-            ⌘⇧J
-          </kbd>{" "}
-          to inspect Spec / State / Actions.
-        </p>
-        <div className="mt-6 space-y-10">
-          {INTERACTIVE_SECTIONS.map((section) => (
-            <article
-              key={section.id}
-              id={`interactive-${section.id}`}
-              className="space-y-3"
-            >
-              <div>
-                <h3 className="text-base font-semibold text-slate-900">
-                  {section.title}
-                </h3>
-                <p className="text-sm text-slate-500">{section.note}</p>
-              </div>
-              <SpecView showDevtools={false} spec={section.spec} />
-            </article>
-          ))}
-        </div>
-      </Section>
-
-      <Section id="primitives" title="Catalog primitives" eyebrow="By type">
-        <div className="flex flex-wrap gap-2">
-          {CATALOG_TYPES.map((type) => (
+    <div className="lg:grid lg:grid-cols-[13.5rem_minmax(0,1fr)] lg:gap-8">
+      {/* Sidebar */}
+      <aside className="lg:sticky lg:top-6 lg:self-start">
+        <nav className="-mx-1 flex gap-1 overflow-x-auto pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:pb-0">
+          {TABS.map((t) => (
             <a
-              key={type}
-              href={`#type-${type.toLowerCase()}`}
-              className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-indigo-200 hover:text-indigo-700"
+              key={t.id}
+              href={`#${t.id}`}
+              className={cn(
+                "shrink-0 rounded-lg px-3 py-1.5 text-sm transition",
+                t.id === tab
+                  ? "bg-gradient-to-r from-indigo-600 to-violet-600 font-medium text-white shadow-[0_10px_24px_-12px_rgba(79,70,229,0.8)]"
+                  : "text-slate-600 hover:bg-white hover:text-slate-900",
+              )}
             >
-              {type}
+              {t.label}
             </a>
           ))}
-        </div>
+        </nav>
 
-        <div className="mt-8 space-y-10">
-          {GALLERY_SECTIONS.map((section) => (
-            <article
-              key={section.id}
-              id={`type-${section.component.split(",")[0].trim().toLowerCase()}`}
-              className="space-y-3"
-            >
-              <div className="flex flex-wrap items-end justify-between gap-2">
-                <div>
-                  <h3 className="text-base font-semibold text-slate-900">
-                    {section.title}
-                  </h3>
-                  <p className="text-sm text-slate-500">{section.note}</p>
+        <div className="mt-4 hidden max-h-[calc(100dvh-9rem)] space-y-3 overflow-y-auto border-t border-slate-200/80 pt-4 pr-1 lg:block">
+          {tab === "composed"
+            ? COMPOSED_EXAMPLES.map((ex) => (
+                <SideLink key={ex.id} href={`#composed/${ex.id}`} active={active === ex.id}>
+                  {ex.title}
+                </SideLink>
+              ))
+            : null}
+          {tab === "interactive"
+            ? INTERACTIVE_SECTIONS.map((sec) => (
+                <SideLink key={sec.id} href={`#interactive/${sec.id}`} active={active === sec.id}>
+                  {sec.title}
+                </SideLink>
+              ))
+            : null}
+          {tab === "primitives"
+            ? grouped.map((g) => (
+                <div key={g.id}>
+                  <p className="px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+                    {g.label}
+                  </p>
+                  {g.items.map((sec) => (
+                    <SideLink key={sec.id} href={`#primitives/${sec.id}`} active={active === sec.id}>
+                      {sec.title}
+                    </SideLink>
+                  ))}
                 </div>
-                <code className="rounded-md bg-slate-100 px-2 py-1 text-[11px] text-slate-600">
-                  {section.component}
-                </code>
-              </div>
-              <SpecView spec={section.spec} />
-            </article>
-          ))}
+              ))
+            : null}
         </div>
-      </Section>
+      </aside>
 
+      {/* Content */}
+      <div className="mt-6 min-w-0 lg:mt-0">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">{current.label}</h2>
+          <p className="text-sm text-slate-500">{current.hint}</p>
+        </div>
+
+        {tab === "composed" ? (
+          <div className="space-y-10">
+            {COMPOSED_EXAMPLES.map((ex) => (
+              <article key={ex.id} id={`composed/${ex.id}`} className="scroll-mt-24 space-y-3">
+                <ItemHeader id={`composed/${ex.id}`} title={ex.title} note={ex.note} />
+                <div className="rounded-[1.35rem] border border-border/70 bg-card p-4 shadow-[0_24px_60px_-28px_rgba(79,70,229,0.35)] sm:p-5">
+                  <div className="space-y-4">
+                    <Message from="user">
+                      <MessageContent>{ex.prompt}</MessageContent>
+                    </Message>
+                    <Message from="assistant">
+                      <MessageContent className="w-full max-w-none gap-3 bg-transparent px-0 py-0">
+                        <MessageResponse>{ex.prose}</MessageResponse>
+                        <SpecView showDevtools={false} spec={ex.spec} />
+                      </MessageContent>
+                    </Message>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : null}
+
+        {tab === "primitives" ? (
+          <div className="space-y-12">
+            {grouped.map((g) => (
+              <section key={g.id} id={`primitives/group-${g.id}`} className="scroll-mt-24 space-y-8">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-xs font-medium uppercase tracking-wide text-indigo-600">
+                    {g.label}
+                  </h3>
+                  <span className="h-px flex-1 bg-slate-200/80" />
+                </div>
+                {g.items.map((section) => (
+                  <PrimitiveArticle key={section.id} section={section} />
+                ))}
+              </section>
+            ))}
+            {ungrouped.length > 0 ? (
+              <section className="space-y-8">
+                <h3 className="text-xs font-medium uppercase tracking-wide text-indigo-600">Other</h3>
+                {ungrouped.map((section) => (
+                  <PrimitiveArticle key={section.id} section={section} />
+                ))}
+              </section>
+            ) : null}
+          </div>
+        ) : null}
+
+        {tab === "interactive" ? (
+          <div className="space-y-10">
+            <p className="max-w-2xl text-sm text-slate-600">
+              Binding, visibility, repeat, watchers, validation, and computed
+              directives. Open DevTools with{" "}
+              <kbd className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px]">
+                ⌘⇧J
+              </kbd>{" "}
+              to inspect Spec / State / Actions.
+            </p>
+            {INTERACTIVE_SECTIONS.map((section) => (
+              <article key={section.id} id={`interactive/${section.id}`} className="scroll-mt-24 space-y-3">
+                <ItemHeader id={`interactive/${section.id}`} title={section.title} note={section.note} />
+                <SpecView showDevtools={false} spec={section.spec} />
+              </article>
+            ))}
+          </div>
+        ) : null}
+
+        {tab === "chrome" ? (
+          <div className="space-y-4">
+            <p className="max-w-2xl text-sm text-slate-600">
+              Every AI Element used around specs in the overlay. Not catalog
+              types; use this tab for chat UX review.
+            </p>
+            <ChatChromeSamples />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
