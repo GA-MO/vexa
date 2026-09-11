@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "agentic-ui/core": ["../src/core/index.ts"],
+      "agentic-ui/react": ["../src/react/index.ts"],
+      "agentic-ui/protocol": ["../src/protocol/index.ts"]
+    }
+  },
+  "include": ["src", "server.ts", "vite.config.ts"]
+}
