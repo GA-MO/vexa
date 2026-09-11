@@ -14,6 +14,6 @@ export function createAgentModel(modelId?: string) {
   });
 
   return openrouter(
-    modelId || process.env.AGENT_MODEL || "google/gemini-2.5-flash",
+    modelId || process.env.AGENT_MODEL || "google/gemini-3.1-flash-lite",
   );
 }

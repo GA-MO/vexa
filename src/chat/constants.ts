@@ -26,21 +26,21 @@ export const MODELS = [
   },
   {
     id: "google/gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
+    name: "Gemini 2.5 Flash (thinking)",
     provider: "google" as const,
     maxTokens: 1_000_000,
-  },
-  {
-    id: "openai/gpt-4.1-mini",
-    name: "GPT-4.1 Mini",
-    provider: "openai" as const,
-    maxTokens: 128_000,
   },
   {
     id: "anthropic/claude-sonnet-4",
     name: "Claude Sonnet 4",
     provider: "anthropic" as const,
     maxTokens: 200_000,
+  },
+  {
+    id: "openai/gpt-4.1-mini",
+    name: "GPT-4.1 Mini",
+    provider: "openai" as const,
+    maxTokens: 128_000,
   },
 ] as const;
 
