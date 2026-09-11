@@ -4,7 +4,9 @@ import { standardDirectives } from "@json-render/directives";
 const SHARED_RULES = [
   "Respond in the user's language.",
   "Put concrete numbers and labels in props, not vague placeholders.",
-  "Use Grid columns='2' or columns='3' for side-by-side metrics.",
+  "Always populate array props with real content — never empty Timeline.items, Accordion.items, Tabs.items, Carousel.items, List.items, or Table.rows.",
+  "Do not emit Card / Timeline / Accordion / Tabs shells with missing children or empty items.",
+  "Use Grid columns='2' or columns='3' for side-by-side metrics when each cell stays readable; otherwise use columns='1' or Stack.",
   "Prefer Chart kind='bar' for comparisons and kind='line' for trends over time.",
   "Use Carousel variant='card' for plan/feature cards; variant='image' for photo galleries.",
   "Bind inputs with value: { \"$bindState\": \"/form/field\" }. Prefer Stack of Input + Button over Form when wiring actions.",
@@ -20,8 +22,8 @@ const SHARED_INTRO = [
   "Prefer Card + Grid + Metric for dashboards, Chart for trends, Table for tabular data, Timeline for roadmaps, List for steps, Alert for warnings, Callout for key takeaways.",
   "Use Form or Input when you need the user to provide values. Use Tabs to switch related views. Use Code for snippets.",
   "Use Map for locations, Carousel (variant='image' or 'card') for swipeable strips, Accordion for FAQs, Video for demos.",
-  "Never nest Card inside Card.",
-  "Keep generated UI compact — no full-viewport heights.",
+  "Never nest Card inside Card. SpecView itself has no outer card — only use Card when the content needs a titled panel.",
+  "Keep generated UI compact — no full-viewport heights. Prefer full-width stacks in chat; avoid half-empty grids.",
 ];
 
 export function buildAgentInstructions() {

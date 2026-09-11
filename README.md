@@ -45,7 +45,7 @@ bun install
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) (or the next free port if 3000 is taken). Catalog review: [http://localhost:3000/catalog](http://localhost:3000/catalog).
 
 ## Use in another project
 
