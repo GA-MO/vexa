@@ -1,0 +1,93 @@
+---
+title: Recommendation
+description: Answer "find me a café near Asok" with one place in a Card, using Image, Rating, tag Badges, IconText contact rows, and buttons for directions and reservation.
+---
+
+## Goal
+
+A recommendation is one confident answer, not a list. The assistant searches with a server tool, picks the best match, and renders a place card: a photo, the name and open status, the rating with review count, three tags, address and hours, and two actions. If the user wants alternatives, a follow-up turns the card into a `Carousel`.
+
+## What the user asks
+
+- "หาคาเฟ่ใกล้อโศกที่นั่งทำงานได้"
+- "Find a quiet café near Asok with power outlets"
+- "Where should I take a client for lunch around Silom?"
+
+## Live example
+
+<Example id="recommendation" />
+
+## How it works
+
+The search tool returns candidates with a photo URL, rating, review count, tags, address, hours, and phone. The model picks one and maps the fields onto the catalog.
+
+```ts title="app/api/chat/route.ts"
+import { tool } from "ai";
+import { z } from "zod";
+import { createVexaHandler } from "vexa/server";
+import { models } from "@/lib/models";
+import { searchPlaces } from "@/lib/places";
+
+const tools = {
+  searchPlaces: tool({
+    description: "Search places near a location. Returns up to five with photoUrl, rating, reviewCount, tags, address, hours, phone, and openNow.",
+    inputSchema: z.object({
+      query: z.string(),
+      near: z.string().describe("a landmark, station, or district"),
+      openNow: z.boolean().nullable(),
+    }),
+    execute: async ({ query, near, openNow }) => searchPlaces({ query, near, openNow: openNow ?? false }),
+  }),
+};
+
+export const { GET, POST } = createVexaHandler({
+  models,
+  tools,
+  rules: [
+    "For a place recommendation render one Card with no title: Image (aspect wide) from photoUrl, a Row with Heading level 3 and a Badge 'Open now' (success) or 'Closed' (neutral), Rating with count and showValue, a Row of up to three neutral Badges for tags, a Column of IconText rows (pin, clock, phone), then a Row with Buttons 'Directions' (secondary) and 'Reserve a table' (primary).",
+    "Pick one place and say why in the text; offer alternatives only when asked.",
+  ],
+});
+```
+
+Photos are external URLs, so the host page's Content Security Policy must allow the image domain. `Image` takes `src`, `alt`, `caption`, and `aspect`; `alt` should describe the photo, not repeat the name.
+
+The two Buttons map naturally onto host tools. Directions opens a map app; reservation is a side effect and gets `confirm: true`.
+
+```tsx title="tools.ts"
+import { z } from "zod";
+import { defineTool } from "vexa/react";
+
+export const directions = defineTool({
+  description: "Open directions to an address in the maps app.",
+  input: z.object({ address: z.string() }),
+  run: ({ address }) => {
+    window.open(`https://maps.google.com/?q=${encodeURIComponent(address)}`, "_blank");
+    return { ok: true, summary: "Opened directions" };
+  },
+});
+
+export const reserveTable = defineTool({
+  description: "Reserve a table at a place id for the current user.",
+  input: z.object({ placeId: z.string(), guests: z.number().int().min(1) }),
+  confirm: true,
+  run: async ({ placeId, guests }) => {
+    await fetch(`/api/reservations`, { method: "POST", body: JSON.stringify({ placeId, guests }) });
+    return { ok: true, summary: "Table reserved" };
+  },
+});
+```
+
+Register them as `tools={{ directions, reserve_table: reserveTable }}` and the model emits `runTool` presses with the place's address and id.
+
+## Prompt hints
+
+- Fix the location vocabulary in `persona`: "'near Asok' means within 800 m of BTS Asok".
+- Ask for the rating as a number: "Rating value is the numeric rating out of 5, count is reviewCount".
+- For a comparison, "when the user asks for options, use Carousel variant card with one item per place and a badge on the recommended one" (see the plan comparison example on [Carousel](/docs/catalog/Carousel)).
+
+## Related
+
+- [Image](/docs/catalog/Image), [Rating](/docs/catalog/Rating), [IconText](/docs/catalog/IconText), [Badge](/docs/catalog/Badge)
+- [Map](/docs/catalog/Map): when the user wants to see where it is
+- [Host tools](/docs/host/host-tools): `defineTool` and `confirm`

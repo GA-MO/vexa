@@ -16,15 +16,17 @@
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"],
-      "agentic-ui": ["../src/index.ts"],
-      "agentic-ui/protocol": ["../src/protocol/index.ts"],
-      "agentic-ui/core": ["../src/core/index.ts"],
-      "agentic-ui/eval": ["../src/eval/index.ts"],
-      "agentic-ui/react": ["../src/react/index.ts"],
-      "agentic-ui/chat": ["../src/chat/index.ts"],
-      "agentic-ui/lib/*": ["../src/lib/*"],
-      "agentic-ui/ui/*": ["../src/ui/*"],
-      "agentic-ui/ai-elements/*": ["../src/ai-elements/*"]
+      "vexa": ["../src/index.ts"],
+      "vexa/protocol": ["../src/protocol/index.ts"],
+      "vexa/core": ["../src/core/index.ts"],
+      "vexa/examples": ["../src/examples/index.ts"],
+      "vexa/server": ["../src/server/index.ts"],
+      "vexa/eval": ["../src/eval/index.ts"],
+      "vexa/react": ["../src/react/index.ts"],
+      "vexa/chat": ["../src/chat/index.ts"],
+      "vexa/lib/*": ["../src/lib/*"],
+      "vexa/ui/*": ["../src/ui/*"],
+      "vexa/ai-elements/*": ["../src/ai-elements/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

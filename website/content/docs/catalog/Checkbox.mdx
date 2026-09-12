@@ -1,0 +1,58 @@
+---
+title: "Checkbox"
+description: "Single boolean checkbox with label. Bind with checked: { $bindState: '/form/agree' }."
+---
+
+## Use it when
+
+A single yes/no the user opts into: consent, an add-on, a filter. The prompt splits the four pickers cleanly — Checkbox for one yes/no, Switch for a setting that is on or off, RadioGroup for two to six exclusive choices, Select for a longer list. There is no multi-select component in the catalog, so several independent booleans means several Checkboxes, each bound to its own path.
+
+## Prompt hints
+
+- "Ask me to accept the terms before continuing"
+- "Let me add extra shot and whipped cream to the order"
+- "Give me a checkbox to include archived items"
+
+`checked: { "$bindState": "/ui/agree" }` binds two-way through `useBoundProp`; unbound, the box still toggles but only in local state. User-entered values belong under `/ui/*` — `/tools/*` and `/host/*` are runtime-owned and writes from a spec are dropped with a warning. `hint` adds a second muted line under the label, the label turns semibold once checked, and `disabled` dims the row and blocks the click.
+
+## Related
+
+- [Switch](/docs/catalog/Switch) — same props, different meaning: a setting rather than a choice
+- [RadioGroup](/docs/catalog/RadioGroup) — one of several, not one yes/no
+- [Input](/docs/catalog/Input) — when the answer is typed
+- [State](/docs/concepts/state) — `$bindState`, `visible`, and reserved namespaces
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | Yes | Example: `"I agree to the terms"` |
+| `name` | `string` | Yes | Example: `"agree"` |
+| `hint` | `string \| null` | No | Example: `null` |
+| `checked` | `boolean \| null` | No | Example: `false` |
+| `disabled` | `boolean \| null` | No | Example: `false` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Checkbox",
+  "props": {
+    "label": "I agree to the terms",
+    "name": "agree",
+    "hint": null,
+    "checked": false,
+    "disabled": false
+  }
+}
+```
+
+## Live example
+
+<Example id="checkbox-switch" />
+
+{/* generated:end */}

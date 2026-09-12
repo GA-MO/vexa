@@ -14,9 +14,9 @@
   "rtl": false,
   "aliases": {
     "components": "../src",
-    "utils": "agentic-ui/lib/utils",
-    "ui": "agentic-ui/ui",
-    "lib": "agentic-ui/lib",
+    "utils": "vexa/lib/utils",
+    "ui": "vexa/ui",
+    "lib": "vexa/lib",
     "hooks": "@/hooks"
   },
   "menuColor": "default",

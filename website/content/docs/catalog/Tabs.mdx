@@ -1,0 +1,59 @@
+---
+title: "Tabs"
+description: "Tabbed text panels for switching related views"
+---
+
+## Use it when
+
+Two to four short prose views describe the same subject and the reader only wants one at a time — overview, risks, next steps. Each panel is a plain string, so anything holding a chart, table or button cannot be a tab; build those as separate elements with `visible` conditions instead. For dense FAQ or policy text the catalog points at [Accordion](/docs/catalog/Accordion), which keeps every title on screen. A Tabs element with empty `items` renders nothing at all.
+
+## Prompt hints
+
+- "give me overview, risks and next steps as tabs"
+- "show the pros and cons in switchable panels"
+- "compare the free and pro plan descriptions side by side"
+
+`items` is the only prop and `content` is text, not a slot; newlines inside it survive. The active tab is component-local React state, so it cannot be bound, read with `$state`, or set by an action, and it resets to the first tab on remount. The tab strip scrolls horizontally rather than wrapping, so long labels become a swipe.
+
+## Related
+
+- [Accordion](/docs/catalog/Accordion) — text-only too, but every section title stays visible.
+- [Card](/docs/catalog/Card) — for panels that hold real components.
+- [State](/docs/concepts/state) — `visible` conditions, the bindable alternative.
+- [Text](/docs/catalog/Text) — when there is only one view to show.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `items` | `{ label: string; content: string }[]` | Yes | Example: `[{"label":"Overview","content":"High-level summary."},{"label":"Details","content":"Supporting detail."}]` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Tabs",
+  "props": {
+    "items": [
+      {
+        "label": "Overview",
+        "content": "High-level summary."
+      },
+      {
+        "label": "Details",
+        "content": "Supporting detail."
+      }
+    ]
+  }
+}
+```
+
+## Live example
+
+<Example id="tabs" />
+
+{/* generated:end */}

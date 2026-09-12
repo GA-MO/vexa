@@ -1,12 +1,12 @@
 "use client";
 
-import { Badge } from "agentic-ui/ui/badge";
+import { Badge } from "vexa/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "agentic-ui/ui/collapsible";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/collapsible";
+import { cn } from "vexa/lib/utils";
 import type { DynamicToolUIPart, ToolUIPart } from "ai";
 import {
   CheckCircleIcon,
@@ -55,13 +55,13 @@ const statusLabels: Record<ToolPart["state"], string> = {
 };
 
 const statusIcons: Record<ToolPart["state"], ReactNode> = {
-  "approval-requested": <ClockIcon className="size-4 text-yellow-600" />,
-  "approval-responded": <CheckCircleIcon className="size-4 text-blue-600" />,
+  "approval-requested": <ClockIcon className="size-4 text-warning" />,
+  "approval-responded": <CheckCircleIcon className="size-4 text-info" />,
   "input-available": <ClockIcon className="size-4 animate-pulse" />,
   "input-streaming": <CircleIcon className="size-4" />,
-  "output-available": <CheckCircleIcon className="size-4 text-green-600" />,
-  "output-denied": <XCircleIcon className="size-4 text-orange-600" />,
-  "output-error": <XCircleIcon className="size-4 text-red-600" />,
+  "output-available": <CheckCircleIcon className="size-4 text-success" />,
+  "output-denied": <XCircleIcon className="size-4 text-warning" />,
+  "output-error": <XCircleIcon className="size-4 text-danger" />,
 };
 
 export const getStatusBadge = (status: ToolPart["state"]) => (
@@ -85,17 +85,17 @@ export const ToolHeader = ({
   return (
     <CollapsibleTrigger
       className={cn(
-        "flex w-full items-center justify-between gap-4 p-3",
+        "flex w-full items-center justify-between gap-3 p-3",
         className
       )}
       {...props}
     >
-      <div className="flex items-center gap-2">
-        <WrenchIcon className="size-4 text-muted-foreground" />
-        <span className="font-medium text-sm">{title ?? derivedName}</span>
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+        <WrenchIcon className="size-4 shrink-0 text-muted-foreground" />
+        <span className="min-w-0 truncate font-medium text-sm">{title ?? derivedName}</span>
         {getStatusBadge(state)}
       </div>
-      <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+      <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
     </CollapsibleTrigger>
   );
 };
@@ -105,24 +105,26 @@ export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
 export const ToolContent = ({ className, ...props }: ToolContentProps) => (
   <CollapsibleContent
     className={cn(
-      "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 space-y-4 p-4 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+      "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 space-y-3 p-3 text-popover-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
       className
     )}
     {...props}
   />
 );
 
+const WRAPPED_CODE = "[&_pre]:whitespace-pre-wrap [&_pre]:wrap-anywhere [&_pre]:text-xs [&_code]:text-xs";
+
 export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolPart["input"];
 };
 
 export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
-  <div className={cn("space-y-2 overflow-hidden", className)} {...props}>
+  <div className={cn("min-w-0 space-y-2", className)} {...props}>
     <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
       Parameters
     </h4>
     <div className="rounded-md bg-muted/50">
-      <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+      <CodeBlock className={WRAPPED_CODE} code={JSON.stringify(input, null, 2)} language="json" />
     </div>
   </div>
 );
@@ -146,10 +148,10 @@ export const ToolOutput = ({
 
   if (typeof output === "object" && !isValidElement(output)) {
     Output = (
-      <CodeBlock code={JSON.stringify(output, null, 2)} language="json" />
+      <CodeBlock className={WRAPPED_CODE} code={JSON.stringify(output, null, 2)} language="json" />
     );
   } else if (typeof output === "string") {
-    Output = <CodeBlock code={output} language="json" />;
+    Output = <CodeBlock className={WRAPPED_CODE} code={output} language="json" />;
   }
 
   return (

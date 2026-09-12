@@ -1,0 +1,77 @@
+---
+title: "LineChart"
+description: "Line chart for trends over time. 1-4 series; handles 14-60 points and thins axis labels automatically. area=true fills under the line."
+---
+
+## Use it when
+
+A value moves over time and the shape of the movement is the answer. The prompt tells the model to prefer LineChart over [Chart](/docs/catalog/Chart) `kind="line"` once there are 10 or more points or more than one series; `Chart` stays for a quick single line, and its `spark` kind for an inline trend with no axes. Comparing named categories rather than a sequence is [BarChart](/docs/catalog/BarChart) territory.
+
+## Prompt hints
+
+- "show weekly active users for the last two months"
+- "plot daily conversion for web and app over 30 days"
+- "how has revenue trended this year?"
+
+`area: true` fills under the line at low opacity and suits a single series; with several series the fills overlap. `showDots` is only worth setting above 14 points, because dots already appear automatically at or below that count. The y axis always starts at zero and negative values are clamped to it, so this is not the component for a series that dips below the baseline. Axis labels thin themselves to fit the container the chart measures, which is what keeps them legible in a narrow panel.
+
+## Related
+
+- [BarChart](/docs/catalog/BarChart) — category comparison, same axes and legend.
+- [Chart](/docs/catalog/Chart) — `kind="spark"` for a compact inline trend.
+- [Metric](/docs/catalog/Metric) — the headline number the trend explains.
+- [Card](/docs/catalog/Card) — a titled panel around chart and commentary.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | `string \| null` | No | Example: `"Weekly active users"` |
+| `labels` | `string[]` | Yes | Example: `["W1","W2","W3","W4"]` |
+| `series` | `{ name: string; values: number[] }[]` | Yes | Example: `[{"name":"Users","values":[420,480,465,530]}]` |
+| `area` | `boolean \| null` | No | Example: `true` |
+| `showDots` | `boolean \| null` | No | Example: `true` |
+| `format` | `"number" \| "currency" \| "percent" \| null` | No | Example: `"number"` |
+| `height` | `"sm" \| "md" \| "lg" \| null` | No | Example: `"md"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "LineChart",
+  "props": {
+    "title": "Weekly active users",
+    "labels": [
+      "W1",
+      "W2",
+      "W3",
+      "W4"
+    ],
+    "series": [
+      {
+        "name": "Users",
+        "values": [
+          420,
+          480,
+          465,
+          530
+        ]
+      }
+    ],
+    "area": true,
+    "showDots": true,
+    "format": "number",
+    "height": "md"
+  }
+}
+```
+
+## Live example
+
+<Example id="line-chart" />
+
+{/* generated:end */}

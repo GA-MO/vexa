@@ -1,28 +1,16 @@
-import { streamAgentChat } from "agentic-ui/core";
-import type { UIMessage } from "ai";
+import { createVexaHandler } from "vexa/server";
+import { stepCountIs } from "ai";
+import { demoModels, demoProviderOptions } from "@/lib/models";
 
 export const maxDuration = 60;
 
-export async function POST(req: Request) {
-  const body = await req.json();
-  const messages: UIMessage[] = body.messages;
-  const model =
-    typeof body.model === "string" && body.model.trim()
-      ? body.model.trim()
-      : undefined;
-
-  if (!Array.isArray(messages) || messages.length === 0) {
-    return Response.json(
-      { error: "messages array is required" },
-      { status: 400 },
-    );
-  }
-
-  try {
-    return await streamAgentChat(messages, { model });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to stream chat";
-    return Response.json({ error: message }, { status: 500 });
-  }
-}
+export const { GET, POST } = createVexaHandler({
+  persona: ({ today, context }) => [
+    "You are the assistant built into the Vexa demo site. You show what generative UI can do and you can control this site through host tools.",
+    `Today is ${today}. The user is currently on ${String(context.path ?? "/")}.`,
+    "Vocabulary: 'the catalog' means the /catalog page; 'an example' means one section on that page.",
+  ],
+  models: demoModels,
+  providerOptions: demoProviderOptions,
+  stopWhen: stepCountIs(6),
+});

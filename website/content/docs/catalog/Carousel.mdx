@@ -1,0 +1,62 @@
+---
+title: "Carousel"
+description: "Free-scroll swipeable strip. Use variant='image' for galleries or variant='card' for plan/feature cards."
+---
+
+## Use it when
+
+Several peers are worth browsing sideways rather than scrolling past: photos with `variant="image"`, or plan and feature cards with `variant="card"`, as the catalog splits them. One picture is Image. Items whose numbers should line up for comparison belong in a Table, and anything the reader must not miss belongs in a Column or Grid, since a carousel hides everything past the first slide.
+
+## Prompt hints
+
+- "Show the pricing plans as swipeable cards"
+- "Show me photos of the rooms"
+- "Give me three package options I can flick through"
+
+Scrolling is free-drag, not slide-by-slide snapping. Slides take 85–88% of the width and shrink to 56–72% once the container passes the `@md/vexa` breakpoint, so the next one always peeks. With a single item the arrows and the drag hint disappear; with an empty `items` array the component renders nothing. When `variant` is `null` it is inferred — `card` if any item has a `title` or `description`, otherwise `image`, where a missing `src` becomes a "No image" placeholder and the caption falls back to `alt`.
+
+## Related
+
+- [Image](/docs/catalog/Image) — a single picture with the same caption strip
+- [Card](/docs/catalog/Card) — one titled panel instead of a strip of them
+- [Grid](/docs/catalog/Grid) — comparable items that should all stay visible
+- [Table](/docs/catalog/Table) — when the plans are really a feature comparison
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `variant` | `"image" \| "card" \| null` | No | Example: `"card"` |
+| `items` | `({ src: string \| null; alt: string \| null; caption: string \| null; title: string \| null; description: string \| null; badge: string \| null })[]` | Yes | Example: `[{"src":null,"alt":null,"caption":null,"title":"Pro","description":"Generative UI for teams","badge":"Popular"}]` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Carousel",
+  "props": {
+    "variant": "card",
+    "items": [
+      {
+        "src": null,
+        "alt": null,
+        "caption": null,
+        "title": "Pro",
+        "description": "Generative UI for teams",
+        "badge": "Popular"
+      }
+    ]
+  }
+}
+```
+
+## Live example
+
+<Example id="carousel" />
+<Example id="carousel-cards" />
+
+{/* generated:end */}

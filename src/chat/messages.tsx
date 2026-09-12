@@ -1,33 +1,39 @@
 "use client";
 
 import { useJsonRenderMessage } from "@json-render/react";
+import { useState } from "react";
 import {
   getToolName,
   isFileUIPart,
   isToolUIPart,
+  type DynamicToolUIPart,
   type FileUIPart,
+  type ReasoningUIPart,
+  type ToolUIPart,
 } from "ai";
 import {
   CheckIcon,
   PaperclipIcon,
+  ShieldAlertIcon,
   XIcon,
 } from "lucide-react";
 import {
   SPEC_DATA_PART_TYPE,
-  type AgenticMessage,
-} from "agentic-ui/protocol";
-import { SpecView } from "agentic-ui/react";
+  type VexaMessage,
+} from "vexa/protocol";
+import { DEFAULT_LABELS, type ChatLabels, type ChatStepsDisplay } from "./constants";
+import { SpecView } from "vexa/react";
 import {
   Attachment,
   AttachmentPreview,
   Attachments,
-} from "agentic-ui/ai-elements/attachments";
+} from "vexa/ai-elements/attachments";
 import {
   ChainOfThought,
   ChainOfThoughtContent,
   ChainOfThoughtHeader,
   ChainOfThoughtStep,
-} from "agentic-ui/ai-elements/chain-of-thought";
+} from "vexa/ai-elements/chain-of-thought";
 import {
   Confirmation,
   ConfirmationAction,
@@ -36,71 +42,100 @@ import {
   ConfirmationRejected,
   ConfirmationRequest,
   ConfirmationTitle,
-} from "agentic-ui/ai-elements/confirmation";
+} from "vexa/ai-elements/confirmation";
 import {
   InlineCitation,
   InlineCitationCard,
   InlineCitationCardBody,
   InlineCitationCardTrigger,
   InlineCitationSource,
-} from "agentic-ui/ai-elements/inline-citation";
+} from "vexa/ai-elements/inline-citation";
 import {
   Message,
   MessageContent,
   MessageResponse,
-} from "agentic-ui/ai-elements/message";
-import {
-  Plan,
-  PlanContent,
-  PlanDescription,
-  PlanHeader,
-  PlanTitle,
-  PlanTrigger,
-} from "agentic-ui/ai-elements/plan";
+} from "vexa/ai-elements/message";
 import {
   Reasoning,
   ReasoningContent,
   ReasoningTrigger,
-} from "agentic-ui/ai-elements/reasoning";
-import { Shimmer } from "agentic-ui/ai-elements/shimmer";
+} from "vexa/ai-elements/reasoning";
+import { Shimmer } from "vexa/ai-elements/shimmer";
 import {
   Source,
   Sources,
   SourcesContent,
   SourcesTrigger,
-} from "agentic-ui/ai-elements/sources";
-import {
-  Task,
-  TaskContent,
-  TaskItem,
-  TaskTrigger,
-} from "agentic-ui/ai-elements/task";
+} from "vexa/ai-elements/sources";
 import {
   Tool,
   ToolContent,
   ToolHeader,
   ToolInput,
   ToolOutput,
-} from "agentic-ui/ai-elements/tool";
+} from "vexa/ai-elements/tool";
+
+function ToolApproval({
+  part,
+  onApproval,
+  labels,
+}: {
+  part: ToolUIPart | DynamicToolUIPart;
+  onApproval?: (id: string, approved: boolean) => void;
+  labels: ChatLabels;
+}) {
+  const approval =
+    "approval" in part
+      ? (part.approval as { id: string; approved?: boolean } | undefined)
+      : undefined;
+  if (!approval || !onApproval) return null;
+
+  const toolName = getToolName(part);
+  return (
+    <Confirmation approval={approval} state={part.state}>
+      <ConfirmationTitle>
+        <ConfirmationRequest>{labels.approveTool(toolName)}</ConfirmationRequest>
+        <ConfirmationAccepted>
+          <CheckIcon className="size-4" />
+          <span>{labels.approved}</span>
+        </ConfirmationAccepted>
+        <ConfirmationRejected>
+          <XIcon className="size-4" />
+          <span>{labels.rejected}</span>
+        </ConfirmationRejected>
+      </ConfirmationTitle>
+      <ConfirmationActions>
+        <ConfirmationAction
+          onClick={() => onApproval(approval.id, false)}
+          variant="outline"
+        >
+          {labels.reject}
+        </ConfirmationAction>
+        <ConfirmationAction
+          onClick={() => onApproval(approval.id, true)}
+          variant="default"
+        >
+          {labels.approve}
+        </ConfirmationAction>
+      </ConfirmationActions>
+    </Confirmation>
+  );
+}
 
 function ToolPartView({
   part,
   messageId,
   index,
   onApproval,
+  labels,
 }: {
-  part: AgenticMessage["parts"][number];
+  part: ToolUIPart | DynamicToolUIPart;
   messageId: string;
   index: number;
   onApproval?: (id: string, approved: boolean) => void;
+  labels: ChatLabels;
 }) {
-  if (!isToolUIPart(part)) return null;
-
   const toolName = getToolName(part);
-  const approval =
-    "approval" in part
-      ? (part.approval as { id: string; approved?: boolean } | undefined)
-      : undefined;
 
   return (
     <div className="space-y-2" key={`${messageId}-tool-${index}`}>
@@ -125,39 +160,91 @@ function ToolPartView({
           />
         </ToolContent>
       </Tool>
-
-      {approval && onApproval ? (
-        <Confirmation approval={approval} state={part.state}>
-          <ConfirmationTitle>
-            <ConfirmationRequest>
-              Approve running <code>{toolName}</code>?
-            </ConfirmationRequest>
-            <ConfirmationAccepted>
-              <CheckIcon className="size-4" />
-              <span>Approved</span>
-            </ConfirmationAccepted>
-            <ConfirmationRejected>
-              <XIcon className="size-4" />
-              <span>Rejected</span>
-            </ConfirmationRejected>
-          </ConfirmationTitle>
-          <ConfirmationActions>
-            <ConfirmationAction
-              onClick={() => onApproval(approval.id, false)}
-              variant="outline"
-            >
-              Reject
-            </ConfirmationAction>
-            <ConfirmationAction
-              onClick={() => onApproval(approval.id, true)}
-              variant="default"
-            >
-              Approve
-            </ConfirmationAction>
-          </ConfirmationActions>
-        </Confirmation>
-      ) : null}
+      <ToolApproval labels={labels} onApproval={onApproval} part={part} />
     </div>
+  );
+}
+
+function HiddenSteps({
+  toolParts,
+  onApproval,
+  labels,
+}: {
+  toolParts: Array<ToolUIPart | DynamicToolUIPart>;
+  onApproval?: (id: string, approved: boolean) => void;
+  labels: ChatLabels;
+}) {
+  const approvals = toolParts.filter((part) => "approval" in part && part.approval);
+  if (approvals.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-2">
+      {approvals.map((part) => (
+        <ToolApproval key={part.toolCallId} labels={labels} onApproval={onApproval} part={part} />
+      ))}
+    </div>
+  );
+}
+
+function ProcessSteps({
+  message,
+  isStreaming,
+  onApproval,
+  labels,
+  reasoningParts,
+  toolParts,
+}: {
+  message: VexaMessage;
+  isStreaming: boolean;
+  onApproval?: (id: string, approved: boolean) => void;
+  labels: ChatLabels;
+  reasoningParts: ReasoningUIPart[];
+  toolParts: Array<ToolUIPart | DynamicToolUIPart>;
+}) {
+  const [open, setOpen] = useState(false);
+  const awaitingApproval = toolParts.some((part) => part.state === "approval-requested");
+  const stepCount = reasoningParts.length + toolParts.length;
+
+  return (
+    <ChainOfThought onOpenChange={setOpen} open={open || awaitingApproval}>
+      <ChainOfThoughtHeader>
+        {isStreaming ? <Shimmer duration={1.2}>{labels.thinking}</Shimmer> : labels.steps(stepCount)}
+      </ChainOfThoughtHeader>
+      <ChainOfThoughtContent>
+        {reasoningParts.map((part, index) => (
+          <ChainOfThoughtStep
+            key={`${message.id}-cot-reasoning-${index}`}
+            label={labels.reasoning}
+            status={part.state === "streaming" ? "active" : "complete"}
+          >
+            <Reasoning className="w-full" isStreaming={part.state === "streaming"}>
+              <ReasoningTrigger />
+              <ReasoningContent>{part.text}</ReasoningContent>
+            </Reasoning>
+          </ChainOfThoughtStep>
+        ))}
+        {toolParts.map((part, index) => (
+          <ChainOfThoughtStep
+            key={`${message.id}-cot-tool-${index}`}
+            label={getToolName(part)}
+            status={
+              part.state === "output-available" ||
+              part.state === "output-error" ||
+              part.state === "output-denied"
+                ? "complete"
+                : "active"
+            }
+          >
+            <ToolPartView
+              index={index}
+              labels={labels}
+              messageId={message.id}
+              onApproval={onApproval}
+              part={part}
+            />
+          </ChainOfThoughtStep>
+        ))}
+      </ChainOfThoughtContent>
+    </ChainOfThought>
   );
 }
 
@@ -167,12 +254,16 @@ export function AssistantMessage({
   isStreaming,
   onApproval,
   messages,
+  labels = DEFAULT_LABELS,
+  steps = "collapsible",
 }: {
-  message: AgenticMessage;
+  message: VexaMessage;
   isLast: boolean;
   isStreaming: boolean;
   onApproval?: (id: string, approved: boolean) => void;
-  messages?: AgenticMessage[];
+  messages?: VexaMessage[];
+  labels?: ChatLabels;
+  steps?: ChatStepsDisplay;
 }) {
   const { spec, hasSpec } = useJsonRenderMessage(message.parts);
   const sourceParts = message.parts.filter(
@@ -182,9 +273,10 @@ export function AssistantMessage({
     .filter((part) => part.type === "source-url")
     .map((part) => part.url);
   const reasoningParts = message.parts.filter(
-    (part) => part.type === "reasoning",
+    (part): part is ReasoningUIPart => part.type === "reasoning",
   );
   const toolParts = message.parts.filter(isToolUIPart);
+  const noticeParts = message.parts.filter((part) => part.type === "data-notice");
   const processParts = [...reasoningParts, ...toolParts];
 
   const lastTextIndex = message.parts.reduce(
@@ -250,7 +342,7 @@ export function AssistantMessage({
     return null;
   });
 
-  if (processParts.length > 0) {
+  if (processParts.length > 0 && steps === "collapsible") {
     hasVisibleContent = true;
   }
 
@@ -302,82 +394,34 @@ export function AssistantMessage({
           </Sources>
         ) : null}
 
-        {processParts.length > 0 ? (
-          <div className="space-y-3">
-            <ChainOfThought defaultOpen={isLast && isStreaming}>
-              <ChainOfThoughtHeader>Chain of Thought</ChainOfThoughtHeader>
-              <ChainOfThoughtContent>
-                {reasoningParts.map((part, index) => (
-                  <ChainOfThoughtStep
-                    key={`${message.id}-cot-reasoning-${index}`}
-                    label="Reasoning"
-                    status={part.state === "streaming" ? "active" : "complete"}
-                  >
-                    <Reasoning
-                      className="w-full"
-                      isStreaming={part.state === "streaming"}
-                    >
-                      <ReasoningTrigger />
-                      <ReasoningContent>{part.text}</ReasoningContent>
-                    </Reasoning>
-                  </ChainOfThoughtStep>
-                ))}
-                {toolParts.map((part, index) => (
-                  <ChainOfThoughtStep
-                    key={`${message.id}-cot-tool-${index}`}
-                    label={getToolName(part)}
-                    status={
-                      part.state === "output-available" ||
-                      part.state === "output-error" ||
-                      part.state === "output-denied"
-                        ? "complete"
-                        : "active"
-                    }
-                  >
-                    <ToolPartView
-                      index={index}
-                      messageId={message.id}
-                      onApproval={onApproval}
-                      part={part}
-                    />
-                  </ChainOfThoughtStep>
-                ))}
-              </ChainOfThoughtContent>
-            </ChainOfThought>
-
-            {toolParts.length > 0 ? (
-              <Plan defaultOpen isStreaming={isLast && isStreaming}>
-                <PlanHeader>
-                  <div className="space-y-1">
-                    <PlanTitle>Working plan</PlanTitle>
-                    <PlanDescription>
-                      Tools and steps for this reply
-                    </PlanDescription>
-                  </div>
-                  <PlanTrigger />
-                </PlanHeader>
-                <PlanContent>
-                  <Task defaultOpen>
-                    <TaskTrigger title={`${toolParts.length} tasks`} />
-                    <TaskContent>
-                      {toolParts.map((part, index) => (
-                        <TaskItem key={`${message.id}-task-${index}`}>
-                          {getToolName(part)} — {part.state}
-                        </TaskItem>
-                      ))}
-                    </TaskContent>
-                  </Task>
-                </PlanContent>
-              </Plan>
-            ) : null}
-          </div>
+        {processParts.length > 0 && steps === "hidden" ? (
+          <HiddenSteps labels={labels} onApproval={onApproval} toolParts={toolParts} />
         ) : null}
+
+        {processParts.length > 0 && steps === "collapsible" ? (
+          <ProcessSteps
+            isStreaming={isLast && isStreaming}
+            labels={labels}
+            message={message}
+            onApproval={onApproval}
+            reasoningParts={reasoningParts}
+            toolParts={toolParts}
+          />
+        ) : null}
+
+        {noticeParts.map((part, index) => (
+          <SecurityNoticeView
+            key={`${message.id}-notice-${index}`}
+            labels={labels}
+            notice={part.data}
+          />
+        ))}
 
         {content}
 
         {showLoader ? (
           <Shimmer className="text-sm" duration={1.2}>
-            Thinking...
+            {labels.thinking}
           </Shimmer>
         ) : null}
       </MessageContent>
@@ -385,7 +429,7 @@ export function AssistantMessage({
   );
 }
 
-export function UserMessage({ message }: { message: AgenticMessage }) {
+export function UserMessage({ message }: { message: VexaMessage }) {
   const files = message.parts.filter(isFileUIPart) as FileUIPart[];
   const textParts = message.parts.filter((part) => part.type === "text");
 
@@ -406,12 +450,36 @@ export function UserMessage({ message }: { message: AgenticMessage }) {
         ) : null}
         {textParts.map((part, index) =>
           part.type === "text" ? (
-            <p key={`${message.id}-${index}`} className="whitespace-pre-wrap">
+            <p key={`${message.id}-${index}`} className="whitespace-pre-wrap wrap-anywhere">
               {part.text}
             </p>
           ) : null,
         )}
       </MessageContent>
     </Message>
+  );
+}
+
+function SecurityNoticeView({
+  notice,
+  labels,
+}: {
+  notice: VexaMessage["parts"][number] extends infer P ? (P extends { type: "data-notice"; data: infer D } ? D : never) : never;
+  labels: ChatLabels;
+}) {
+  return (
+    <div
+      role="status"
+      className="flex gap-2.5 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2.5 text-sm text-foreground"
+    >
+      <ShieldAlertIcon className="mt-0.5 size-4 shrink-0 text-warning" />
+      <div className="min-w-0">
+        <p className="font-semibold">{labels.securityTitle}</p>
+        <p className="text-[13px] leading-snug">{labels.securityBody(notice.tool)}</p>
+        <p className="mt-1 line-clamp-2 wrap-anywhere font-mono text-[11px] text-warning" title={notice.excerpt}>
+          {notice.excerpt}
+        </p>
+      </div>
+    </div>
   );
 }

@@ -1,0 +1,52 @@
+---
+title: "Actions"
+description: "The built-in spec actions a button or watcher can trigger: runTool, submitForm, and toast."
+---
+
+## Overview
+
+These three are the only actions a spec may dispatch. They are declared in `catalog.actions`, and a spec naming anything else is rejected by validation before it renders, so the model cannot invent a capability. A button fires them with `on.press: [{ "action": "runTool", "params": { … } }]`; a `watch` expression can fire the same list when a state path changes.
+
+`runTool` is the extension point. Anything app-specific — navigating, opening a drawer, writing to your database — is a host tool registered with `defineTool` in `VexaProvider`, not a new action baked into the library. If the host registered a tool under that name, the result lands at `/tools/<name>` and its `summary` or `error` goes to `/toast`. If it did not, the call is forwarded into the chat as a message so the model or a server tool can answer it instead.
+
+`submitForm` snapshots `/form` — falling back to `/ui/form` — into `/lastSubmit`, or into `statePath` when you set one, together with an `at` timestamp. `toast` writes `/toast` for a short confirmation.
+
+Params can be dynamic: `input` values accept `{ "$bindState": "/ui/query" }` to read what the user typed. Note that `/tools/*` is runtime-owned, so a spec can read a tool result from there but never write it.
+
+- [Host tools](/docs/concepts/host-tools): defining the tools `runTool` calls
+- [State](/docs/concepts/state): the paths these actions read and write
+
+{/* generated:start */}
+
+## runTool
+
+Call a host or server tool by name. input values may use $bindState from state paths.
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | Yes |  |
+| `input` | `Record<string, unknown> \| null` | No |  |
+
+## submitForm
+
+Snapshot form state into /lastSubmit (or statePath) after validateForm
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `statePath` | `string \| null` | No |  |
+
+## toast
+
+Set /toast message for a short confirmation callout
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `message` | `string` | Yes |  |
+
+{/* generated:end */}

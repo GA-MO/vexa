@@ -1,0 +1,47 @@
+---
+title: "Separator"
+description: "Horizontal divider"
+---
+
+## Use it when
+
+You want a plain rule between two blocks and nothing else — most often between an explanation and the buttons that follow it. If the break needs a caption such as "or" or "Today", [Divider](/docs/catalog/Divider) is the one that takes a `label`. For an unlabelled rule the two overlap, and neither the catalog nor the prompt declares a winner; note only that the prompt's layout rules mention [Divider](/docs/catalog/Divider) by name and not `Separator`.
+
+## Prompt hints
+
+- "put a line before the buttons"
+- "separate the summary from the actions"
+- "add a rule between those two sections"
+
+There are no props to steer — the schema is an empty object and the component renders a single bordered `<hr>` with no margin of its own. All the space around it therefore comes from the parent [Stack](/docs/catalog/Stack) or [Column](/docs/catalog/Column) gap, which is why it looks tighter than [Divider](/docs/catalog/Divider) in the same position.
+
+## Related
+
+- [Divider](/docs/catalog/Divider) — same idea, plus an optional centred label and its own margin.
+- [Stack](/docs/catalog/Stack) — supplies the spacing around the rule.
+- [Button](/docs/catalog/Button) — the action group a separator usually precedes.
+- [Card](/docs/catalog/Card) — an alternative when the two blocks should be visually separate surfaces.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Separator",
+  "props": {}
+}
+```
+
+## Live example
+
+<Example id="separator-button" />
+
+{/* generated:end */}

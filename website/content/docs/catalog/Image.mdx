@@ -1,0 +1,56 @@
+---
+title: "Image"
+description: "Image with optional caption"
+---
+
+## Use it when
+
+One picture is the point of the answer — a product shot, a screenshot, a room. More than one picture becomes a Carousel with `variant="image"`, a clip is Video, a location is Map, and a decorative glyph is Icon. Because no information may live only in a picture, the caption and surrounding text still have to carry the answer.
+
+## Prompt hints
+
+- "Show me a photo of the room"
+- "What does the dashboard look like?"
+- "Show the product image with a caption"
+
+`alt` is required by the schema, not optional. `aspect` picks a fixed frame — `wide` (16:9, the default), `square`, or `tall` (3:4) — and the file is drawn with `object-cover`, so an image that does not match is cropped to fill rather than letterboxed; there is no width, height, or fit prop. `caption` renders as a bordered figcaption strip under the frame and is the right place for the source or the context.
+
+## Related
+
+- [Carousel](/docs/catalog/Carousel) — several images as a swipeable strip
+- [Video](/docs/catalog/Video) — a clip instead of a still
+- [Avatar](/docs/catalog/Avatar) — when the picture is a person
+- [Card](/docs/catalog/Card) — the titled panel to put an image and its text into
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `src` | `string` | Yes | Example: `"https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80"` |
+| `alt` | `string` | Yes | Example: `"Analytics dashboard"` |
+| `caption` | `string \| null` | No | Example: `"Sample product visual"` |
+| `aspect` | `"wide" \| "square" \| "tall" \| null` | No | Example: `"wide"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Image",
+  "props": {
+    "src": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
+    "alt": "Analytics dashboard",
+    "caption": "Sample product visual",
+    "aspect": "wide"
+  }
+}
+```
+
+## Live example
+
+<Example id="image" />
+
+{/* generated:end */}

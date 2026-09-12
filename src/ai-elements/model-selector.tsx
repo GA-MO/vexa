@@ -8,14 +8,14 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from "agentic-ui/ui/command";
+} from "vexa/ui/command";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
-} from "agentic-ui/ui/dialog";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/dialog";
+import { cn } from "vexa/lib/utils";
 import type { ComponentProps, ReactNode } from "react";
 
 export type ModelSelectorProps = ComponentProps<typeof Dialog>;

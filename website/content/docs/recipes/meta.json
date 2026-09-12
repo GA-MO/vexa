@@ -1,0 +1,4 @@
+{
+  "title": "Recipes",
+  "pages": ["dashboard", "order-status", "receipt", "booking", "recommendation", "trend", "i18n", "dark-mode", "per-tenant-models"]
+}

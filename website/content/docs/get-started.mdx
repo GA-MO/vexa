@@ -1,0 +1,106 @@
+---
+title: Get started
+description: Install Vexa, wrap your app in VexaProvider, add the chat route with a models registry, and send a first prompt in about five minutes.
+---
+
+## Install
+
+Vexa is a React 19 library built on the AI SDK (`ai` 6) and json-render. It is not published to npm yet, so depend on it by path and bring one AI SDK provider package of your choice.
+
+```json title="package.json"
+{
+  "dependencies": {
+    "vexa": "file:../vexa",
+    "ai": "^6.0.84",
+    "zod": "^4.3.6",
+    "@ai-sdk/anthropic": "^2.0.0"
+  }
+}
+```
+
+Import the token stylesheet once. It declares the color tokens, the chart palette, and the dark palette that every catalog component and the chat chrome read.
+
+```css title="app/globals.css"
+@import "tailwindcss";
+@import "vexa/styles.css";
+```
+
+## Wrap your app in a client component
+
+`VexaProvider` and `VexaChatOverlay` use hooks, so they live in a client component. Render the overlay inside the provider so it inherits `api`, the `chat` defaults, and any host tools you add later.
+
+```tsx title="app/providers.tsx"
+"use client";
+
+import { VexaProvider } from "vexa/react";
+import { VexaChatOverlay } from "vexa/chat";
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <VexaProvider format={{ locale: "en-US", currency: "USD" }} chat={{ title: "Acme assistant" }}>
+      {children}
+      <VexaChatOverlay />
+    </VexaProvider>
+  );
+}
+```
+
+```tsx title="app/layout.tsx"
+import { Providers } from "./providers";
+import "./globals.css";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+## Add the chat route
+
+`createVexaHandler` returns `GET` and `POST`. It requires a `models` registry of AI SDK `LanguageModel` instances: Vexa never imports a provider and never reads an API key. Pass the registry as a function so the key is read on the first request instead of at build time.
+
+```ts title="lib/models.ts"
+import { createAnthropic } from "@ai-sdk/anthropic";
+import type { ModelRegistry } from "vexa/server";
+
+export function models(): ModelRegistry {
+  const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return {
+    "claude-sonnet-4": {
+      model: () => anthropic("claude-sonnet-4-20250514"),
+      name: "Claude Sonnet 4",
+      maxTokens: 200_000,
+    },
+  };
+}
+```
+
+```ts title="app/api/chat/route.ts"
+import { createVexaHandler } from "vexa/server";
+import { models } from "@/lib/models";
+
+export const maxDuration = 60;
+export const { GET, POST } = createVexaHandler({ models });
+```
+
+`GET /api/chat` publishes the registry as `{ models, default }` and the chat picker fetches it on mount, so model ids live in one place. `POST` streams the reply. A request that names an id outside the registry gets a 400.
+
+## Send a first prompt
+
+Start the app, press the launcher in the bottom-right corner, and type:
+
+> Compare the Free, Pro and Enterprise plans in a table and recommend one for a team of 8.
+
+The assistant streams a one-sentence reply, then JSONL patches that the panel renders as catalog components (a Table, then a Callout) while they arrive. Text-only answers stay text: the model emits UI only when it helps.
+
+## Related
+
+- [Spec stream](/docs/concepts/spec-stream): what those JSONL lines are and how they become components
+- [Provider](/docs/host/provider): every `VexaProvider` prop
+- [Host tools](/docs/host/host-tools): let the model navigate and read page state
+- [Handler](/docs/server/handler): persona, server tools, MCP, and limits

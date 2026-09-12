@@ -1,0 +1,52 @@
+---
+title: "Badge"
+description: "Compact status pill"
+---
+
+## Use it when
+
+One item has a state worth naming in a word or two — Shipped, Popular, Overdue — and that state should ride along next to a title or value rather than take its own line. If the state needs a sentence of explanation it is an [Alert](/docs/catalog/Alert); if it is a number with a trend it is a [Metric](/docs/catalog/Metric). A [Carousel](/docs/catalog/Carousel) card already has its own `badge` field, so do not add one inside.
+
+## Prompt hints
+
+- "mark which orders have shipped"
+- "flag the recommended plan"
+- "show each ticket's priority next to its title"
+
+`tone` is the only styling prop and it offers four values — `neutral` (the default), `success`, `warning`, `danger`. There is deliberately no `info` tone here, unlike [Alert](/docs/catalog/Alert) and [Callout](/docs/catalog/Callout). The badge renders inline at `text-xs`, so it only lands where you expect inside a [Row](/docs/catalog/Row); `justify="between"` is what pins it to the right of a label.
+
+## Related
+
+- [Row](/docs/catalog/Row) — puts the badge on the same line as its subject.
+- [Alert](/docs/catalog/Alert) — when the status needs a sentence.
+- [Metric](/docs/catalog/Metric) — when the status is really a number and a trend.
+- [Icon](/docs/catalog/Icon) — a lighter marker when no text is needed.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | Yes | Example: `"Live"` |
+| `tone` | `"neutral" \| "success" \| "warning" \| "danger" \| null` | No | Example: `"success"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Badge",
+  "props": {
+    "label": "Live",
+    "tone": "success"
+  }
+}
+```
+
+## Live example
+
+<Example id="badge" />
+
+{/* generated:end */}

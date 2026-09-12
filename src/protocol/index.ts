@@ -27,11 +27,19 @@ export type SpecPatch = {
   from?: string;
 };
 
-export type AgenticDataParts = {
-  [SPEC_DATA_PART]: SpecDataPart;
+export type VexaSecurityNotice = {
+  kind: "injection";
+  tool: string;
+  rules: string[];
+  excerpt: string;
 };
 
-export type AgenticMessage = UIMessage<unknown, AgenticDataParts>;
+export type VexaDataParts = {
+  [SPEC_DATA_PART]: SpecDataPart;
+  notice: VexaSecurityNotice;
+};
+
+export type VexaMessage = UIMessage<unknown, VexaDataParts>;
 
 export const COMPONENT_TYPES = [
   "Stack",

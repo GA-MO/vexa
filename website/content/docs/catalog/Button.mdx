@@ -1,0 +1,52 @@
+---
+title: "Button"
+description: "Action button. Prefer primary for the main CTA."
+---
+
+## Use it when
+
+The answer ends in something the user can do: confirm, run a tool, submit the values they just typed. A button carries no behaviour in its props — it emits `press`, and what happens is whatever `on.press` declares. The only custom actions that exist are `submitForm`, `toast` and `runTool`, and anything host-specific goes through `runTool`, never a new action name. Inside a [Form](/docs/catalog/Form) you do not need one: `Form` renders its own submit control.
+
+## Prompt hints
+
+- "give me a confirm button"
+- "let me start the migration from here"
+- "add a cancel option next to it"
+
+`variant` defaults to `primary`, the gradient CTA; `secondary` is the bordered version. The catalog tells the model to keep `primary` for the main call to action, so a pair of buttons should read as one of each. Pressing a button that calls a write or destructive tool shows an approval card first, and the press reaches the model as an explicit action message, not as free text.
+
+## Related
+
+- [Actions](/docs/actions) — the parameters `runTool`, `submitForm` and `toast` accept.
+- [State](/docs/concepts/state) — where `$bindState` values a button submits actually live.
+- [Form](/docs/catalog/Form) — brings its own submit button and field binding.
+- [Row](/docs/catalog/Row) — lay out two buttons with `justify="end"`.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | Yes | Example: `"Continue"` |
+| `variant` | `"primary" \| "secondary" \| null` | No | Example: `"primary"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Button",
+  "props": {
+    "label": "Continue",
+    "variant": "primary"
+  }
+}
+```
+
+## Live example
+
+<Example id="separator-button" />
+
+{/* generated:end */}

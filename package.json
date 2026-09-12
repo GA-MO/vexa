@@ -1,5 +1,5 @@
 {
-  "name": "agentic-ui",
+  "name": "vexa",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,6 +7,8 @@
     ".": "./src/index.ts",
     "./protocol": "./src/protocol/index.ts",
     "./core": "./src/core/index.ts",
+    "./examples": "./src/examples/index.ts",
+    "./server": "./src/server/index.ts",
     "./eval": "./src/eval/index.ts",
     "./react": "./src/react/index.ts",
     "./chat": "./src/chat/index.ts",
@@ -19,7 +21,11 @@
     "dev": "bun run --cwd demo dev",
     "build": "bun run --cwd demo build",
     "start": "bun run --cwd demo start",
-    "typecheck": "tsc --noEmit && bun run --cwd demo typecheck",
+    "dev:site": "bun run --cwd website dev",
+    "build:site": "bun run --cwd website build",
+    "start:site": "bun run --cwd website start",
+    "typecheck": "tsc --noEmit && bun run --cwd demo typecheck && bun run --cwd website typecheck",
+    "generate:reference": "bun run scripts/generate-reference.ts",
     "mcp:build": "bunx --bun vite build --config mcp/vite.config.ts",
     "mcp:stdio": "bun run mcp/server.ts --stdio",
     "mcp:http": "bun run mcp/server.ts"
@@ -29,6 +35,7 @@
     "react-dom": "^19.0.0"
   },
   "dependencies": {
+    "@ai-sdk/mcp": "^2.0.48",
     "@ai-sdk/react": "^3.0.84",
     "@base-ui/react": "^1.8.0",
     "@json-render/core": "^0.20.0",
@@ -39,7 +46,6 @@
     "@json-render/react": "^0.20.0",
     "@modelcontextprotocol/ext-apps": "^1.2.0",
     "@modelcontextprotocol/sdk": "^1.27.1",
-    "@openrouter/ai-sdk-provider": "^2.0.0",
     "@radix-ui/react-use-controllable-state": "^1.2.6",
     "@streamdown/cjk": "^1.0.3",
     "@streamdown/code": "^1.1.1",

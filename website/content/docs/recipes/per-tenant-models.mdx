@@ -1,0 +1,110 @@
+---
+title: Per-tenant models
+description: Resolve the provider, the API key, and the allowed model ids per request with a model resolver, keep the picker list from a models registry, and give each tenant its own persona.
+---
+
+## Goal
+
+A multi-tenant app bills each customer for their own model usage, or lets them bring their own key. The route has to pick the provider client per request, refuse ids a tenant did not pay for, and still show a picker. `createVexaHandler` supports this with two fields used together: a `models` registry that `GET` publishes, and a `model` resolver that `POST` runs with the parsed body and the `Request`.
+
+## What the user asks
+
+Nothing changes for the user. The same prompts produce the same UI on whichever model the tenant gets:
+
+- "สรุปยอดขายไตรมาสนี้ให้หน่อย เทียบกับปีที่แล้ว"
+- "Where is order A-1042?"
+
+## Live example
+
+<Example id="dashboard" />
+
+The output does not depend on the tenant. What differs is the key that paid for it and the list in the picker.
+
+## How it works
+
+### The resolver
+
+`model` accepts `(body, req) => LanguageModel | undefined | Promise<…>`. Return `undefined` and the request gets `400 No model available for this request`. With a resolver, `body.model` is not checked against the registry, so the resolver validates it:
+
+```ts title="app/api/chat/route.ts"
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createVexaHandler, type ModelRegistry } from "vexa/server";
+import { tenantFromRequest } from "@/lib/tenants";
+
+const MODEL_IDS = {
+  "claude-sonnet-4": { upstream: "claude-sonnet-4-20250514", name: "Claude Sonnet 4", maxTokens: 200_000 },
+  "claude-haiku-3-5": { upstream: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku", maxTokens: 200_000 },
+} as const;
+
+type ModelId = keyof typeof MODEL_IDS;
+
+const DEFAULT_MODEL: ModelId = "claude-sonnet-4";
+
+function isModelId(id: string | undefined): id is ModelId {
+  return id !== undefined && id in MODEL_IDS;
+}
+
+const platform = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const models: ModelRegistry = Object.fromEntries(
+  Object.entries(MODEL_IDS).map(([id, { upstream, name, maxTokens }]) => [
+    id,
+    { model: () => platform(upstream), name, maxTokens },
+  ]),
+);
+
+export const { GET, POST } = createVexaHandler({
+  models,
+  model: async (body, req) => {
+    const tenant = await tenantFromRequest(req);
+    if (!tenant) return undefined;
+    const id = isModelId(body.model) && tenant.allowedModels.includes(body.model) ? body.model : DEFAULT_MODEL;
+    const anthropic = createAnthropic({ apiKey: tenant.anthropicKey ?? process.env.ANTHROPIC_API_KEY });
+    return anthropic(MODEL_IDS[id].upstream);
+  },
+});
+```
+
+`GET /api/chat` returns the two entries with their names and context sizes, so the picker fills as usual. `POST` never touches the registry: `resolveModel` calls the resolver first and returns whatever it produces. The lazy `model: () => platform(upstream)` entries are therefore never instantiated; they exist for the list.
+
+`tenantFromRequest` is yours. Read a session cookie, a JWT, or a header, and return `{ allowedModels, anthropicKey }` from your database. Keys never come from the client: the request body is `.strict()` and has no field for one.
+
+### Per-tenant picker
+
+The picker shows every registry entry. To hide models a tenant cannot use, pass `chat.models` on the provider from your tenant record; the ids must still be registry ids.
+
+```tsx title="app/providers.tsx"
+<VexaProvider chat={{ models: tenant.allowedModels.map((id) => MODEL_INFO[id]), defaultModel: tenant.allowedModels[0] }}>
+```
+
+A tenant that edits that list in the browser gains nothing: the resolver falls back to `DEFAULT_MODEL` for any id outside `allowedModels`.
+
+### Per-tenant persona
+
+`persona` can be a function of `{ today, context, tools, req }`. It is synchronous, so read something already on the request (a header your auth middleware set, or a tenant cached by `tenantFromRequest`) rather than awaiting a database:
+
+```ts title="app/api/chat/route.ts"
+persona: ({ today, req }) => {
+  const tenant = TENANTS[req?.headers.get("x-tenant-id") ?? ""];
+  return [
+    `You are the assistant built into ${tenant?.name ?? "this app"}.`,
+    `Today is ${today}.`,
+    tenant?.glossary ?? "",
+  ];
+},
+```
+
+### Metering
+
+Wrap the model with AI SDK middleware to record usage per tenant before returning it from the resolver, or read usage from the stream in your own logging. The handler does not meter; it only chooses.
+
+## Prompt hints
+
+Nothing tenant-specific belongs in `rules`. Keep composition rules global and put tenant facts (name, glossary, allowed actions) in `persona`, where they sit in the first prompt layer and cannot follow the library invariants.
+
+## Related
+
+- [Models](/docs/server/models): registry, lazy entries, resolution order
+- [Models and picker](/docs/host/models-and-picker): what `GET` returns and how `chat.models` narrows it
+- [Persona and rules](/docs/server/persona-and-rules): `PersonaContext`
+- [Security](/docs/security): why ids and keys stay on the server

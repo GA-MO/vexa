@@ -1,18 +1,18 @@
 "use client";
 
-import { Badge } from "agentic-ui/ui/badge";
-import type { CarouselApi } from "agentic-ui/ui/carousel";
+import { Badge } from "vexa/ui/badge";
+import type { CarouselApi } from "vexa/ui/carousel";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-} from "agentic-ui/ui/carousel";
+} from "vexa/ui/carousel";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "agentic-ui/ui/hover-card";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/hover-card";
+import { cn } from "vexa/lib/utils";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import {

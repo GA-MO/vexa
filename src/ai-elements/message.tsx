@@ -1,17 +1,17 @@
 "use client";
 
-import { Button } from "agentic-ui/ui/button";
+import { Button } from "vexa/ui/button";
 import {
   ButtonGroup,
   ButtonGroupText,
-} from "agentic-ui/ui/button-group";
+} from "vexa/ui/button-group";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "agentic-ui/ui/tooltip";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/tooltip";
+import { cn } from "vexa/lib/utils";
 import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
@@ -54,7 +54,7 @@ export const MessageContent = ({
 }: MessageContentProps) => (
   <div
     className={cn(
-      "flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
+      "flex w-fit min-w-0 max-w-full flex-col gap-2 text-sm",
       "group-[.is-user]:ml-auto group-[.is-user]:rounded-2xl group-[.is-user]:bg-primary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-primary-foreground",
       "group-[.is-assistant]:text-foreground",
       className
@@ -327,10 +327,13 @@ export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
     <Streamdown
       className={cn(
-        "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        "size-full min-w-0 [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        "[&_pre]:whitespace-pre-wrap [&_pre]:wrap-anywhere [&_pre_code]:text-xs",
+        "[&_h1]:text-xl [&_h2]:text-lg [&_h3]:text-base [&_h4]:text-sm",
         className
       )}
       plugins={streamdownPlugins}
+      lineNumbers={false}
       {...props}
     />
   ),

@@ -1,0 +1,85 @@
+---
+title: Receipt
+description: Answer "show me the bill" with LineItems for the lines and totals, IconText rows for pickup details, and a Reorder button, with amounts formatted by the provider.
+---
+
+## Goal
+
+Turn an order record into something the user can read like a paper receipt: a heading with the paid status, the line items with quantities and amounts, the subtotal, tax, and total, and where and when to pick it up. `LineItems` does the arithmetic layout; the host's `format` decides how money prints.
+
+## What the user asks
+
+- "ขอสรุปบิลออเดอร์เมื่อกี้"
+- "Show me the receipt for order C-3381"
+- "How much was the coffee order, with tax?"
+
+## Live example
+
+<Example id="receipt" />
+
+## How it works
+
+A read tool returns the order. `LineItems` takes `items` (`name`, `detail`, `qty`, `amount`) and `summary` lines with an optional `emphasis: "total"`. The trailing Buttons call host tools through `runTool`.
+
+```ts title="app/api/chat/route.ts"
+import { tool } from "ai";
+import { z } from "zod";
+import { createVexaHandler } from "vexa/server";
+import { models } from "@/lib/models";
+import { findReceipt } from "@/lib/orders";
+
+const tools = {
+  getReceipt: tool({
+    description: "Line items, subtotal, tax, total, payment status, and pickup details of one order.",
+    inputSchema: z.object({ orderId: z.string() }),
+    execute: async ({ orderId }) => findReceipt(orderId),
+  }),
+};
+
+export const { GET, POST } = createVexaHandler({
+  models,
+  tools,
+  rules: [
+    "For a receipt use a Stack: a Row with Heading 'Receipt #id' and a Badge for the payment status, then LineItems with every line and summary rows for subtotal, tax and total (emphasis total), then IconText rows for pickup location, time and invoice email.",
+    "Send currency null on LineItems so the host formats amounts.",
+  ],
+});
+```
+
+The live example sets `currency: "฿"` explicitly, which makes `LineItems` print the symbol followed by `formatter.number(value, 2)`. With `currency: null` it uses `formatter.money`, so the provider's locale and currency apply to every amount:
+
+```tsx title="app/providers.tsx"
+<VexaProvider format={{ locale: "th-TH", currency: "THB" }}>
+```
+
+The Reorder button is the natural place for a host tool with confirmation, since it changes the cart:
+
+```tsx title="tools.ts"
+import { z } from "zod";
+import { defineTool } from "vexa/react";
+
+export const reorder = defineTool({
+  description: "Add every item of a past order to the cart again.",
+  input: z.object({ orderId: z.string() }),
+  confirm: true,
+  run: async ({ orderId }) => {
+    await fetch(`/api/cart/reorder/${orderId}`, { method: "POST" });
+    return { ok: true, summary: `Order ${orderId} is back in your cart` };
+  },
+});
+```
+
+Register it as `tools={{ reorder }}` on the provider. The `summary` is copied to `/toast`, so an `Alert` with `visible: { "$state": "/toast" }` in the spec can confirm the result without another model turn.
+
+## Prompt hints
+
+- Quantities matter: "qty is a number; use null for fees such as delivery".
+- Keep details short: "detail is one line, for example the milk option or the delivery radius".
+- If the store emails invoices, name it: "the invoice email is in the tool output under invoiceEmail; show it as an IconText with icon receipt".
+
+## Related
+
+- [LineItems](/docs/catalog/LineItems), [IconText](/docs/catalog/IconText), [Badge](/docs/catalog/Badge)
+- [Format and functions](/docs/host/format-and-functions): what `money` and `number` print
+- [Order status](/docs/recipes/order-status): the question that usually comes first
+- [Actions](/docs/actions): `toast` and `runTool`

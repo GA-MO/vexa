@@ -8,7 +8,7 @@ import {
   AttachmentPreview,
   AttachmentRemove,
   Attachments,
-} from "agentic-ui/ai-elements/attachments";
+} from "vexa/ai-elements/attachments";
 import {
   Context,
   ContextCacheUsage,
@@ -20,7 +20,7 @@ import {
   ContextOutputUsage,
   ContextReasoningUsage,
   ContextTrigger,
-} from "agentic-ui/ai-elements/context";
+} from "vexa/ai-elements/context";
 import {
   ModelSelector,
   ModelSelectorContent,
@@ -32,7 +32,7 @@ import {
   ModelSelectorLogo,
   ModelSelectorName,
   ModelSelectorTrigger,
-} from "agentic-ui/ai-elements/model-selector";
+} from "vexa/ai-elements/model-selector";
 import {
   PromptInputActionAddAttachments,
   PromptInputActionAddScreenshot,
@@ -46,9 +46,32 @@ import {
   PromptInputTextarea,
   PromptInputTools,
   usePromptInputAttachments,
-} from "agentic-ui/ai-elements/prompt-input";
-import { Button } from "agentic-ui/ui/button";
-import { MODELS } from "./constants";
+} from "vexa/ai-elements/prompt-input";
+import { Button } from "vexa/ui/button";
+import { MODELS, type ChatModel } from "./constants";
+
+const PROVIDER_LABELS: Record<string, string> = {
+  google: "Google",
+  anthropic: "Anthropic",
+  openai: "OpenAI",
+  openrouter: "OpenRouter",
+  meta: "Meta",
+  mistral: "Mistral",
+  xai: "xAI",
+};
+
+function providerLabel(provider: string) {
+  return PROVIDER_LABELS[provider] ?? provider.charAt(0).toUpperCase() + provider.slice(1);
+}
+
+function groupByProvider(models: readonly ChatModel[]) {
+  const groups = new Map<string, ChatModel[]>();
+  for (const item of models) {
+    const label = providerLabel(item.provider);
+    groups.set(label, [...(groups.get(label) ?? []), item]);
+  }
+  return [...groups].map(([label, items]) => ({ label, models: items }));
+}
 
 function PromptInputAttachmentsDisplay() {
   const attachments = usePromptInputAttachments();
@@ -82,6 +105,7 @@ export function ChatComposer({
   usedTokens,
   maxTokens,
   usage,
+  models,
 }: {
   text: string;
   setText: (value: string) => void;
@@ -91,18 +115,23 @@ export function ChatComposer({
   usedTokens: number;
   maxTokens: number;
   usage: LanguageModelUsage;
+  models?: readonly ChatModel[];
 }) {
   const attachments = usePromptInputAttachments();
   const [modelOpen, setModelOpen] = useState(false);
-  const selected = MODELS.find((item) => item.id === model) ?? MODELS[0];
+  const modelOptions = models && models.length > 0 ? models : MODELS;
+  const selected = modelOptions.find((item) => item.id === model) ?? modelOptions[0];
 
   return (
     <>
-      <PromptInputHeader>
-        <PromptInputAttachmentsDisplay />
-      </PromptInputHeader>
+      {attachments.files.length > 0 ? (
+        <PromptInputHeader>
+          <PromptInputAttachmentsDisplay />
+        </PromptInputHeader>
+      ) : null}
       <PromptInputBody>
         <PromptInputTextarea
+          className="min-h-11 pt-3"
           onChange={(event) => setText(event.target.value)}
           placeholder="Ask for an answer or a UI..."
           value={text}
@@ -139,21 +168,24 @@ export function ChatComposer({
               <ModelSelectorInput placeholder="Search models..." />
               <ModelSelectorList>
                 <ModelSelectorEmpty>No models found.</ModelSelectorEmpty>
-                <ModelSelectorGroup heading="OpenRouter">
-                  {MODELS.map((item) => (
-                    <ModelSelectorItem
-                      key={item.id}
-                      onSelect={() => {
-                        setModel(item.id);
-                        setModelOpen(false);
-                      }}
-                      value={item.id}
-                    >
-                      <ModelSelectorLogo provider={item.provider} />
-                      <ModelSelectorName>{item.name}</ModelSelectorName>
-                    </ModelSelectorItem>
-                  ))}
-                </ModelSelectorGroup>
+                {groupByProvider(modelOptions).map((group) => (
+                  <ModelSelectorGroup className="flex flex-col gap-0.5" heading={group.label} key={group.label}>
+                    {group.models.map((item) => (
+                      <ModelSelectorItem
+                        data-checked={item.id === model}
+                        key={item.id}
+                        onSelect={() => {
+                          setModel(item.id);
+                          setModelOpen(false);
+                        }}
+                        value={item.id}
+                      >
+                        <ModelSelectorLogo provider={item.provider as never} />
+                        <ModelSelectorName>{item.name}</ModelSelectorName>
+                      </ModelSelectorItem>
+                    ))}
+                  </ModelSelectorGroup>
+                ))}
               </ModelSelectorList>
             </ModelSelectorContent>
           </ModelSelector>

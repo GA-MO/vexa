@@ -1,0 +1,91 @@
+---
+title: Models
+description: The server-side model registry, lazy entries that read keys on the first request, per-request resolvers for multi-tenant keys, and why no provider is bundled.
+---
+
+## Vexa never creates a provider
+
+The library does not import any provider package and never reads an environment variable. `createVexaHandler` requires `model` or a non-empty `models` registry of AI SDK `LanguageModel` instances and throws otherwise. The host owns the provider client, the key, and the env var names, so one deployment can use OpenRouter, another Anthropic, another a mix.
+
+## The registry
+
+```ts title="vexa/server"
+type ModelEntry =
+  | LanguageModel
+  | { model: LanguageModel | (() => LanguageModel); name?: string; provider?: string; maxTokens?: number };
+
+type ModelRegistry = Record<string, ModelEntry>;
+```
+
+Keys are the ids the client sends in `body.model`. The first key is the default. `name`, `provider`, and `maxTokens` are metadata for the picker; `provider` is inferred from the id when omitted and `maxTokens` defaults to 128,000.
+
+```ts title="lib/models.ts (mixed providers)"
+import { anthropic } from "@ai-sdk/anthropic";
+import { openai } from "@ai-sdk/openai";
+import type { ModelRegistry } from "vexa/server";
+
+export const models: ModelRegistry = {
+  "claude-sonnet-4": { model: anthropic("claude-sonnet-4-20250514"), name: "Claude Sonnet 4", maxTokens: 200_000 },
+  "gpt-4.1-mini": { model: openai("gpt-4.1-mini"), name: "GPT-4.1 Mini", maxTokens: 128_000 },
+};
+```
+
+## Lazy registry
+
+Pass a function so provider construction and env reads happen on the first request, not at import or build time. The function is called once and memoized. Per-entry `model: () => …` is lazy as well, so an unused model never instantiates.
+
+```ts title="demo/lib/models.ts"
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import type { ModelRegistry } from "vexa/server";
+
+const DEMO_MODELS = [
+  { id: "google/gemini-3.1-flash-lite", name: "Gemini 3.1 Flash Lite", maxTokens: 1_000_000 },
+  { id: "anthropic/claude-sonnet-4", name: "Claude Sonnet 4", maxTokens: 200_000 },
+] as const;
+
+export function demoModels(): ModelRegistry {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY is missing in demo/.env.local");
+  const provider = createOpenRouter({ apiKey, compatibility: "strict" });
+  return Object.fromEntries(DEMO_MODELS.map(({ id, name, maxTokens }) => [id, { model: () => provider(id), name, maxTokens }]));
+}
+```
+
+```ts title="app/api/chat/route.ts"
+export const { GET, POST } = createVexaHandler({
+  models: demoModels,
+  providerOptions: { openrouter: { reasoning: { effort: "medium" } } },
+});
+```
+
+## Per-request resolver
+
+`model` can be a function `(body, req) => LanguageModel | undefined`. It sees the parsed body and the `Request`, so a host can choose a provider or an API key from a session cookie or a tenant header. Returning `undefined` yields `400 No model available for this request`.
+
+```ts title="tenant keys"
+export const { POST } = createVexaHandler({
+  model: async (body, req) => {
+    const tenant = await tenantFrom(req.headers.get("cookie"));
+    if (!tenant) return undefined;
+    return createAnthropic({ apiKey: tenant.anthropicKey })("claude-sonnet-4-20250514");
+  },
+});
+```
+
+With a resolver, `body.model` is yours to interpret; the handler does not check it against a registry, and `GET` returns an empty list.
+
+## Resolution order
+
+| Config | `body.model` | Result |
+|---|---|---|
+| `model` is a resolver | passed to the resolver | whatever it returns |
+| `model` is a `LanguageModel` | ignored | that model |
+| `models` registry | id in registry | that entry |
+| `models` registry | missing or empty | first key |
+| `models` registry | unknown id | `400` |
+
+## Related
+
+- [Models and picker](/docs/host/models-and-picker): how the client fetches this list
+- [Handler](/docs/server/handler): all config fields
+- [Security](/docs/security): why the client cannot choose an unlisted model

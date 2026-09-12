@@ -1,0 +1,52 @@
+---
+title: "Text"
+description: "Body copy"
+---
+
+## Use it when
+
+A block of generated UI needs a sentence of explanation attached to it — what a chart shows, an assumption behind a number, a caption under a total. It is not where the reply itself goes: the assistant writes prose in the chat message and emits UI beside it, so duplicating the answer in a `Text` element just says everything twice. Points that read as a sequence belong in [List](/docs/catalog/List), risks in [Alert](/docs/catalog/Alert), and the single key takeaway in [Callout](/docs/catalog/Callout).
+
+## Prompt hints
+
+- "explain what this chart is showing"
+- "add a one-line note under the total"
+- "say why the forecast assumes flat churn"
+
+`muted` is the only lever: false (the default) renders near-solid foreground text, true switches to `muted-foreground` for secondary context. Content is rendered as plain text at `text-sm` with `whitespace-pre-wrap`, so line breaks you put in `content` survive, but Markdown does not — asterisks and backticks appear literally.
+
+## Related
+
+- [Heading](/docs/catalog/Heading) — the label above the paragraph.
+- [List](/docs/catalog/List) — when the prose is really three bullet points.
+- [Alert](/docs/catalog/Alert) — for a warning rather than a note.
+- [Callout](/docs/catalog/Callout) — for the one sentence that should stand out.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `content` | `string` | Yes | Example: `"Here is a short summary."` |
+| `muted` | `boolean \| null` | No | Example: `false` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Text",
+  "props": {
+    "content": "Here is a short summary.",
+    "muted": false
+  }
+}
+```
+
+## Live example
+
+<Example id="heading-text" />
+
+{/* generated:end */}

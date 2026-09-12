@@ -398,7 +398,7 @@ export const catalog = defineCatalog(schema, {
       example: {
         items: [
           {
-            title: "What is Agentic UI?",
+            title: "What is Vexa?",
             content: "Chat that can emit constrained generative UI.",
           },
         ],
@@ -700,19 +700,20 @@ export const catalog = defineCatalog(schema, {
     },
   },
   actions: {
+    runTool: {
+      params: z.object({
+        name: z.string(),
+        input: z.record(z.string(), z.unknown()).nullable(),
+      }),
+      description:
+        "Call a host or server tool by name. input values may use $bindState from state paths.",
+    },
     submitForm: {
       params: z.object({
         statePath: z.string().nullable(),
       }),
       description:
         "Snapshot form state into /lastSubmit (or statePath) after validateForm",
-    },
-    loadCities: {
-      params: z.object({
-        country: z.string(),
-      }),
-      description:
-        "Load city options for a country into /availableCities (watcher demo)",
     },
     toast: {
       params: z.object({

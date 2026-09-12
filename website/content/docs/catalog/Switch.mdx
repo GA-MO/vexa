@@ -1,0 +1,58 @@
+---
+title: "Switch"
+description: "Toggle switch for on/off settings. Bind with checked: { $bindState: '/settings/notify' }."
+---
+
+## Use it when
+
+A setting that is on or off and takes effect as soon as it is flipped: notifications, delivery versus pickup, a mode. Switch and Checkbox accept identical props; the prompt separates them by meaning and the layout follows — Switch puts label and hint on the left and the control on the right, so a column of them reads as a settings panel, while Checkbox reads as an opt-in beside its text. A choice between named options is RadioGroup or Select.
+
+## Prompt hints
+
+- "Turn on the morning digest"
+- "Let me switch between delivery and pickup"
+- "Show me a settings panel for my notifications"
+
+`checked: { "$bindState": "/ui/notify" }` binds two-way through `useBoundProp`, which makes a Switch a good driver for `visible` on the elements it reveals. Keep the path under `/ui/*`: `/tools/*` and `/host/*` are runtime-owned and spec writes there are dropped with a warning. The control is a `role="switch"` button labelled by `label`, so `hint` is free to explain what "off" means.
+
+## Related
+
+- [Checkbox](/docs/catalog/Checkbox) — the same boolean as an opt-in
+- [RadioGroup](/docs/catalog/RadioGroup) — two to six named options instead of on/off
+- [Divider](/docs/catalog/Divider) — a labelled rule to group settings rows
+- [State](/docs/concepts/state) — `visible` conditions and `watch` driven by a bound value
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | Yes | Example: `"Email notifications"` |
+| `name` | `string` | Yes | Example: `"notify"` |
+| `hint` | `string \| null` | No | Example: `"Send a digest every morning"` |
+| `checked` | `boolean \| null` | No | Example: `true` |
+| `disabled` | `boolean \| null` | No | Example: `false` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Switch",
+  "props": {
+    "label": "Email notifications",
+    "name": "notify",
+    "hint": "Send a digest every morning",
+    "checked": true,
+    "disabled": false
+  }
+}
+```
+
+## Live example
+
+<Example id="checkbox-switch" />
+
+{/* generated:end */}

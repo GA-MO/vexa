@@ -39,6 +39,9 @@ import {
   useStateBinding,
 } from "@json-render/react";
 import { cn } from "./cn";
+import { useVexaFormat } from "./host";
+import type { Formatter } from "./format";
+
 type StackProps = {
   direction?: "vertical" | "horizontal" | null;
   gap?: "sm" | "md" | "lg" | null;
@@ -87,16 +90,16 @@ export function Card({
 }) {
   const hasChildren = Children.toArray(children).length > 0;
   return (
-    <section className="w-full min-w-0 rounded-xl border border-slate-200/80 bg-white p-3 shadow-[0_10px_30px_-12px_rgba(79,70,229,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-16px_rgba(79,70,229,0.35)] @md/agentic:p-4">
+    <section className="w-full min-w-0 rounded-xl border border-border/80 bg-card p-3 shadow-[0_10px_30px_-12px_rgba(79,70,229,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-16px_rgba(79,70,229,0.35)] @md/vexa:p-4">
       {(props.title || props.description) && (
         <header className={cn("space-y-0.5", hasChildren && "mb-3")}>
           {props.title ? (
-            <h3 className="text-base font-semibold tracking-tight text-slate-900">
+            <h3 className="text-base font-semibold tracking-tight text-foreground">
               {props.title}
             </h3>
           ) : null}
           {props.description ? (
-            <p className="text-sm text-slate-500">{props.description}</p>
+            <p className="text-sm text-muted-foreground">{props.description}</p>
           ) : null}
         </header>
       )}
@@ -112,12 +115,12 @@ type GridProps = {
   gap?: "sm" | "md" | "lg" | null;
 };
 
-/** Columns follow SpecView `@container/agentic`, not the viewport — chat panels stay ~1 col. */
+/** Columns follow SpecView `@container/vexa`, not the viewport — chat panels stay ~1 col. */
 const columnClass = {
   "1": "grid-cols-1",
-  "2": "grid-cols-1 @md/agentic:grid-cols-2",
-  "3": "grid-cols-1 @md/agentic:grid-cols-2 @2xl/agentic:grid-cols-3",
-  "4": "grid-cols-1 @md/agentic:grid-cols-2 @xl/agentic:grid-cols-3 @3xl/agentic:grid-cols-4",
+  "2": "grid-cols-1 @md/vexa:grid-cols-2",
+  "3": "grid-cols-1 @md/vexa:grid-cols-2 @2xl/vexa:grid-cols-3",
+  "4": "grid-cols-1 @md/vexa:grid-cols-2 @xl/vexa:grid-cols-3 @3xl/vexa:grid-cols-4",
 } as const;
 
 export function Grid({
@@ -151,8 +154,8 @@ type HeadingProps = {
 export function Heading({ props }: { props: HeadingProps }) {
   const level = props.level ?? "2";
   const className = cn(
-    "font-semibold tracking-tight text-slate-900",
-    level === "1" && "text-xl bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent",
+    "font-semibold tracking-tight text-foreground",
+    level === "1" && "text-xl bg-gradient-to-r from-primary to-brand-violet bg-clip-text text-transparent",
     level === "2" && "text-lg",
     level === "3" && "text-base",
   );
@@ -172,7 +175,7 @@ export function Text({ props }: { props: TextProps }) {
     <p
       className={cn(
         "text-sm leading-relaxed whitespace-pre-wrap",
-        props.muted ? "text-slate-500" : "text-slate-700",
+        props.muted ? "text-muted-foreground" : "text-foreground/85",
       )}
     >
       {props.content}
@@ -188,25 +191,25 @@ type MetricProps = {
 };
 
 const trendClass = {
-  up: "text-emerald-600",
-  down: "text-rose-600",
-  neutral: "text-slate-500",
+  up: "text-success",
+  down: "text-danger",
+  neutral: "text-muted-foreground",
 } as const;
 
 export function Metric({ props }: { props: MetricProps }) {
   return (
-    <div className="min-w-0 rounded-xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/60 p-2.5 @md/agentic:p-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 break-words">
+    <div className="min-w-0 rounded-xl border border-primary/15 bg-gradient-to-br from-card to-primary/5 p-2.5 @md/vexa:p-3">
+      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground break-words">
         {props.label}
       </p>
-      <p className="mt-0.5 text-lg font-semibold text-slate-900 break-words @md/agentic:text-xl">
+      <p className="mt-0.5 text-lg font-semibold text-foreground break-words @md/vexa:text-xl">
         {props.value}
       </p>
       {props.detail ? (
         <p
           className={cn(
             "mt-1 text-xs font-medium break-words",
-            props.trend ? trendClass[props.trend] : "text-slate-500",
+            props.trend ? trendClass[props.trend] : "text-muted-foreground",
           )}
         >
           {props.detail}
@@ -222,10 +225,10 @@ type BadgeProps = {
 };
 
 const badgeTone = {
-  neutral: "bg-slate-100 text-slate-700",
-  success: "bg-emerald-50 text-emerald-700",
-  warning: "bg-amber-50 text-amber-700",
-  danger: "bg-rose-50 text-rose-700",
+  neutral: "bg-muted text-foreground/85",
+  success: "bg-success/10 text-success",
+  warning: "bg-warning/10 text-warning",
+  danger: "bg-danger/10 text-danger",
 } as const;
 
 export function Badge({ props }: { props: BadgeProps }) {
@@ -249,10 +252,10 @@ type AlertProps = {
 };
 
 const alertTone = {
-  info: "border-indigo-200 bg-indigo-50 text-indigo-900",
-  success: "border-emerald-200 bg-emerald-50 text-emerald-900",
-  warning: "border-amber-200 bg-amber-50 text-amber-900",
-  danger: "border-rose-200 bg-rose-50 text-rose-900",
+  info: "border-primary/25 bg-primary/10 text-foreground",
+  success: "border-success/30 bg-success/10 text-foreground",
+  warning: "border-warning/30 bg-warning/10 text-foreground",
+  danger: "border-danger/30 bg-danger/10 text-foreground",
 } as const;
 
 export function Alert({ props }: { props: AlertProps }) {
@@ -266,7 +269,7 @@ export function Alert({ props }: { props: AlertProps }) {
 }
 
 export function Separator() {
-  return <hr className="border-slate-200" />;
+  return <hr className="border-border" />;
 }
 
 type TableProps = {
@@ -279,9 +282,9 @@ export function Table({ props }: { props: TableProps }) {
   const rows = props.rows ?? [];
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200">
+    <div className="overflow-x-auto rounded-xl border border-border">
       <table className="min-w-full text-left text-sm">
-        <thead className="bg-slate-50 text-slate-500">
+        <thead className="bg-muted/40 text-muted-foreground">
           <tr>
             {columns.map((column) => (
               <th key={column.key} className="px-2.5 py-1.5 font-medium">
@@ -292,7 +295,7 @@ export function Table({ props }: { props: TableProps }) {
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={index} className="border-t border-slate-100 text-slate-700">
+            <tr key={index} className="border-t border-border/60 text-foreground/85">
               {columns.map((column) => (
                 <td key={column.key} className="px-2.5 py-1.5">
                   {row[column.key] ?? ""}
@@ -317,7 +320,7 @@ export function List({ props }: { props: ListProps }) {
   return (
     <Tag
       className={cn(
-        "space-y-1 text-sm text-slate-700",
+        "space-y-1 text-sm text-foreground/85",
         props.ordered ? "list-decimal pl-5" : "list-disc pl-5",
       )}
     >
@@ -346,10 +349,10 @@ export function Button({
       type="button"
       onClick={() => emit?.("press")}
       className={cn(
-        "inline-flex min-h-9 items-center justify-center rounded-lg px-3.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2",
+        "inline-flex min-h-9 items-center justify-center rounded-lg px-3.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         variant === "primary"
-          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-[0_10px_24px_-12px_rgba(79,70,229,0.8)] hover:brightness-105"
-          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+          ? "bg-gradient-to-r from-primary to-brand-violet text-white shadow-[0_10px_24px_-12px_rgba(79,70,229,0.8)] hover:brightness-105"
+          : "border border-border bg-card text-foreground/85 hover:bg-muted",
       )}
     >
       {props.label}
@@ -365,7 +368,7 @@ type ChartProps = {
   points?: ChartPoint[] | null;
 };
 
-const PIE_COLORS = ["#4f46e5", "#7c3aed", "#818cf8", "#a78bfa", "#c4b5fd", "#e0e7ff"];
+const PIE_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--muted-foreground)"];
 
 function arcPath(
   cx: number,
@@ -401,11 +404,11 @@ function PieChart({ title, points }: { title?: string | null; points: ChartPoint
   });
 
   return (
-    <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/50 p-3">
+    <div className="rounded-xl border border-primary/15 bg-gradient-to-br from-card to-primary/5 p-3">
       {title ? (
-        <p className="mb-2 text-sm font-semibold text-slate-900">{title}</p>
+        <p className="mb-2 text-sm font-semibold text-foreground">{title}</p>
       ) : null}
-      <div className="flex flex-col items-center gap-3 @sm/agentic:flex-row">
+      <div className="flex flex-col items-center gap-3 @sm/vexa:flex-row">
         <svg
           viewBox={`0 0 ${size} ${size}`}
           className="size-[120px] shrink-0"
@@ -417,7 +420,7 @@ function PieChart({ title, points }: { title?: string | null; points: ChartPoint
               key={`${arc.label}-${arc.index}`}
               d={arc.d}
               fill={PIE_COLORS[arc.index % PIE_COLORS.length]}
-              stroke="#fff"
+              stroke="var(--card)"
               strokeWidth={1.5}
             >
               <title>{`${arc.label}: ${arc.value} (${Math.round(arc.share * 100)}%)`}</title>
@@ -435,11 +438,11 @@ function PieChart({ title, points }: { title?: string | null; points: ChartPoint
                 className="inline-block size-2.5 shrink-0 rounded-full"
                 style={{ background: PIE_COLORS[arc.index % PIE_COLORS.length] }}
               />
-              <span className="min-w-0 flex-1 truncate text-slate-700">{arc.label}</span>
-              <span className="shrink-0 tabular-nums text-slate-400">
+              <span className="min-w-0 flex-1 truncate text-foreground/85">{arc.label}</span>
+              <span className="shrink-0 tabular-nums text-muted-foreground/70">
                 {Math.round(arc.share * 100)}%
               </span>
-              <span className="shrink-0 font-medium tabular-nums text-slate-900">
+              <span className="shrink-0 font-medium tabular-nums text-foreground">
                 {arc.value}
               </span>
             </li>
@@ -469,17 +472,17 @@ function SparkChart({ title, points }: { title?: string | null; points: ChartPoi
   const delta = latest - first;
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-indigo-100 bg-white px-3 py-2">
+    <div className="flex items-center gap-3 rounded-xl border border-primary/15 bg-card px-3 py-2">
       <div className="min-w-0 shrink-0">
         {title ? (
-          <p className="text-xs font-medium text-slate-500">{title}</p>
+          <p className="text-xs font-medium text-muted-foreground">{title}</p>
         ) : null}
-        <p className="text-base font-semibold tabular-nums text-slate-900">
+        <p className="text-base font-semibold tabular-nums text-foreground">
           {latest}
           <span
             className={cn(
               "ml-2 text-xs font-medium",
-              delta > 0 ? "text-emerald-600" : delta < 0 ? "text-rose-600" : "text-slate-400",
+              delta > 0 ? "text-success" : delta < 0 ? "text-danger" : "text-muted-foreground/70",
             )}
           >
             {delta > 0 ? "+" : ""}
@@ -497,7 +500,7 @@ function SparkChart({ title, points }: { title?: string | null; points: ChartPoi
         {coords.length > 1 ? (
           <polyline
             fill="none"
-            stroke="#4f46e5"
+            stroke="var(--primary)"
             strokeWidth="2"
             strokeLinejoin="round"
             strokeLinecap="round"
@@ -505,7 +508,7 @@ function SparkChart({ title, points }: { title?: string | null; points: ChartPoi
             points={coords.map(([x, y]) => `${x},${y}`).join(" ")}
           />
         ) : null}
-        {last ? <circle cx={last[0]} cy={last[1]} r="3" fill="#7c3aed" /> : null}
+        {last ? <circle cx={last[0]} cy={last[1]} r="3" fill="var(--brand-violet)" /> : null}
       </svg>
     </div>
   );
@@ -540,9 +543,9 @@ export function Chart({ props }: { props: ChartProps }) {
     .join(" ");
 
   return (
-    <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/50 p-3">
+    <div className="rounded-xl border border-primary/15 bg-gradient-to-br from-card to-primary/5 p-3">
       {props.title ? (
-        <p className="mb-3 text-sm font-semibold text-slate-900">
+        <p className="mb-3 text-sm font-semibold text-foreground">
           {props.title}
         </p>
       ) : null}
@@ -569,13 +572,13 @@ export function Chart({ props }: { props: ChartProps }) {
                     width={Math.max(barW, 4)}
                     height={barH}
                     rx={6}
-                    className="fill-indigo-500"
+                    className="fill-primary"
                   />
                   <text
                     x={x + Math.max(barW, 4) / 2}
                     y={height - 2}
                     textAnchor="middle"
-                    className="fill-slate-500 text-[10px]"
+                    className="fill-muted-foreground text-[10px]"
                   >
                     {point.label}
                   </text>
@@ -587,8 +590,8 @@ export function Chart({ props }: { props: ChartProps }) {
           <>
             <defs>
               <linearGradient id={gradientId} x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0%" stopColor="#4f46e5" />
-                <stop offset="100%" stopColor="#7c3aed" />
+                <stop offset="0%" stopColor="var(--primary)" />
+                <stop offset="100%" stopColor="var(--brand-violet)" />
               </linearGradient>
             </defs>
             <polyline
@@ -607,12 +610,12 @@ export function Chart({ props }: { props: ChartProps }) {
               const y = pad + chartH - (point.value / max) * chartH;
               return (
                 <g key={`${point.label}-${index}`}>
-                  <circle cx={x} cy={y} r="4" className="fill-violet-600" />
+                  <circle cx={x} cy={y} r="4" className="fill-brand-violet" />
                   <text
                     x={x}
                     y={height - 2}
                     textAnchor="middle"
-                    className="fill-slate-500 text-[10px]"
+                    className="fill-muted-foreground text-[10px]"
                   >
                     {point.label}
                   </text>
@@ -642,14 +645,14 @@ const aspectClass = {
 export function Image({ props }: { props: ImageProps }) {
   const aspect = props.aspect ?? "wide";
   return (
-    <figure className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <figure className="overflow-hidden rounded-xl border border-border bg-card">
       <img
         src={props.src}
         alt={props.alt}
         className={cn("w-full object-cover", aspectClass[aspect])}
       />
       {props.caption ? (
-        <figcaption className="border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
+        <figcaption className="border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
           {props.caption}
         </figcaption>
       ) : null}
@@ -668,8 +671,8 @@ export function Tabs({ props }: { props: TabsProps }) {
   const current = items[Math.min(active, items.length - 1)];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white">
-      <div className="flex gap-1 overflow-x-auto border-b border-slate-100 p-1.5">
+    <div className="rounded-xl border border-border bg-card">
+      <div className="flex gap-1 overflow-x-auto border-b border-border/60 p-1.5">
         {items.map((item, index) => (
           <button
             key={`${item.label}-${index}`}
@@ -678,8 +681,8 @@ export function Tabs({ props }: { props: TabsProps }) {
             className={cn(
               "rounded-lg px-3 py-1.5 text-xs font-medium transition",
               index === active
-                ? "bg-indigo-600 text-white"
-                : "text-slate-600 hover:bg-slate-50",
+                ? "bg-primary text-white"
+                : "text-muted-foreground hover:bg-muted",
             )}
           >
             {item.label}
@@ -687,7 +690,7 @@ export function Tabs({ props }: { props: TabsProps }) {
         ))}
       </div>
       <div className="p-3">
-        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+        <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap">
           {current?.content}
         </p>
       </div>
@@ -704,19 +707,19 @@ type ProgressProps = {
 export function Progress({ props }: { props: ProgressProps }) {
   const value = Math.max(0, Math.min(100, props.value));
   return (
-    <div className="space-y-1.5 rounded-xl border border-indigo-100 bg-white p-3">
+    <div className="space-y-1.5 rounded-xl border border-primary/15 bg-card p-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-slate-900">{props.label}</p>
-        <p className="text-sm font-semibold text-indigo-600">{value}%</p>
+        <p className="text-sm font-medium text-foreground">{props.label}</p>
+        <p className="text-sm font-semibold text-primary">{value}%</p>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-violet-600"
+          className="h-full rounded-full bg-gradient-to-r from-primary to-brand-violet"
           style={{ width: `${value}%` }}
         />
       </div>
       {props.detail ? (
-        <p className="text-xs text-slate-500">{props.detail}</p>
+        <p className="text-xs text-muted-foreground">{props.detail}</p>
       ) : null}
     </div>
   );
@@ -737,20 +740,20 @@ export function Timeline({ props }: { props: TimelineProps }) {
       {items.map((item, index) => (
         <li key={`${item.title}-${index}`} className="relative flex gap-3 pb-3.5 last:pb-0">
           <div className="flex flex-col items-center">
-            <span className="mt-1 size-2.5 rounded-full bg-indigo-600 ring-4 ring-indigo-100" />
+            <span className="mt-1 size-2.5 rounded-full bg-primary ring-4 ring-primary/20" />
             {index < items.length - 1 ? (
-              <span className="mt-1 w-px flex-1 bg-slate-200" />
+              <span className="mt-1 w-px flex-1 bg-border" />
             ) : null}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-sm font-semibold text-slate-900">{item.title}</p>
+              <p className="text-sm font-semibold text-foreground">{item.title}</p>
               {item.time ? (
-                <p className="text-xs text-slate-400">{item.time}</p>
+                <p className="text-xs text-muted-foreground/70">{item.time}</p>
               ) : null}
             </div>
             {item.detail ? (
-              <p className="mt-1 text-sm text-slate-600">{item.detail}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{item.detail}</p>
             ) : null}
           </div>
         </li>
@@ -793,7 +796,7 @@ function FieldControl({
     validateOn: props.validateOn ?? "blur",
   });
   const className =
-    "mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20";
+    "mt-1 w-full rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/25";
 
   const onChange = (next: string) => {
     setValue(next);
@@ -801,7 +804,7 @@ function FieldControl({
   };
 
   return (
-    <label className="block text-sm font-medium text-slate-700">
+    <label className="block text-sm font-medium text-foreground/85">
       {props.label}
       {inputType === "textarea" ? (
         <textarea
@@ -833,7 +836,7 @@ function FieldControl({
       {errors.length > 0 ? (
         <ul className="mt-1.5 space-y-0.5">
           {errors.map((error) => (
-            <li key={error} className="text-xs text-rose-600">
+            <li key={error} className="text-xs text-danger">
               {error}
             </li>
           ))}
@@ -852,7 +855,7 @@ function BoundFormField({ props }: { props: FieldProps }) {
     validateOn: props.validateOn ?? "blur",
   });
   const className =
-    "mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20";
+    "mt-1 w-full rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/25";
 
   const onChange = (next: string) => {
     setValue(next);
@@ -860,7 +863,7 @@ function BoundFormField({ props }: { props: FieldProps }) {
   };
 
   return (
-    <label className="block text-sm font-medium text-slate-700">
+    <label className="block text-sm font-medium text-foreground/85">
       {props.label}
       {inputType === "textarea" ? (
         <textarea
@@ -892,7 +895,7 @@ function BoundFormField({ props }: { props: FieldProps }) {
       {errors.length > 0 ? (
         <ul className="mt-1.5 space-y-0.5">
           {errors.map((error) => (
-            <li key={error} className="text-xs text-rose-600">
+            <li key={error} className="text-xs text-danger">
               {error}
             </li>
           ))}
@@ -929,14 +932,14 @@ export function Form({
 
   return (
     <form
-      className="space-y-3 rounded-xl border border-slate-200 bg-white p-3"
+      className="space-y-3 rounded-xl border border-border bg-card p-3"
       onSubmit={(event) => {
         event.preventDefault();
         emit?.("submit");
       }}
     >
       {props.title ? (
-        <p className="text-sm font-semibold text-slate-900">{props.title}</p>
+        <p className="text-sm font-semibold text-foreground">{props.title}</p>
       ) : null}
       <div className="space-y-2.5">
         {fields.map((field) => (
@@ -945,7 +948,7 @@ export function Form({
       </div>
       <button
         type="submit"
-        className="inline-flex min-h-9 items-center justify-center rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 text-sm font-medium text-white"
+        className="inline-flex min-h-9 items-center justify-center rounded-lg bg-gradient-to-r from-primary to-brand-violet px-3.5 text-sm font-medium text-white"
       >
         {props.submitLabel ?? "Submit"}
       </button>
@@ -981,14 +984,14 @@ export function Avatar({ props }: { props: AvatarProps }) {
           src={props.src}
           alt={props.name}
           className={cn(
-            "rounded-full object-cover ring-2 ring-indigo-100",
+            "rounded-full object-cover ring-2 ring-primary/20",
             avatarSize[size],
           )}
         />
       ) : (
         <div
           className={cn(
-            "flex items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 font-semibold text-white",
+            "flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-brand-violet font-semibold text-white",
             avatarSize[size],
           )}
         >
@@ -996,11 +999,11 @@ export function Avatar({ props }: { props: AvatarProps }) {
         </div>
       )}
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-slate-900">
+        <p className="truncate text-sm font-semibold text-foreground">
           {props.name}
         </p>
         {props.role ? (
-          <p className="truncate text-xs text-slate-500">{props.role}</p>
+          <p className="truncate text-xs text-muted-foreground">{props.role}</p>
         ) : null}
       </div>
     </div>
@@ -1016,7 +1019,7 @@ type CodeProps = {
 export function Code({ props }: { props: CodeProps }) {
   return (
     <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 text-slate-100">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-3 py-2 text-xs text-slate-400">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-3 py-2 text-xs text-muted-foreground/70">
         <span>{props.filename ?? "snippet"}</span>
         <span>{props.language ?? "text"}</span>
       </div>
@@ -1060,13 +1063,13 @@ export function Map({ props }: { props: MapProps }) {
   }%2C${props.latitude + span * 0.7}&layer=mapnik&marker=${props.latitude}%2C${props.longitude}`;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       {props.title ? (
-        <div className="border-b border-slate-100 px-3 py-2">
-          <p className="text-sm font-medium text-slate-900">{props.title}</p>
+        <div className="border-b border-border/60 px-3 py-2">
+          <p className="text-sm font-medium text-foreground">{props.title}</p>
         </div>
       ) : null}
-      <div className="relative aspect-[16/10] bg-slate-100">
+      <div className="relative aspect-[16/10] bg-muted">
         <iframe
           title={props.title ?? "Map"}
           src={osmSrc}
@@ -1075,14 +1078,14 @@ export function Map({ props }: { props: MapProps }) {
           referrerPolicy="no-referrer-when-downgrade"
         />
       </div>
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-border/60">
         {markers.map((marker, index) => (
           <li
             key={`${marker.label}-${index}`}
             className="flex items-start justify-between gap-3 px-3 py-2 text-xs"
           >
-            <span className="font-medium text-slate-800">{marker.label}</span>
-            <span className="shrink-0 tabular-nums text-slate-500">
+            <span className="font-medium text-foreground">{marker.label}</span>
+            <span className="shrink-0 tabular-nums text-muted-foreground">
               {marker.latitude.toFixed(4)}, {marker.longitude.toFixed(4)}
             </span>
           </li>
@@ -1127,9 +1130,9 @@ export function Carousel({ props }: { props: CarouselProps }) {
             variant === "card" ? (
               <div
                 key={`${item.title ?? item.src ?? "slide"}-${index}`}
-                className="min-w-0 shrink-0 grow-0 basis-[85%] @md/agentic:basis-[56%]"
+                className="min-w-0 shrink-0 grow-0 basis-[85%] @md/vexa:basis-[56%]"
               >
-                <div className="flex h-full flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_12px_28px_-20px_rgba(15,23,42,0.35)]">
+                <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_12px_28px_-20px_rgba(15,23,42,0.35)]">
                   {item.src ? (
                     <img
                       src={item.src}
@@ -1140,23 +1143,23 @@ export function Carousel({ props }: { props: CarouselProps }) {
                   <div className="flex flex-1 flex-col gap-1.5 p-3">
                     <div className="flex items-start justify-between gap-2">
                       {item.title ? (
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-foreground">
                           {item.title}
                         </p>
                       ) : null}
                       {item.badge ? (
-                        <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-700">
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                           {item.badge}
                         </span>
                       ) : null}
                     </div>
                     {item.description ? (
-                      <p className="text-sm leading-relaxed text-slate-600">
+                      <p className="text-sm leading-relaxed text-muted-foreground">
                         {item.description}
                       </p>
                     ) : null}
                     {item.caption ? (
-                      <p className="mt-auto text-xs text-slate-400">
+                      <p className="mt-auto text-xs text-muted-foreground/70">
                         {item.caption}
                       </p>
                     ) : null}
@@ -1166,9 +1169,9 @@ export function Carousel({ props }: { props: CarouselProps }) {
             ) : (
               <div
                 key={`${item.src ?? "image"}-${index}`}
-                className="min-w-0 shrink-0 grow-0 basis-[88%] @md/agentic:basis-[72%]"
+                className="min-w-0 shrink-0 grow-0 basis-[88%] @md/vexa:basis-[72%]"
               >
-                <figure className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <figure className="overflow-hidden rounded-xl border border-border bg-card">
                   {item.src ? (
                     <img
                       src={item.src}
@@ -1177,12 +1180,12 @@ export function Carousel({ props }: { props: CarouselProps }) {
                       draggable={false}
                     />
                   ) : (
-                    <div className="flex aspect-[16/9] items-center justify-center bg-slate-100 text-xs text-slate-400">
+                    <div className="flex aspect-[16/9] items-center justify-center bg-muted text-xs text-muted-foreground/70">
                       No image
                     </div>
                   )}
                   {item.caption || item.alt ? (
-                    <figcaption className="border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
+                    <figcaption className="border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
                       {item.caption ?? item.alt}
                     </figcaption>
                   ) : null}
@@ -1194,7 +1197,7 @@ export function Carousel({ props }: { props: CarouselProps }) {
       </div>
       {items.length > 1 ? (
         <div className="flex items-center justify-between gap-2 px-0.5">
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-muted-foreground/70">
             Swipe or drag to scroll freely
           </p>
           <div className="flex gap-1.5">
@@ -1202,7 +1205,7 @@ export function Carousel({ props }: { props: CarouselProps }) {
               type="button"
               aria-label="Scroll previous"
               onClick={() => emblaApi?.scrollPrev()}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
             >
               <ChevronLeft aria-hidden size={18} strokeWidth={2} />
             </button>
@@ -1210,7 +1213,7 @@ export function Carousel({ props }: { props: CarouselProps }) {
               type="button"
               aria-label="Scroll next"
               onClick={() => emblaApi?.scrollNext()}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
             >
               <ChevronRight aria-hidden size={18} strokeWidth={2} />
             </button>
@@ -1230,39 +1233,39 @@ type CalloutProps = {
 
 const calloutTone = {
   brand: {
-    shell: "border-indigo-200 bg-gradient-to-br from-indigo-50 to-violet-50",
-    bar: "bg-gradient-to-b from-indigo-600 to-violet-600",
-    eyebrow: "text-indigo-600",
-    title: "text-slate-900",
-    body: "text-slate-600",
+    shell: "border-primary/25 bg-gradient-to-br from-primary/10 to-brand-violet/10",
+    bar: "bg-gradient-to-b from-primary to-brand-violet",
+    eyebrow: "text-primary",
+    title: "text-foreground",
+    body: "text-muted-foreground",
   },
   info: {
-    shell: "border-sky-200 bg-sky-50",
-    bar: "bg-sky-500",
-    eyebrow: "text-sky-700",
-    title: "text-sky-950",
-    body: "text-sky-800",
+    shell: "border-info/30 bg-info/10",
+    bar: "bg-info",
+    eyebrow: "text-info",
+    title: "text-foreground",
+    body: "text-info",
   },
   success: {
-    shell: "border-emerald-200 bg-emerald-50",
-    bar: "bg-emerald-500",
-    eyebrow: "text-emerald-700",
-    title: "text-emerald-950",
-    body: "text-emerald-800",
+    shell: "border-success/30 bg-success/10",
+    bar: "bg-success",
+    eyebrow: "text-success",
+    title: "text-foreground",
+    body: "text-success",
   },
   warning: {
-    shell: "border-amber-200 bg-amber-50",
-    bar: "bg-amber-500",
-    eyebrow: "text-amber-700",
-    title: "text-amber-950",
-    body: "text-amber-800",
+    shell: "border-warning/30 bg-warning/10",
+    bar: "bg-warning",
+    eyebrow: "text-warning",
+    title: "text-foreground",
+    body: "text-warning",
   },
   danger: {
-    shell: "border-rose-200 bg-rose-50",
-    bar: "bg-rose-500",
-    eyebrow: "text-rose-700",
-    title: "text-rose-950",
-    body: "text-rose-800",
+    shell: "border-danger/30 bg-danger/10",
+    bar: "bg-danger",
+    eyebrow: "text-danger",
+    title: "text-foreground",
+    body: "text-danger",
   },
 } as const;
 
@@ -1314,27 +1317,27 @@ export function Accordion({ props }: { props: AccordionProps }) {
   if (items.length === 0) return null;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       {items.map((item, index) => {
         const isOpen = open === index;
         return (
           <div
             key={`${item.title}-${index}`}
-            className="border-b border-slate-100 last:border-b-0"
+            className="border-b border-border/60 last:border-b-0"
           >
             <button
               type="button"
               onClick={() => setOpen(isOpen ? -1 : index)}
-              className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition hover:bg-slate-50"
+              className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition hover:bg-muted"
               aria-expanded={isOpen}
             >
-              <span className="text-sm font-medium text-slate-900">
+              <span className="text-sm font-medium text-foreground">
                 {item.title}
               </span>
               <span
                 className={cn(
-                  "text-slate-400 transition",
-                  isOpen && "rotate-180 text-indigo-600",
+                  "text-muted-foreground/70 transition",
+                  isOpen && "rotate-180 text-primary",
                 )}
               >
                 ▾
@@ -1342,7 +1345,7 @@ export function Accordion({ props }: { props: AccordionProps }) {
             </button>
             {isOpen ? (
               <div className="px-3 pb-3">
-                <p className="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">
+                <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
                   {item.content}
                 </p>
               </div>
@@ -1384,7 +1387,7 @@ export function Video({ props }: { props: VideoProps }) {
   const youtube = isYouTubeSrc(props.src);
 
   return (
-    <figure className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <figure className="overflow-hidden rounded-xl border border-border bg-card">
       <div className={cn("bg-slate-950", aspectClass[aspect])}>
         {youtube ? (
           <iframe
@@ -1404,7 +1407,7 @@ export function Video({ props }: { props: VideoProps }) {
         )}
       </div>
       {props.caption ? (
-        <figcaption className="border-t border-slate-100 px-3 py-2 text-xs text-slate-500">
+        <figcaption className="border-t border-border/60 px-3 py-2 text-xs text-muted-foreground">
           {props.caption}
         </figcaption>
       ) : null}
@@ -1437,7 +1440,7 @@ export function Checkbox({
   return (
     <label
       className={cn(
-        "flex cursor-pointer items-start gap-2.5 text-sm text-slate-700",
+        "flex cursor-pointer items-start gap-2.5 text-sm text-foreground/85",
         disabled && "cursor-not-allowed opacity-50",
       )}
     >
@@ -1454,8 +1457,8 @@ export function Checkbox({
         className={cn(
           "mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded border transition",
           isChecked
-            ? "border-indigo-600 bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.9)]"
-            : "border-slate-300 bg-white",
+            ? "border-primary bg-gradient-to-br from-primary to-brand-violet text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.9)]"
+            : "border-input bg-card",
         )}
       >
         {isChecked ? (
@@ -1471,11 +1474,11 @@ export function Checkbox({
         ) : null}
       </span>
       <span className="min-w-0">
-        <span className={cn("block", isChecked && "font-medium text-slate-900")}>
+        <span className={cn("block", isChecked && "font-medium text-foreground")}>
           {props.label}
         </span>
         {props.hint ? (
-          <span className="block text-xs text-slate-500">{props.hint}</span>
+          <span className="block text-xs text-muted-foreground">{props.hint}</span>
         ) : null}
       </span>
     </label>
@@ -1501,9 +1504,9 @@ export function Switch({
   return (
     <div className="flex items-start justify-between gap-3 text-sm">
       <div className="min-w-0">
-        <p className="font-medium text-slate-900">{props.label}</p>
+        <p className="font-medium text-foreground">{props.label}</p>
         {props.hint ? (
-          <p className="text-xs text-slate-500">{props.hint}</p>
+          <p className="text-xs text-muted-foreground">{props.hint}</p>
         ) : null}
       </div>
       <button
@@ -1517,15 +1520,15 @@ export function Switch({
         className={cn(
           "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition",
           isChecked
-            ? "border-transparent bg-gradient-to-r from-indigo-600 to-violet-600 shadow-[0_8px_18px_-10px_rgba(79,70,229,0.9)]"
-            : "border-slate-300 bg-slate-100",
+            ? "border-transparent bg-gradient-to-r from-primary to-brand-violet shadow-[0_8px_18px_-10px_rgba(79,70,229,0.9)]"
+            : "border-input bg-muted",
           disabled && "cursor-not-allowed opacity-50",
         )}
       >
         <span
           aria-hidden
           className={cn(
-            "absolute top-0.5 size-[18px] rounded-full bg-white shadow-sm transition-all",
+            "absolute top-0.5 size-[18px] rounded-full bg-card shadow-sm transition-all",
             isChecked ? "left-[22px]" : "left-0.5",
           )}
         />
@@ -1561,7 +1564,7 @@ export function RadioGroup({
   return (
     <fieldset className="min-w-0 border-0 p-0">
       {props.label ? (
-        <legend className="mb-2 text-sm font-medium text-slate-700">
+        <legend className="mb-2 text-sm font-medium text-foreground/85">
           {props.label}
         </legend>
       ) : null}
@@ -1574,8 +1577,8 @@ export function RadioGroup({
               className={cn(
                 "flex cursor-pointer items-center gap-2.5 rounded-lg border px-2.5 py-1.5 text-sm transition",
                 checked
-                  ? "border-indigo-300 bg-indigo-50/60 text-slate-900"
-                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                  ? "border-primary/40 bg-primary/5 text-foreground"
+                  : "border-border bg-card text-foreground/85 hover:border-input",
                 disabled && "cursor-not-allowed opacity-50",
               )}
             >
@@ -1591,12 +1594,12 @@ export function RadioGroup({
               <span
                 aria-hidden
                 className={cn(
-                  "inline-flex size-4 shrink-0 items-center justify-center rounded-full border bg-white transition",
-                  checked ? "border-indigo-600" : "border-slate-300",
+                  "inline-flex size-4 shrink-0 items-center justify-center rounded-full border bg-card transition",
+                  checked ? "border-primary" : "border-input",
                 )}
               >
                 {checked ? (
-                  <span className="size-2 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600" />
+                  <span className="size-2 rounded-full bg-gradient-to-br from-primary to-brand-violet" />
                 ) : null}
               </span>
               <span className={cn(checked && "font-medium")}>{option.label}</span>
@@ -1632,7 +1635,7 @@ export function Select({
   const disabled = props.disabled ?? false;
 
   return (
-    <label className="block text-sm font-medium text-slate-700">
+    <label className="block text-sm font-medium text-foreground/85">
       {props.label}
       <span className="relative mt-1 block">
         <select
@@ -1641,8 +1644,8 @@ export function Select({
           disabled={disabled}
           onChange={(event) => setValue(event.target.value)}
           className={cn(
-            "w-full appearance-none rounded-lg border border-slate-200 bg-white py-1.5 pl-3 pr-9 text-sm outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50",
-            value ? "text-slate-900" : "text-slate-400",
+            "w-full appearance-none rounded-lg border border-border bg-card py-1.5 pl-3 pr-9 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-50",
+            value ? "text-foreground" : "text-muted-foreground/70",
           )}
         >
           <option value="" disabled>
@@ -1660,7 +1663,7 @@ export function Select({
           height="14"
           viewBox="0 0 12 12"
           fill="none"
-          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+          className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/70"
         >
           <path
             d="m3 4.5 3 3 3-3"
@@ -1686,6 +1689,7 @@ const STAR_PATH =
   "m8 2.4 1.7 3.5 3.8.5-2.8 2.7.7 3.8L8 11.1l-3.4 1.8.7-3.8L2.5 6.4l3.8-.5z";
 
 export function Rating({ props }: { props: RatingProps }) {
+  const formatter = useVexaFormat();
   const max = Math.max(1, Math.round(props.max ?? 5));
   const clamped = Math.max(
     0,
@@ -1700,16 +1704,16 @@ export function Rating({ props }: { props: RatingProps }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
       {props.label ? (
-        <span className="font-medium text-slate-700">{props.label}</span>
+        <span className="font-medium text-foreground/85">{props.label}</span>
       ) : null}
       <span
         role="img"
         aria-label={`${clamped.toFixed(1)} out of ${max}${
-          props.count != null ? `, ${props.count.toLocaleString()} reviews` : ""
+          props.count != null ? `, ${formatter.integer(props.count)} reviews` : ""
         }`}
         className="inline-flex items-center gap-2"
       >
-        <span className="inline-flex gap-0.5 text-amber-400">
+        <span className="inline-flex gap-0.5 text-warning">
           {stars.map((fill, index) => {
             const gradientId = `${idBase}-${index}`;
             return (
@@ -1732,13 +1736,13 @@ export function Rating({ props }: { props: RatingProps }) {
           })}
         </span>
         {showValue ? (
-          <span className="font-semibold tabular-nums text-slate-900">
+          <span className="font-semibold tabular-nums text-foreground">
             {clamped.toFixed(1)}
           </span>
         ) : null}
         {props.count != null ? (
-          <span className="text-xs text-slate-500">
-            ({props.count.toLocaleString()} reviews)
+          <span className="text-xs text-muted-foreground">
+            ({formatter.integer(props.count)} reviews)
           </span>
         ) : null}
       </span>
@@ -1753,12 +1757,12 @@ export function Rating({ props }: { props: RatingProps }) {
 type DividerProps = { label?: string | null };
 
 export function Divider({ props }: { props: DividerProps }) {
-  if (!props.label) return <hr className="my-1 border-0 border-t border-slate-200" />;
+  if (!props.label) return <hr className="my-1 border-0 border-t border-border" />;
   return (
-    <div className="my-1 flex items-center gap-3 text-[11px] font-medium uppercase tracking-wide text-slate-400">
-      <span className="h-px flex-1 bg-slate-200" />
+    <div className="my-1 flex items-center gap-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+      <span className="h-px flex-1 bg-border" />
       <span>{props.label}</span>
-      <span className="h-px flex-1 bg-slate-200" />
+      <span className="h-px flex-1 bg-border" />
     </div>
   );
 }
@@ -1845,28 +1849,19 @@ export function Row({
 type ChartFormat = "number" | "currency" | "percent";
 type ChartSeries = { name: string; values: number[] };
 
-const SERIES_COLORS = ["#4f46e5", "#a78bfa", "#10b981", "#f59e0b", "#f43f5e"];
-const GRID_COLOR = "#e2e8f0";
-const AXIS_COLOR = "#64748b";
+const SERIES_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+const GRID_COLOR = "var(--border)";
+const AXIS_COLOR = "var(--muted-foreground)";
 const CHART_HEIGHT = { sm: 120, md: 180, lg: 260 } as const;
 
-const numberFmt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
-
-function formatChartValue(format: ChartFormat | null | undefined, value: number) {
-  if (format === "currency") return `฿${numberFmt.format(value)}`;
-  if (format === "percent") return `${numberFmt.format(value)}%`;
-  return numberFmt.format(value);
+function formatChartValue(formatter: Formatter, format: ChartFormat | null | undefined, value: number) {
+  if (format === "currency") return `${formatter.currencySymbol}${formatter.number(value)}`;
+  if (format === "percent") return `${formatter.number(value)}%`;
+  return formatter.number(value);
 }
 
-function compactTick(format: ChartFormat | null | undefined, value: number) {
-  const abs = Math.abs(value);
-  const sign = value < 0 ? "-" : "";
-  const prefix = format === "currency" ? "฿" : "";
-  const suffix = format === "percent" ? "%" : "";
-  const trim = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1).replace(/\.0$/, ""));
-  if (abs >= 1_000_000) return `${sign}${prefix}${trim(abs / 1_000_000)}M${suffix}`;
-  if (abs >= 1_000) return `${sign}${prefix}${trim(abs / 1_000)}K${suffix}`;
-  return `${sign}${prefix}${trim(abs)}${suffix}`;
+function compactTick(formatter: Formatter, format: ChartFormat | null | undefined, value: number) {
+  return formatter.compact(value, format ?? "number");
 }
 
 function scale(d0: number, d1: number, r0: number, r1: number) {
@@ -1933,7 +1928,7 @@ function useContainerWidth(fallback = 320) {
 function ChartLegend({ series }: { series: ChartSeries[] }) {
   if (series.length < 2) return null;
   return (
-    <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-500">
+    <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
       {series.map((s, i) => (
         <li key={`${i}-${s.name}`} className="flex items-center gap-1.5">
           <span
@@ -1950,9 +1945,9 @@ function ChartLegend({ series }: { series: ChartSeries[] }) {
 
 function ChartFrame({ title, children }: { title?: string | null; children: ReactNode }) {
   return (
-    <div className="w-full min-w-0 rounded-xl border border-indigo-100 bg-gradient-to-br from-white to-indigo-50/40 p-3">
+    <div className="w-full min-w-0 rounded-xl border border-primary/15 bg-gradient-to-br from-card to-primary/5 p-3">
       {title ? (
-        <p className="mb-2 text-sm font-semibold text-slate-900">{title}</p>
+        <p className="mb-2 text-sm font-semibold text-foreground">{title}</p>
       ) : null}
       {children}
     </div>
@@ -1971,6 +1966,7 @@ type BarChartProps = {
 };
 
 export function BarChart({ props }: { props: BarChartProps }) {
+  const formatter = useVexaFormat();
   const [ref, width] = useContainerWidth();
   const labels = props.labels ?? [];
   const series = (props.series ?? []).slice(0, 5);
@@ -1980,7 +1976,7 @@ export function BarChart({ props }: { props: BarChartProps }) {
   const n = labels.length;
   const ticks = niceTicks(seriesMax(series, stacked));
   const top = ticks[ticks.length - 1] ?? 0;
-  const fmt = (v: number) => formatChartValue(format, v);
+  const fmt = (v: number) => formatChartValue(formatter, format, v);
   const color = (i: number) =>
     series.length === 1 ? SERIES_COLORS[0] : SERIES_COLORS[i % SERIES_COLORS.length];
   const rowValue = (i: number) =>
@@ -1991,7 +1987,7 @@ export function BarChart({ props }: { props: BarChartProps }) {
   if (n === 0 || series.length === 0) {
     return (
       <ChartFrame title={props.title}>
-        <p className="text-sm text-slate-400">No data</p>
+        <p className="text-sm text-muted-foreground/70">No data</p>
       </ChartFrame>
     );
   }
@@ -2058,7 +2054,7 @@ export function BarChart({ props }: { props: BarChartProps }) {
                       x={x(rowValue(i)) + 5}
                       y={y0 + rowH / 2}
                       fontSize={11}
-                      fill="#0f172a"
+                      fill="var(--foreground)"
                       fontWeight={500}
                       dominantBaseline="middle"
                     >
@@ -2078,7 +2074,7 @@ export function BarChart({ props }: { props: BarChartProps }) {
                   fill={AXIS_COLOR}
                   textAnchor={ti === ticks.length - 1 ? "end" : ti === 0 ? "start" : "middle"}
                 >
-                  {compactTick(format, t)}
+                  {compactTick(formatter, format, t)}
                 </text>
               ) : null,
             )}
@@ -2119,7 +2115,7 @@ export function BarChart({ props }: { props: BarChartProps }) {
                 textAnchor="end"
                 dominantBaseline="middle"
               >
-                {compactTick(format, t)}
+                {compactTick(formatter, format, t)}
               </text>
             </g>
           ))}
@@ -2156,7 +2152,7 @@ export function BarChart({ props }: { props: BarChartProps }) {
                     x={cx}
                     y={y(rowValue(i)) - 4}
                     fontSize={10}
-                    fill="#0f172a"
+                    fill="var(--foreground)"
                     fontWeight={500}
                     textAnchor="middle"
                   >
@@ -2188,6 +2184,7 @@ type LineChartProps = {
 };
 
 export function LineChart({ props }: { props: LineChartProps }) {
+  const formatter = useVexaFormat();
   const [ref, width] = useContainerWidth();
   const labels = props.labels ?? [];
   const series = (props.series ?? []).slice(0, 5);
@@ -2202,12 +2199,12 @@ export function LineChart({ props }: { props: LineChartProps }) {
   const y = scale(0, top, plotH, 6);
   const shown = thinLabels(n, Math.max(2, Math.min(12, Math.floor((width - AXIS_W) / 56))));
   const dots = (props.showDots ?? false) || n <= 14;
-  const fmt = (v: number) => formatChartValue(format, v);
+  const fmt = (v: number) => formatChartValue(formatter, format, v);
 
   if (n === 0 || series.length === 0) {
     return (
       <ChartFrame title={props.title}>
-        <p className="text-sm text-slate-400">No data</p>
+        <p className="text-sm text-muted-foreground/70">No data</p>
       </ChartFrame>
     );
   }
@@ -2234,7 +2231,7 @@ export function LineChart({ props }: { props: LineChartProps }) {
                 textAnchor="end"
                 dominantBaseline="middle"
               >
-                {compactTick(format, t)}
+                {compactTick(formatter, format, t)}
               </text>
             </g>
           ))}
@@ -2326,12 +2323,12 @@ type IconName = keyof typeof ICONS;
 type IconTone = "default" | "muted" | "primary" | "success" | "warning" | "danger";
 
 const iconTone: Record<IconTone, string> = {
-  default: "text-slate-700",
-  muted: "text-slate-400",
-  primary: "text-indigo-600",
-  success: "text-emerald-600",
-  warning: "text-amber-500",
-  danger: "text-rose-600",
+  default: "text-foreground/85",
+  muted: "text-muted-foreground/70",
+  primary: "text-primary",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-danger",
 };
 const iconSize = { sm: 14, md: 18, lg: 24 } as const;
 
@@ -2384,9 +2381,9 @@ export function IconText({ props }: { props: IconTextProps }) {
         <LucideIcon name={props.icon} tone="muted" size="sm" />
       </span>
       <span className="min-w-0">
-        <span className="block break-words text-slate-800">{props.text}</span>
+        <span className="block break-words text-foreground">{props.text}</span>
         {props.hint ? (
-          <span className="block text-xs text-slate-500">{props.hint}</span>
+          <span className="block text-xs text-muted-foreground">{props.hint}</span>
         ) : null}
       </span>
     </div>
@@ -2410,43 +2407,39 @@ type LineItemsProps = {
   currency?: string | null;
 };
 
-const moneyFmt = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
 export function LineItems({ props }: { props: LineItemsProps }) {
+  const formatter = useVexaFormat();
   const items = props.items ?? [];
   const summary = props.summary ?? [];
-  const currency = props.currency ?? "฿";
-  const money = (v: number) => `${currency}${moneyFmt.format(v)}`;
+  const money = (value: number) =>
+    props.currency ? `${props.currency}${formatter.number(value, 2)}` : formatter.money(value);
 
   return (
-    <div className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm">
+    <div className="w-full min-w-0 rounded-xl border border-border bg-card px-3 py-2.5 text-sm">
       {items.length === 0 ? (
-        <p className="py-1 text-slate-400">No items</p>
+        <p className="py-1 text-muted-foreground/70">No items</p>
       ) : (
         <ul className="flex flex-col gap-1.5">
           {items.map((item, i) => (
             <li key={`${i}-${item.name}`} className="flex items-start justify-between gap-3">
               <span className="min-w-0">
-                <span className="block truncate text-slate-800">
+                <span className="block truncate text-foreground">
                   {item.qty != null ? (
-                    <span className="mr-1.5 tabular-nums text-slate-400">{item.qty}×</span>
+                    <span className="mr-1.5 tabular-nums text-muted-foreground/70">{item.qty}×</span>
                   ) : null}
                   {item.name}
                 </span>
                 {item.detail ? (
-                  <span className="block text-xs italic text-slate-500">{item.detail}</span>
+                  <span className="block text-xs italic text-muted-foreground">{item.detail}</span>
                 ) : null}
               </span>
-              <span className="shrink-0 tabular-nums text-slate-800">{money(item.amount)}</span>
+              <span className="shrink-0 tabular-nums text-foreground">{money(item.amount)}</span>
             </li>
           ))}
         </ul>
       )}
       {summary.length > 0 ? (
-        <dl className="mt-2.5 flex flex-col gap-1 border-t border-slate-200 pt-2">
+        <dl className="mt-2.5 flex flex-col gap-1 border-t border-border pt-2">
           {summary.map((line, i) => {
             const total = line.emphasis === "total";
             return (
@@ -2454,13 +2447,13 @@ export function LineItems({ props }: { props: LineItemsProps }) {
                 key={`${i}-${line.label}`}
                 className={cn("flex items-baseline justify-between gap-3", total && "mt-1")}
               >
-                <dt className={total ? "text-base font-semibold text-slate-900" : "text-slate-500"}>
+                <dt className={total ? "text-base font-semibold text-foreground" : "text-muted-foreground"}>
                   {line.label}
                 </dt>
                 <dd
                   className={cn(
                     "tabular-nums",
-                    total ? "text-lg font-semibold text-indigo-700" : "text-slate-800",
+                    total ? "text-lg font-semibold text-primary" : "text-foreground",
                   )}
                 >
                   {money(line.amount)}
@@ -2483,17 +2476,17 @@ type FromToProps = {
 
 export function FromTo({ props }: { props: FromToProps }) {
   return (
-    <div className="flex w-full items-center gap-3 rounded-xl border border-indigo-100 bg-gradient-to-r from-white via-indigo-50/40 to-white px-3 py-2.5">
-      <span className="min-w-0 flex-1 break-words text-base font-semibold leading-tight text-slate-900">
+    <div className="flex w-full items-center gap-3 rounded-xl border border-primary/15 bg-gradient-to-r from-card via-primary/5 to-card px-3 py-2.5">
+      <span className="min-w-0 flex-1 break-words text-base font-semibold leading-tight text-foreground">
         {props.from}
       </span>
-      <span className="flex shrink-0 flex-col items-center gap-0.5 text-slate-400">
+      <span className="flex shrink-0 flex-col items-center gap-0.5 text-muted-foreground/70">
         <LucideIcon name={props.icon ?? "arrowRight"} tone="primary" size="lg" />
         {props.via ? (
           <span className="whitespace-nowrap text-[10.5px] font-medium">{props.via}</span>
         ) : null}
       </span>
-      <span className="min-w-0 flex-1 break-words text-right text-base font-semibold leading-tight text-slate-900">
+      <span className="min-w-0 flex-1 break-words text-right text-base font-semibold leading-tight text-foreground">
         {props.to}
       </span>
     </div>
@@ -2511,7 +2504,7 @@ export function KeyValue({ props }: { props: KeyValueProps }) {
   return (
     <dl
       className={cn(
-        "w-full min-w-0 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white",
+        "w-full min-w-0 divide-y divide-border/60 rounded-xl border border-border bg-card",
         size === "sm" ? "text-[13px]" : "text-sm",
       )}
     >
@@ -2520,8 +2513,8 @@ export function KeyValue({ props }: { props: KeyValueProps }) {
           key={`${i}-${pair.label}`}
           className={cn("flex items-baseline justify-between gap-3 px-2.5", size === "sm" ? "py-1" : "py-1.5")}
         >
-          <dt className="shrink-0 text-slate-500">{pair.label}</dt>
-          <dd className="min-w-0 break-words text-right font-medium text-slate-900">{pair.value}</dd>
+          <dt className="shrink-0 text-muted-foreground">{pair.label}</dt>
+          <dd className="min-w-0 break-words text-right font-medium text-foreground">{pair.value}</dd>
         </div>
       ))}
     </dl>

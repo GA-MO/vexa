@@ -1,0 +1,58 @@
+---
+title: "Row"
+description: "Lay children out left-to-right; wraps on narrow widths unless wrap=false. Use justify='between' for label/value pairs."
+---
+
+## Use it when
+
+Two or three things belong on one line: a label and its value, an [Icon](/docs/catalog/Icon) in front of its text, a pair of buttons at the end of a card. When the whole block is label/value pairs for one record, [KeyValue](/docs/catalog/KeyValue) already does that job with its own dividers and alignment. For section-level layout use [Stack](/docs/catalog/Stack) or [Grid](/docs/catalog/Grid) instead.
+
+## Prompt hints
+
+- "show the courier and the tracking number on one line"
+- "put the status badge to the right of the title"
+- "give me Track and Contact buttons at the end"
+
+`justify="between"` pushes a label and value to opposite edges — the pattern the prompt names for label/value rows. `wrap` defaults to `true`, so a long value drops to its own line in a narrow panel; set `wrap: false` to keep an icon glued to its text. `gap` defaults to `sm` and `align` to `center`, and every child gets `min-w-0` so long strings truncate instead of overflowing.
+
+## Related
+
+- [Column](/docs/catalog/Column) — stack several rows with tight vertical spacing.
+- [KeyValue](/docs/catalog/KeyValue) — a whole record of label/value pairs in one component.
+- [IconText](/docs/catalog/IconText) — a prebuilt icon + text line, no Row needed.
+- [Badge](/docs/catalog/Badge) — the usual right-hand occupant of a `justify="between"` row.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `gap` | `"none" \| "xs" \| "sm" \| "md" \| "lg" \| null` | No | Example: `"sm"` |
+| `align` | `"start" \| "center" \| "end" \| "stretch" \| null` | No | Example: `"center"` |
+| `justify` | `"start" \| "center" \| "end" \| "between" \| null` | No | Example: `"between"` |
+| `wrap` | `boolean \| null` | No | Example: `true` |
+
+Slots: `default`
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Row",
+  "props": {
+    "gap": "sm",
+    "align": "center",
+    "justify": "between",
+    "wrap": true
+  }
+}
+```
+
+## Live example
+
+<Example id="column-row" />
+
+{/* generated:end */}

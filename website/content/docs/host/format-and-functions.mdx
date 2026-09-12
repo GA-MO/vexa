@@ -1,0 +1,62 @@
+---
+title: Format and functions
+description: Set the locale and currency every catalog component uses for numbers, money, and compact axis labels, and add your own $computed functions.
+---
+
+## format
+
+`VexaProvider format` takes a partial `{ locale, currency }`. The default is `en-US` and `THB`. Every catalog component that prints a number (Metric, LineItems, BarChart and LineChart axes, KeyValue, and others) reads the formatter from context, so one prop changes the whole catalog.
+
+```tsx title="app/providers.tsx"
+<VexaProvider format={{ locale: "th-TH", currency: "THB" }}>
+```
+
+The value is validated on creation with `Intl.NumberFormat`. An invalid locale or currency code falls back to the default with a `console.warn` instead of throwing during render.
+
+## What the formatter provides
+
+| Method | Example with `en-US` / `USD` |
+|---|---|
+| `number(1234.5)` | `1,234.5` (max 2 fraction digits) |
+| `integer(1234.5)` | `1,235` |
+| `money(1234.5)` | `$1,234.50` (narrow symbol, 2 fraction digits) |
+| `compact(1_250_000, "currency")` | `$1.3M` |
+| `compact(0.42, "percent")` | `0.4%` |
+| `currencySymbol` | `$` |
+
+Host components rendered inside a spec can read it with `useVexaFormat()` from `vexa/react`; outside a provider it returns the default formatter.
+
+## Built-in computed functions
+
+Specs derive display values with `$computed`. Two functions ship with the library and both respect `format`:
+
+| Function | Args | Result |
+|---|---|---|
+| `fullName` | `{ first, last }` | `"Ada Lovelace"` |
+| `formatCurrency` | `{ value, currency? }` | `"฿1,200"` using the provider locale and currency, zero fraction digits |
+
+```json title="in a spec"
+{ "type": "Text", "props": { "content": { "$computed": "formatCurrency", "args": { "value": { "$state": "/ui/total" } } } } }
+```
+
+## Adding functions
+
+Pass `functions` to the provider. They are merged with the built-ins and a host function with the same name wins.
+
+```tsx title="app/providers.tsx"
+import type { ComputedFunction } from "@json-render/core";
+
+const functions: Record<string, ComputedFunction> = {
+  percentOf: (args) => `${Math.round((Number(args.part) / Number(args.total)) * 100)}%`,
+};
+
+<VexaProvider functions={functions}>
+```
+
+The model only uses a function when it knows about it. Name it in `createVexaHandler({ rules })` on the server, for example "Use $computed percentOf with args part and total for share of a whole", or it will stay unused.
+
+## Related
+
+- [State](/docs/concepts/state): `$computed`, `$template`, and the other expressions
+- [Provider](/docs/host/provider): where `format` and `functions` sit
+- [Persona and rules](/docs/server/persona-and-rules): telling the model about host functions

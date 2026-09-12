@@ -1,0 +1,63 @@
+---
+title: "Chart"
+description: "Bar for comparisons, line for trends, pie for share of total, spark for a compact inline trend"
+---
+
+## Use it when
+
+One series of labelled points needs a quick picture, or you need a kind the dedicated charts do not have: `pie` for share of a total and `spark` for a compact inline trend exist only here. For everything else the prompt hands the work over — [BarChart](/docs/catalog/BarChart) for 2–4 series or many categories, [LineChart](/docs/catalog/LineChart) for 10 or more points or multiple series. `Chart` takes a flat `points` array and has no concept of a second series.
+
+## Prompt hints
+
+- "show the revenue split by channel"
+- "give me a sparkline of daily signups"
+- "quick bar of the four quarters"
+
+`kind` is the real lever: `pie` draws a donut with a percentage legend beside it, `spark` draws a 40px line with the latest value and its change from the first point, and `bar` (the default) and `line` share one frame. Those two draw into a fixed 320×140 viewBox that scales with the panel, so their labels grow and shrink with width — [BarChart](/docs/catalog/BarChart) and [LineChart](/docs/catalog/LineChart) measure the container and keep text at a constant size.
+
+## Related
+
+- [BarChart](/docs/catalog/BarChart) — real axes, multiple series, horizontal layout.
+- [LineChart](/docs/catalog/LineChart) — trends with thinned labels and area fill.
+- [Metric](/docs/catalog/Metric) — the headline figure beside a `spark`.
+- [Progress](/docs/catalog/Progress) — better than a one-slice pie for completion.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | `string \| null` | No | Example: `"Revenue"` |
+| `kind` | `"bar" \| "line" \| "pie" \| "spark" \| null` | No | Example: `"bar"` |
+| `points` | `{ label: string; value: number }[]` | Yes | Example: `[{"label":"Q1","value":12},{"label":"Q2","value":18}]` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Chart",
+  "props": {
+    "title": "Revenue",
+    "kind": "bar",
+    "points": [
+      {
+        "label": "Q1",
+        "value": 12
+      },
+      {
+        "label": "Q2",
+        "value": 18
+      }
+    ]
+  }
+}
+```
+
+## Live example
+
+<Example id="chart" />
+
+{/* generated:end */}

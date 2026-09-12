@@ -1,21 +1,22 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { SpecView } from "agentic-ui/react";
+import { SpecView } from "vexa/react";
 import {
   CATALOG_TYPES,
   COMPOSED_EXAMPLES,
   GALLERY_SECTIONS,
   INTERACTIVE_SECTIONS,
+  PRIMITIVE_GROUPS,
   type GallerySection,
-} from "@/lib/catalog-gallery";
+} from "vexa/examples";
 import {
   Message,
   MessageContent,
   MessageResponse,
-} from "agentic-ui/ai-elements/message";
+} from "vexa/ai-elements/message";
 import { ChatChromeSamples } from "@/components/chat-chrome-samples";
-import { cn } from "agentic-ui/lib/utils";
+import { cn } from "vexa/lib/utils";
 
 type TabId = "composed" | "primitives" | "interactive" | "chrome";
 
@@ -24,16 +25,6 @@ const TABS: Array<{ id: TabId; label: string; hint: string }> = [
   { id: "primitives", label: "Primitives", hint: `${CATALOG_TYPES.length} catalog types` },
   { id: "interactive", label: "Interactive", hint: "Binding, visibility, repeat, watchers" },
   { id: "chrome", label: "Chat chrome", hint: "AI Elements around specs" },
-];
-
-/** Primitive sections grouped by what the LLM reaches for. */
-const PRIMITIVE_GROUPS: Array<{ id: string; label: string; sections: string[] }> = [
-  { id: "layout", label: "Layout", sections: ["card-grid", "column-row", "divider", "separator-button", "tabs", "accordion"] },
-  { id: "text", label: "Text & status", sections: ["heading-text", "badge", "alert", "callout", "list", "code"] },
-  { id: "data", label: "Data display", sections: ["metric", "table", "key-value", "line-items", "from-to", "progress", "timeline", "rating"] },
-  { id: "charts", label: "Charts", sections: ["bar-chart", "line-chart", "chart"] },
-  { id: "inputs", label: "Inputs", sections: ["input-form", "checkbox-switch", "radio-group", "select"] },
-  { id: "media", label: "Media & icons", sections: ["icon-icontext", "avatar", "image", "video", "map", "carousel", "carousel-cards"] },
 ];
 
 function readHash(): { tab: TabId; item: string | null } {

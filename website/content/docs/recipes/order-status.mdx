@@ -1,0 +1,115 @@
+---
+title: Order status
+description: Answer "where is my order" with a Card that holds FromTo, KeyValue, a Timeline of events, and buttons that open the map or contact the courier through host tools.
+---
+
+## Goal
+
+The everyday support question. The assistant looks the order up with a read tool, then answers with one `Card`: the route as `FromTo`, the facts as `KeyValue`, the history as `Timeline`, and two actions. A follow-up ("and the one before that?") patches the same card instead of starting a new one.
+
+## What the user asks
+
+- "ออเดอร์ #A-1042 ถึงไหนแล้ว"
+- "Where is order A-1042?"
+- "Has my last order shipped yet?"
+
+## Live example
+
+<Example id="order-status" />
+
+## How it works
+
+The order comes from a server tool. The tool reads the page context so the user does not have to repeat their customer id.
+
+```ts title="app/api/chat/route.ts"
+import { tool } from "ai";
+import { z } from "zod";
+import { createVexaHandler } from "vexa/server";
+import { models } from "@/lib/models";
+import { findOrder } from "@/lib/orders";
+
+const tools = {
+  getOrder: tool({
+    description: "Look up one order by id: status, courier, tracking number, ETA, items, total, and the event history.",
+    inputSchema: z.object({ id: z.string() }),
+    execute: async ({ id }, { experimental_context }) => {
+      const { customerId } = experimental_context as { customerId: string };
+      return findOrder(customerId, id);
+    },
+  }),
+};
+
+export const { GET, POST } = createVexaHandler({
+  models,
+  tools,
+  rules: [
+    "For one order answer with a Card titled with the order id: FromTo (warehouse to delivery address, courier as via), KeyValue with status, ETA, items and total, then a Timeline of events oldest first.",
+    "End the Card with a Row of two Buttons: 'Track on map' (secondary) and 'Contact courier' (primary), each calling runTool.",
+  ],
+});
+```
+
+The client sends `customerId` in `context`, validated by `contextSchema`, and registers the two host tools the buttons call:
+
+```tsx title="app/providers.tsx"
+"use client";
+
+import { z } from "zod";
+import { VexaProvider, defineTool } from "vexa/react";
+import { VexaChatOverlay } from "vexa/chat";
+
+const openMap = defineTool({
+  description: "Open the live tracking map for an order id.",
+  input: z.object({ id: z.string() }),
+  run: ({ id }) => {
+    window.open(`/orders/${id}/map`, "_blank");
+    return { ok: true, summary: `Opened the map for ${id}` };
+  },
+});
+
+const contactCourier = defineTool({
+  description: "Start a chat with the courier of an order.",
+  input: z.object({ id: z.string() }),
+  confirm: true,
+  run: ({ id }) => {
+    window.location.assign(`/support/courier?order=${id}`);
+    return { ok: true };
+  },
+});
+
+export function Providers({ children, customerId }: { children: React.ReactNode; customerId: string }) {
+  return (
+    <VexaProvider
+      contextSchema={z.object({ customerId: z.string() })}
+      context={() => ({ customerId })}
+      tools={{ open_map: openMap, contact_courier: contactCourier }}
+    >
+      {children}
+      <VexaChatOverlay />
+    </VexaProvider>
+  );
+}
+```
+
+The generated buttons then carry `runTool` presses. `contact_courier` has `confirm: true`, so a Run / Cancel card appears before the page navigates away.
+
+```json title="what the model emits for the actions"
+{
+  "type": "Button",
+  "props": { "label": "Track on map", "variant": "secondary" },
+  "on": { "press": [{ "action": "runTool", "params": { "name": "open_map", "input": { "id": "A-1042" } } }] }
+}
+```
+
+## Prompt hints
+
+- Tell the model what "my order" means: "Without an id, call getOrder with the customer's most recent order" (add a `latestOrder` tool or let `getOrder` accept `"latest"`).
+- `Timeline` items are `{ title, detail, time }`; ask for the pending step with `detail: null` and `time: "—"` so the card shows what is still to come.
+- Status words map to Badge tones: "delivered is success, delayed is warning, lost is danger".
+
+## Related
+
+- [FromTo](/docs/catalog/FromTo), [KeyValue](/docs/catalog/KeyValue), [Timeline](/docs/catalog/Timeline)
+- [Host tools](/docs/host/host-tools): `defineTool` and `confirm`
+- [runTool](/docs/host/runtool): how a button reaches a host tool
+- [Receipt](/docs/recipes/receipt): the follow-up question about the same order

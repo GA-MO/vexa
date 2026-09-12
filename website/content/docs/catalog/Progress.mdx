@@ -1,0 +1,54 @@
+---
+title: "Progress"
+description: "Progress bar from 0 to 100"
+---
+
+## Use it when
+
+One quantity as a share of a fixed whole — onboarding completion, quota used, a pipeline stage. `value` is clamped to 0–100 and printed as a percentage next to the label, so it is not a general-purpose gauge: a score out of five is Rating, a comparison across categories is BarChart, and a standalone figure with a trend is Metric. There is no indeterminate or loading state.
+
+## Prompt hints
+
+- "How far along is onboarding?"
+- "Show migration progress"
+- "What percent of my quota have I used?"
+
+Put the raw counts in `detail` ("3 of 5 steps") — the bar itself shows the clamped percentage and nothing else. There is no tone or colour prop: the fill is always the primary-to-violet gradient, so several Progress bars in a Stack read as one set rather than as a status hierarchy.
+
+## Related
+
+- [Metric](/docs/catalog/Metric) — the number without the bar
+- [BarChart](/docs/catalog/BarChart) — several categories compared against each other
+- [Rating](/docs/catalog/Rating) — a score out of five instead of a percentage
+- [Timeline](/docs/catalog/Timeline) — when the steps themselves matter more than the share
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | Yes | Example: `"Onboarding"` |
+| `value` | `number` | Yes | Example: `65` |
+| `detail` | `string \| null` | No | Example: `"3 of 5 steps"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Progress",
+  "props": {
+    "label": "Onboarding",
+    "value": 65,
+    "detail": "3 of 5 steps"
+  }
+}
+```
+
+## Live example
+
+<Example id="progress" />
+
+{/* generated:end */}

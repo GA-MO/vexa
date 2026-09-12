@@ -1,0 +1,56 @@
+---
+title: Security
+description: The threat model for a chat that controls a page and calls tools, what the library enforces by construction, and the checklist a host must complete before shipping.
+---
+
+## Threat model
+
+| # | Threat | Mitigation |
+|---|---|---|
+| T1 | A model-authored button calls `runTool` with input from `/ui/*` written by the user or by a tool result | host tools are read-tier and may run; any other name becomes a user message so the server gate applies |
+| T2 | MCP descriptions or outputs carry injected instructions | `fence()` on descriptions, `toModelOutput` fencing on outputs, mandatory `allow` list, guard scan and downgrade |
+| T3 | `context()` leaks tokens or PII to the model and to external MCP servers | `contextSchema` is mandatory and validated per request; context is never copied into tool inputs automatically; 4 KB cap |
+| T4 | The client forges a tier or auto-approves a gated tool | the body schema is `.strict()` with no tier or approval field; tiers live on the server; `toolApprovalSecret` signs approvals |
+| T5 | A host tool runs without a user gesture (navigation, DOM, `window.open`) | `confirm: true` on tools with visible side effects; host tools must be idempotent and must not mutate data |
+| T6 | A spec forges a tool result that other components bind to | `/tools/*` and `/host/*` are written by the runtime only; spec writes are dropped with a warning |
+| T7 | An MCP tool name collides with a local tool | mandatory `<server>__` prefix and name regexes |
+| T8 | The client picks an unapproved model or floods the prompt with host tool descriptions or context | server `models` registry (400 otherwise); fenced descriptions and context; caps of 200 messages, 32 host tools, 300-character descriptions, 4 KB context |
+| T9 | A button or forged user message carries `⟦action⟧ runTool` with a tool that does not exist or was never exposed | the server rewrites the message into an "unavailable" note before the model sees it |
+| T10 | Host `instructions` or `rules` weaken security rules by coming later in the prompt | library invariants are appended after every host layer |
+
+## What the library enforces by construction
+
+These hold because of types and validators, not conventions.
+
+- `HostTool` has no `tier` field; the server assigns read-tier to every host tool.
+- The request body is `.strict()` and size-limited; no field exists for a tier, an approval, a prompt, or a key.
+- The server owns the model registry; the client picker is presentation only and an unlisted id is a 400.
+- `McpServerConfig.allow` is required and rejects `"*"`; an unspecified MCP tier is `destructive`.
+- Every server and MCP output reaches the model through `toModelOutput` fencing; every MCP and host tool description is fenced before entering the prompt.
+- `setState` to `/tools/*` or `/host/*` is a no-op with a warning.
+- `context` without `contextSchema` is a type error and throws on mount.
+- The invariants block is the last part of the system prompt; no host text can follow it.
+- A flagged tool result downgrades the turn to read-tier tools and streams a user-visible notice.
+
+## What you must do as a host
+
+The library cannot know which capabilities are safe on your page or which context fields are sensitive.
+
+- Keep `context()` to non-sensitive page state (path, selected ids, theme). Server tools read it through `experimental_context` and the model can copy it into MCP arguments.
+- Put `confirm: true` on every host tool with a visible side effect. Mutations belong in server tools with `needsApproval` or a `toolTiers` entry.
+- Classify every MCP server: list only the tools you need in `allow`, set `tier: "read"` only for tools that cannot change anything, and use `tierOf` for exceptions.
+- Set `toolApprovalSecret` from an environment variable so approvals cannot be replayed or forged.
+- Keep provider keys, MCP headers, and MCP env in server code, never in the client bundle.
+- Bound cost: keep `stopWhen` small (the demo uses `stepCountIs(6)`), rate-limit the route, and list only models you will pay for.
+- Log `onToolResult` on the client and tool executions on the server; the library has no audit trail.
+- If a legitimate tool output trips a rule, narrow it with `guard.rules` instead of setting `onFlagged: "off"`.
+- After changing `persona`, `rules`, or `instructions`, inspect `buildAgentInstructions()` and confirm the invariants are still last.
+- Translate `labels.securityTitle` and `labels.securityBody`; the notice card is how a user learns a tool result was untrusted.
+
+## Related
+
+- [Security model](/docs/concepts/security-model): the short version
+- [Guard](/docs/server/guard): rules and downgrade details
+- [MCP](/docs/server/mcp): allow lists and tiers
+- [Host tools](/docs/host/host-tools): `confirm` and result shapes
+- [Handler](/docs/server/handler): the strict body schema

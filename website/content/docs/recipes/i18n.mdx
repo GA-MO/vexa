@@ -1,0 +1,102 @@
+---
+title: i18n
+description: Ship the chat in Thai with format for baht amounts, chat.labels for the panel chrome, and a persona or instruction that fixes the answer language.
+---
+
+## Goal
+
+A Thai user should see Thai everywhere: the empty state and buttons of the panel, the assistant's sentences, and amounts written the way Thai apps write them. Three settings cover it, each on the layer that owns the text: `format` and `chat.labels` on the provider, the answer language on the server.
+
+## What the user asks
+
+- "ขอสรุปบิลออเดอร์เมื่อกี้"
+- "สรุปยอดขายไตรมาสนี้ให้หน่อย เทียบกับปีที่แล้ว"
+- "ออเดอร์ #A-1042 ถึงไหนแล้ว"
+
+## Live example
+
+<Example id="receipt" />
+
+The example shows a Thai prompt and a Thai answer around English component text. With the configuration below the labels of the panel around it are Thai as well, and `LineItems` with `currency: null` prints amounts through the provider's formatter instead of the `฿` prefix the example hardcodes.
+
+## How it works
+
+### Numbers and money
+
+`format` takes a `locale` and an ISO currency code. Every component that prints a number (Metric, LineItems, KeyValue, chart axes, `$computed formatCurrency`) reads it from context.
+
+```tsx title="app/providers.tsx"
+"use client";
+
+import { VexaProvider } from "vexa/react";
+import { VexaChatOverlay } from "vexa/chat";
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <VexaProvider
+      format={{ locale: "th-TH", currency: "THB" }}
+      chat={{
+        title: "ผู้ช่วย Acme",
+        subtitle: "ถาม · ตอบ · แสดงผลเป็น UI",
+        suggestions: [
+          { label: "สรุปยอดขาย", prompt: "สรุปยอดขายไตรมาสนี้ให้หน่อย เทียบกับปีที่แล้ว" },
+          { label: "สถานะออเดอร์", prompt: "ออเดอร์ล่าสุดของฉันถึงไหนแล้ว" },
+        ],
+        labels: {
+          emptyTitle: "ถามได้เลย",
+          emptyDescription: "พิมพ์คำถาม แล้วรับคำตอบพร้อม UI",
+          thinking: "กำลังคิด…",
+          approve: "อนุมัติ",
+          reject: "ปฏิเสธ",
+          run: "เรียกใช้",
+          cancel: "ยกเลิก",
+          startOver: "เริ่มใหม่",
+          closeChat: "ปิดแชท",
+          openAssistant: "เปิดผู้ช่วย",
+          closeAssistant: "ปิดผู้ช่วย",
+          tasks: (count) => `${count} งาน`,
+          approveTool: (tool) => `อนุญาตให้เรียก ${tool} หรือไม่`,
+          runOnPage: (tool) => `เรียก ${tool} บนหน้านี้หรือไม่`,
+          securityTitle: "พบข้อความน่าสงสัยในข้อมูลจากเครื่องมือ",
+        },
+      }}
+    >
+      {children}
+      <VexaChatOverlay />
+    </VexaProvider>
+  );
+}
+```
+
+`labels` is a `Partial<ChatLabels>`: any key you leave out keeps its English default. Function-valued keys (`tasks`, `approveTool`, `runOnPage`, `securityBody`) receive the count or tool name, so word order is yours. An invalid locale or currency falls back to `en-US` / `THB` with a console warning rather than throwing.
+
+### The assistant's language
+
+The catalog rules already say "respond in the user's language", so a Thai question gets a Thai answer without configuration. For a single-language app, fix it on the server so an English question from a Thai user still gets Thai:
+
+```ts title="app/api/chat/route.ts"
+export const { GET, POST } = createVexaHandler({
+  models,
+  persona: "คุณคือผู้ช่วยของ Acme ตอบเป็นภาษาไทยเสมอ ใช้คำสุภาพและกระชับ",
+  instructions: ["Component labels, table headers, and button text must be Thai. Keep product names and order ids as they are."],
+});
+```
+
+`persona` is the first prompt layer and `instructions` come after the operational rules; both are host text and neither can override the library invariants that follow them.
+
+### Component text
+
+Component strings such as Table headers and Button labels are written by the model, so the instruction above is what makes them Thai. The only text the library prints inside a spec is formatted numbers, which `format` handles. Thai script needs a font with Thai glyphs on the host page; the components inherit `font-family` from the page.
+
+## Prompt hints
+
+- Numbers stay Arabic: "write digits as 0-9, not Thai numerals" avoids ๑๒๓ in Metric values.
+- Dates and times: "write times as HH:MM and dates as d MMM in Thai (14 ก.ย.)".
+- Mixed audiences: leave `persona` language-neutral and let the catalog rule follow each user.
+
+## Related
+
+- [Labels and i18n](/docs/host/labels-and-i18n): every `ChatLabels` key
+- [Format and functions](/docs/host/format-and-functions): what the formatter prints
+- [Persona and rules](/docs/server/persona-and-rules): the prompt layers
+- [Receipt](/docs/recipes/receipt): the example above with its host code

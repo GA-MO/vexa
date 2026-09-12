@@ -1,0 +1,71 @@
+---
+title: runTool
+description: The runTool spec action lets buttons and watch expressions in generated UI call host tools directly or forward server and MCP tools through the model.
+---
+
+## The action
+
+`runTool` is one of the three custom actions declared in the catalog. Its params are `name` (string) and `input` (object or `null`). Input values may use `$state` or `$bindState` to pull values the user entered under `/ui/*`.
+
+```json title="button in a spec"
+{
+  "type": "Button",
+  "props": { "label": "Track on map", "variant": "primary" },
+  "on": { "press": [{ "action": "runTool", "params": { "name": "open_map", "input": { "id": "A-1042" } } }] }
+}
+```
+
+## Dispatch by kind
+
+The handler in `createVexaHandlers` decides where the call goes by looking at the name:
+
+| `name` is | What happens |
+|---|---|
+| a host tool registered on `VexaProvider` | runs `run(input)` in the browser, after input validation and the optional confirmation; result written to `/tools/<name>` and `/toast` |
+| anything else | sends a user message `⟦action⟧ runTool <name> <json>` through the mounted chat; the model calls the server or MCP tool itself |
+
+Host tools run directly because the browser executes them anyway; there is no server gate to bypass. Every other name goes through the model so it passes the server's tool list, `needsApproval`, and the injection guard. The server rewrites the message into an "unavailable" note when the name is unknown, so a spec cannot steer the model to arbitrary tools.
+
+When no `VexaProvider` is mounted, or no chat is open to forward to, the handler writes an explanation to `/toast` instead of failing silently.
+
+## From watch
+
+`watch` runs an action when a state path changes. With `runTool` it turns user input into a host call without a button:
+
+```json title="cascading select"
+{
+  "type": "Stack",
+  "props": { "direction": "vertical", "gap": "md" },
+  "watch": {
+    "/ui/country": {
+      "action": "runTool",
+      "params": { "name": "load_cities", "input": { "country": { "$state": "/ui/country" } } }
+    }
+  },
+  "children": ["country", "cities"]
+}
+```
+
+```json title="the host tool it calls"
+load_cities: defineTool({
+  description: "List the cities available for a country code (TH, US, JP).",
+  input: z.object({ country: z.string().min(2).max(2) }),
+  run: ({ country }) => ({ ok: true, data: { cities: CITIES[country.toUpperCase()] ?? [] } }),
+})
+```
+
+A Text can then show `{ "$template": "Cities: ${/tools/load_cities/cities}" }`. This is how the former `loadCities` action was replaced: the library ships no demo behavior, and the host owns the data.
+
+## Result shape
+
+For calls from buttons and `watch`, `/tools/<name>` receives the tool's `data` (or `{ ok: true, summary }` when there is none). `summary` is copied to `/toast` on success and `error` on failure, so an `Alert` with `visible: { "$state": "/toast" }` shows the outcome. Model-initiated calls store the whole result object instead; see [Host tools](/docs/host/host-tools#results-under-tools).
+
+## From host code
+
+Outside a spec, `useVexaHost().runTool(name, input)` runs the same path with `source: "button"`.
+
+## Related
+
+- [State](/docs/concepts/state): `watch`, `visible`, and the reserved namespaces
+- [Host tools](/docs/host/host-tools): defining what `runTool` calls
+- [Guard](/docs/server/guard): how forwarded action messages are sanitized

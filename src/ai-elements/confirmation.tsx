@@ -1,8 +1,8 @@
 "use client";
 
-import { Alert, AlertDescription } from "agentic-ui/ui/alert";
-import { Button } from "agentic-ui/ui/button";
-import { cn } from "agentic-ui/lib/utils";
+import { Alert, AlertDescription } from "vexa/ui/alert";
+import { Button } from "vexa/ui/button";
+import { cn } from "vexa/lib/utils";
 import type { ToolUIPart } from "ai";
 import type { ComponentProps, ReactNode } from "react";
 import { createContext, useContext, useMemo } from "react";

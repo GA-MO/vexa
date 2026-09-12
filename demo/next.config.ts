@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const demoDir = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["agentic-ui"],
+  transpilePackages: ["vexa"],
   outputFileTracingRoot: path.join(demoDir, ".."),
 };
 

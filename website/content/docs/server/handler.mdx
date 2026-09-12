@@ -1,0 +1,96 @@
+---
+title: Handler
+description: createVexaHandler builds the GET and POST handlers for the chat route, validates the strict request body, resolves the model, and streams text plus spec patches.
+---
+
+## One call, two handlers
+
+```ts title="app/api/chat/route.ts"
+import { createVexaHandler } from "vexa/server";
+import { stepCountIs } from "ai";
+import { models } from "@/lib/models";
+
+export const maxDuration = 60;
+
+export const { GET, POST } = createVexaHandler({
+  models,
+  persona: ({ today, context }) => `You are the assistant for Acme's admin console. Today is ${today}; the user is on ${String(context.path ?? "/")}.`,
+  stopWhen: stepCountIs(6),
+});
+```
+
+`vexa/server` is server-only: it imports `@ai-sdk/mcp/mcp-stdio`, which pulls in `child_process`. Never import it from client code. `vexa/core` and `vexa/react` stay client-safe.
+
+## Config
+
+| Field | Type | Default | Purpose |
+|---|---|---|---|
+| `models` | `ModelRegistry \| () => ModelRegistry` | | allowlist keyed by the id the client sends; first key is the default |
+| `model` | `LanguageModel \| ModelResolver` | | force one model, or resolve per request from `(body, req)` |
+| `providerOptions` | `Record<string, Record<string, unknown>>` | | passed through to `streamText` |
+| `persona` | `string \| string[] \| (ctx) => string \| string[]` | "You are Vexa…" | first prompt layer |
+| `rules` | `string[]` | | appended to the catalog rules |
+| `instructions` | `string[]` | | free text after the operational rules |
+| `tools` | `ToolSet` | | server tools with `execute`; set `needsApproval` yourself |
+| `toolTiers` | `Partial<Record<keyof tools, "read" \| "write" \| "destructive">>` | `needsApproval ? "write" : "read"` | tier per server tool; keys are checked against `tools` |
+| `mcp` | `McpServerConfig[]` | | external tool servers |
+| `stopWhen` | `StopCondition` | `stepCountIs(4)` | bounds the tool loop |
+| `toolApprovalSecret` | `string` | | signs approvals (`experimental_toolApprovalSecret`) |
+| `guard` | `{ onFlagged?: "downgrade" \| "off"; rules?: GuardRule[] }` | `"downgrade"` | injection guard |
+
+`createVexaHandler` throws at startup when neither `model` nor `models` is given, and on the first request when the registry resolves to an empty object.
+
+## GET
+
+Returns `{ models: ModelInfo[], default: string | null }` built from the registry. With `model` and no `models`, it returns `{ models: [], default: null }`. The chat picker calls this on mount.
+
+## POST
+
+1. Parse JSON; a non-JSON body gets `400 Request body must be JSON`.
+2. Validate against the strict body schema; any unknown field, an invalid host tool name, or a limit overrun gets `400 Invalid chat request: <field>: <issue>`.
+3. Resolve the model from `body.model` (or the resolver); an unknown id gets `400`.
+4. Sanitize `⟦action⟧ runTool` user messages whose tool is unknown (see [Guard](/docs/server/guard)).
+5. Connect MCP servers, build the tool set (server tools and MCP outputs fenced, host tools without `execute`), assemble the system prompt, and stream. Errors during streaming return `500` with the message.
+
+## The request body
+
+```ts title="what the client is allowed to send"
+{
+  id?: string; trigger?: string; messageId?: string;   // AI SDK transport fields
+  messages: UIMessage[];                               // 1 to 200
+  model?: string;
+  context?: Record<string, unknown>;                   // serialized size ≤ 4 KB
+  hostTools?: { name: string; description: string; inputSchema: object }[];   // ≤ 32, name ^[a-z][a-z0-9_]{0,63}$, description ≤ 300 chars
+}
+```
+
+The schema is `.strict()`: there is no field for a tier, an approval, a system prompt, or a key, so none can be forged from the browser.
+
+## Server tools
+
+Server tools are plain AI SDK tools. `experimental_context` carries the client's validated `context` into `execute`, so a tool can read the page path or selected ids without the client sending them again.
+
+```ts title="a gated server tool"
+import { tool } from "ai";
+import { z } from "zod";
+
+const tools = {
+  deleteOrders: tool({
+    description: "Delete orders by id.",
+    inputSchema: z.object({ ids: z.array(z.string()) }),
+    needsApproval: true,
+    execute: async ({ ids }, { experimental_context }) => db.orders.deleteMany(ids),
+  }),
+};
+
+createVexaHandler({ models, tools, toolTiers: { deleteOrders: "destructive" } });
+```
+
+Gated tools are named in the prompt so the model announces the change before calling, and the chat renders an approval card. Every output goes through `toModelOutput` fencing unless the tool defines its own.
+
+## Related
+
+- [Models](/docs/server/models): registry, lazy entries, resolvers
+- [Persona and rules](/docs/server/persona-and-rules): the prompt layers
+- [MCP](/docs/server/mcp): `McpServerConfig`
+- [Guard](/docs/server/guard): what happens on a flagged result

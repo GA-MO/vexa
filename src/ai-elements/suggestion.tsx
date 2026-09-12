@@ -1,11 +1,11 @@
 "use client";
 
-import { Button } from "agentic-ui/ui/button";
+import { Button } from "vexa/ui/button";
 import {
   ScrollArea,
   ScrollBar,
-} from "agentic-ui/ui/scroll-area";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/scroll-area";
+import { cn } from "vexa/lib/utils";
 import type { ComponentProps } from "react";
 import { useCallback } from "react";
 

@@ -1,0 +1,4 @@
+{
+  "title": "Server",
+  "pages": ["handler", "models", "persona-and-rules", "mcp", "guard"]
+}

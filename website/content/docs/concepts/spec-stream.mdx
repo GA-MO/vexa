@@ -1,0 +1,52 @@
+---
+title: Spec stream
+description: How the model streams JSONL patch lines that json-render assembles into a spec and SpecView renders as catalog components.
+---
+
+## A reply is text plus patches
+
+The system prompt asks the model to answer conversationally first, then to emit UI as JSONL inside a ```` ```spec ```` fence. Each line is one RFC 6902 JSON Patch operation against a document with three roots: `/root`, `/elements`, and `/state`.
+
+````text title="model output"
+Here is a quarterly overview.
+
+```spec
+{"op":"add","path":"/root","value":"main"}
+{"op":"add","path":"/elements/main","value":{"type":"Stack","props":{"direction":"vertical","gap":"md"},"children":["revenue"]}}
+{"op":"add","path":"/elements/revenue","value":{"type":"Metric","props":{"label":"Revenue","value":"THB 1.2M","detail":"+8% vs Q1","trend":"up"},"children":[]}}
+```
+````
+
+The model writes `/root` first, then elements, then the state they read, so the panel fills in progressively instead of waiting for the whole answer.
+
+## What the server does with the lines
+
+`createVexaHandler` calls `streamText` and pipes the result through `pipeJsonRender` from `@json-render/core`. The transform recognizes the spec fence, parses each line, and turns it into a `data-spec` part of the UI message stream. Prose outside the fence stays a normal text part. The browser never parses JSONL itself.
+
+## What the client does with the parts
+
+Inside the chat panel, `useJsonRenderMessage(message.parts)` merges every `data-spec` part of one assistant message into a single flat spec:
+
+```ts title="shape of a compiled spec"
+type Spec = {
+  root: string;
+  elements: Record<string, { type: string; props: Record<string, unknown>; children?: string[] }>;
+  state?: Record<string, unknown>;
+};
+```
+
+`SpecView` then hands that spec to the json-render `Renderer` with Vexa's registry (one React component per catalog type), a state store, the built-in action handlers, computed functions, and directives. The rendered result appears in the assistant bubble, sized for a 340 to 600 px panel.
+
+## Patches after a tool call
+
+When the model calls a tool mid-answer, the AI SDK ends the step, the tool runs, and the model continues. Because json-render merges every `data-spec` part of a message into one spec, the continuation must patch the spec it already started (same element ids) rather than open a new root. The prompt states this rule; a second `/root` would replace the first.
+
+## Validation
+
+The catalog is the schema. A patch that adds an element whose `type` is not in the catalog, or whose props fail the zod schema, is dropped by the renderer instead of being rendered. This is what makes the output "constrained": the model chooses which components to compose, never how they are implemented.
+
+## Related
+
+- [Catalog](/docs/concepts/catalog): why the component set is closed and how props are declared
+- [State](/docs/concepts/state): the `/state` root and the namespaces the runtime reserves
+- [Get started](/docs/get-started): see a stream end to end

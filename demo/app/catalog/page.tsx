@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { CatalogGallery } from "@/components/catalog-gallery";
-import { CATALOG_TYPES } from "@/lib/catalog-gallery";
+import { CATALOG_TYPES } from "vexa/examples";
 
 export const metadata = {
-  title: "Catalog gallery · Agentic UI",
+  title: "Catalog gallery · Vexa",
   description: "Every generative UI catalog type rendered as it appears in chat",
 };
 

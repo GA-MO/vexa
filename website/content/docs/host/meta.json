@@ -1,0 +1,4 @@
+{
+  "title": "Host integration",
+  "pages": ["provider", "host-tools", "runtool", "format-and-functions", "labels-and-i18n", "theme", "models-and-picker"]
+}

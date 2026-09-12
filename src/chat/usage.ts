@@ -1,7 +1,7 @@
 import type { LanguageModelUsage } from "ai";
-import type { AgenticMessage } from "agentic-ui/protocol";
+import type { VexaMessage } from "vexa/protocol";
 
-export function estimateTokens(messages: AgenticMessage[]) {
+export function estimateTokens(messages: VexaMessage[]) {
   let chars = 0;
   for (const message of messages) {
     for (const part of message.parts) {
@@ -13,7 +13,7 @@ export function estimateTokens(messages: AgenticMessage[]) {
   return Math.max(1, Math.ceil(chars / 4));
 }
 
-export function estimateUsage(messages: AgenticMessage[]): LanguageModelUsage {
+export function estimateUsage(messages: VexaMessage[]): LanguageModelUsage {
   const total = estimateTokens(messages);
   const inputTokens = Math.ceil(total * 0.7);
   const outputTokens = Math.max(0, total - inputTokens);

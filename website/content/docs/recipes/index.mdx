@@ -1,0 +1,24 @@
+---
+title: Recipes
+description: Nine end-to-end patterns, each with a live example and the host or server code that makes the assistant produce it.
+---
+
+Every recipe follows the same shape: what the user asks, the UI the assistant answers with, and the `VexaProvider` or `createVexaHandler` configuration behind it. The examples are the same specs the test bench renders, so what you see here is what the library produces.
+
+## Answers built from data
+
+- [Dashboard](/docs/recipes/dashboard): Metric grid, BarChart, and a Table from one server tool.
+- [Order status](/docs/recipes/order-status): FromTo, KeyValue, Timeline, and a button that opens the map.
+- [Receipt](/docs/recipes/receipt): LineItems with totals and pickup details.
+- [Recommendation](/docs/recipes/recommendation): Image, Rating, and contact rows for one place.
+- [Trend](/docs/recipes/trend): LineChart with two series and the insight in an Alert.
+
+## Answers that collect input
+
+- [Booking](/docs/recipes/booking): Select, RadioGroup, Input, Switch, validation, and a host tool that books.
+
+## Configuration
+
+- [i18n](/docs/recipes/i18n): Thai chrome, Thai answers, baht formatting.
+- [Dark mode](/docs/recipes/dark-mode): `theme.mode` and a host tool that switches it.
+- [Per-tenant models](/docs/recipes/per-tenant-models): resolve the model and the key per request.

@@ -1,0 +1,66 @@
+---
+title: "Table"
+description: "Simple data table"
+---
+
+## Use it when
+
+Several records share the same fields and are worth reading row by row — plans, invoices, search results. The catalog is explicit about the boundaries: one record's details go in KeyValue, priced rows that end in a total go in LineItems (which formats the money for you), and a single origin and destination goes in FromTo. Table has no sorting, filtering, paging, or per-cell components; `rows` holds strings and numbers only.
+
+## Prompt hints
+
+- "Compare the Free, Pro and Enterprise plans in a table"
+- "List last month's invoices with amount and status"
+- "Table of the top five regions by revenue"
+
+`columns` controls both the order and which fields appear — a row key with no matching column is dropped, and a column whose key a row lacks renders an empty cell rather than failing. A three- or four-column projection is the practical way to fit a wide result into chat; anything wider scrolls inside the table's own horizontal scroll container instead of squeezing.
+
+## Related
+
+- [KeyValue](/docs/catalog/KeyValue) — the details of one record instead of many
+- [LineItems](/docs/catalog/LineItems) — priced rows with subtotal and total
+- [BarChart](/docs/catalog/BarChart) — when one numeric column is the point
+- [Catalog](/docs/concepts/catalog) — why `rows` must never be emitted empty
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `columns` | `{ key: string; label: string }[]` | Yes | Example: `[{"key":"name","label":"Name"},{"key":"score","label":"Score"}]` |
+| `rows` | `(Record<string, string \| number>)[]` | Yes | Example: `[{"name":"Alpha","score":92}]` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Table",
+  "props": {
+    "columns": [
+      {
+        "key": "name",
+        "label": "Name"
+      },
+      {
+        "key": "score",
+        "label": "Score"
+      }
+    ],
+    "rows": [
+      {
+        "name": "Alpha",
+        "score": 92
+      }
+    ]
+  }
+}
+```
+
+## Live example
+
+<Example id="table" />
+
+{/* generated:end */}

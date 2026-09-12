@@ -1,0 +1,54 @@
+---
+title: "Code"
+description: "Code snippet block for examples and configs"
+---
+
+## Use it when
+
+The answer contains something the reader will copy verbatim: a config block, a command, a snippet of setup code. A single identifier or value inside a sentence does not need it — that is [Text](/docs/catalog/Text) — and a set of settings the user should read rather than paste is easier to scan as [KeyValue](/docs/catalog/KeyValue).
+
+## Prompt hints
+
+- "show me the config for that"
+- "give me the curl command"
+- "what does the provider setup look like?"
+
+`language` and `filename` are labels in the header strip, nothing more: there is no syntax highlighting, and when they are null the header falls back to `text` and `snippet`. The block is the one place in the catalog that is always dark rather than themed, and it scrolls horizontally instead of wrapping — in a 340px chat panel that makes line length matter more than it would on a full-width page.
+
+## Related
+
+- [Text](/docs/catalog/Text) — the sentence that explains what to do with the snippet.
+- [Card](/docs/catalog/Card) — wrap the snippet when it needs a titled panel.
+- [Tabs](/docs/catalog/Tabs) — one text panel per variant when there are several commands.
+- [Catalog](/docs/concepts/catalog) — the full set of components the model may emit.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `code` | `string` | Yes | Example: `"console.log('hello')"` |
+| `language` | `string \| null` | No | Example: `"ts"` |
+| `filename` | `string \| null` | No | Example: `"main.ts"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Code",
+  "props": {
+    "code": "console.log('hello')",
+    "language": "ts",
+    "filename": "main.ts"
+  }
+}
+```
+
+## Live example
+
+<Example id="code" />
+
+{/* generated:end */}

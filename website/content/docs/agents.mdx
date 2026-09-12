@@ -1,0 +1,100 @@
+---
+title: Agents
+description: "How coding agents read these docs: every page as Markdown, llms.txt indexes, a JSON search API, and the vexa-docs MCP server for Claude Code and other MCP clients."
+---
+
+## Every page is Markdown
+
+Add `.md` to any docs URL to get the page as plain Markdown with the frontmatter folded into a heading and a `Source:` line. HTML pages advertise it with a `Link: <...md>; rel="alternate"; type="text/markdown"` header.
+
+```bash title="terminal"
+curl -s http://localhost:3002/docs/host/host-tools.md | head -20
+```
+
+Two indexes cover the whole site:
+
+| URL | Contents |
+| --- | --- |
+| `/llms.txt` | One line per page: `- [Title](url.md): summary`, grouped by section |
+| `/llms-full.txt` | Every page concatenated, separated by `---`, long pages truncated with a pointer to the full `.md` |
+
+```bash title="terminal"
+curl -s http://localhost:3002/llms.txt
+```
+
+The examples use `http://localhost:3002`, which is where `bun run dev` serves the site. Replace it with the deployed origin.
+
+## JSON API
+
+Three read-only endpoints back the MCP server and are usable on their own. They need a running server, so they are not part of the prerendered build.
+
+| Route | Returns |
+| --- | --- |
+| `GET /api/docs/search?q=host%20tool&limit=8` | `{ query, results: [{ title, url, markdownUrl, section, excerpt }] }`, best page first |
+| `GET /api/docs/pages` | `{ pages: [{ title, description, url, markdownUrl, section }] }` in sidebar order |
+| `GET /api/docs/components` | `{ components: [{ name, description, url, markdownUrl }] }`, one per catalog component |
+
+```bash title="terminal"
+curl -s "http://localhost:3002/api/docs/search?q=host%20tool&limit=3"
+```
+
+The search runs on the same Orama index as the ⌘K palette, so an agent finds what a reader finds. `limit` is clamped to 1–20.
+
+## MCP server
+
+The site exposes an MCP server named `vexa-docs` with three tools:
+
+| Tool | Input | Output |
+| --- | --- | --- |
+| `search_docs` | `{ query: string, limit?: number }` | Matching pages with section, excerpt and Markdown URL |
+| `get_page` | `{ slug: string }`, also accepts a path or a full URL | The page as Markdown |
+| `list_components` | none | Every catalog component with its one-line description and docs URL |
+
+It is served over Streamable HTTP at `/mcp` (stateless, JSON responses) and as a stdio script that talks to a running site, so editors that only speak stdio can use it without a build step.
+
+### Claude Code
+
+Put a `.mcp.json` at the root of the project that should read the docs. The stdio variant points at the script in this repository and needs a running site (`bun run dev` in `website/`, or the deployed origin in `VEXA_DOCS_URL`):
+
+```json title=".mcp.json"
+{
+  "mcpServers": {
+    "vexa-docs": {
+      "command": "bun",
+      "args": ["/absolute/path/to/agentic-ui/website/scripts/vexa-docs-mcp.ts"],
+      "env": { "VEXA_DOCS_URL": "http://localhost:3002" }
+    }
+  }
+}
+```
+
+Against a deployed site the HTTP transport needs no local checkout:
+
+```json title=".mcp.json"
+{
+  "mcpServers": {
+    "vexa-docs": {
+      "type": "http",
+      "url": "https://vexa.example.com/mcp"
+    }
+  }
+}
+```
+
+Then ask Claude Code something like "How do I add a host tool in Vexa?". It calls `search_docs`, reads the [Host tools](/docs/host/host-tools) page through `get_page`, and answers from the page instead of guessing.
+
+### Running the stdio server by hand
+
+```bash title="terminal"
+cd website
+bun run mcp:docs
+```
+
+The script reads JSON-RPC from stdin and writes to stdout, which is what MCP clients expect. To inspect it without a client, pipe an `initialize`, `notifications/initialized`, and `tools/list` message into it, one JSON object per line.
+
+## Writing pages agents can read
+
+- One H1 per page: the frontmatter `title`. Body headings start at `##`
+- `description` is one sentence; it is the summary in `llms.txt` and the fallback excerpt in search results
+- Code blocks carry a language and a `title="file"` so a snippet keeps its file name in Markdown
+- Live `<Example />` blocks become a note with the example id and a link, so nothing lives only in a rendered component

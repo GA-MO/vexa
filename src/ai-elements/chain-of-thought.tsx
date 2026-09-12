@@ -1,13 +1,13 @@
 "use client";
 
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
-import { Badge } from "agentic-ui/ui/badge";
+import { Badge } from "vexa/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "agentic-ui/ui/collapsible";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/collapsible";
+import { cn } from "vexa/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { BrainIcon, ChevronDownIcon, DotIcon } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
@@ -126,7 +126,7 @@ export const ChainOfThoughtStep = memo(
   }: ChainOfThoughtStepProps) => (
     <div
       className={cn(
-        "flex gap-2 text-sm",
+        "group/step flex gap-2 text-sm",
         stepStatusStyles[status],
         "fade-in-0 slide-in-from-top-2 animate-in",
         className
@@ -135,9 +135,9 @@ export const ChainOfThoughtStep = memo(
     >
       <div className="relative mt-0.5">
         <Icon className="size-4" />
-        <div className="absolute top-7 bottom-0 left-1/2 -mx-px w-px bg-border" />
+        <div className="absolute top-7 bottom-0 left-1/2 -mx-px w-px bg-border group-last/step:hidden" />
       </div>
-      <div className="flex-1 space-y-2 overflow-hidden">
+      <div className="min-w-0 flex-1 space-y-2">
         <div>{label}</div>
         {description && (
           <div className="text-muted-foreground text-xs">{description}</div>

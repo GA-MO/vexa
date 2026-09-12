@@ -1,0 +1,56 @@
+---
+title: "Metric"
+description: "Single KPI with optional trend"
+---
+
+## Use it when
+
+One number is the answer, with at most one line of comparison under it. Metric is the dashboard tile the prompt pairs with Card and Grid, but `Grid columns="2"` or `"3"` only works while each tile stays readable in a 340–600px chat panel — otherwise use `columns="1"` or a Stack. Several records with the same fields belong in Table; the many fields of one record belong in KeyValue; a share of a fixed whole belongs in Progress.
+
+## Prompt hints
+
+- "Show this week's revenue, churn and NPS as cards"
+- "How many tickets are open right now?"
+- "Summarise the quarter in three KPIs"
+
+`value` is a string, so the model formats the number itself — Metric applies no locale or currency formatting. `trend` draws no arrow or icon: it only colours `detail` (up is success, down is danger, neutral and an absent trend are muted), so a `trend` with `detail: null` changes nothing on screen.
+
+## Related
+
+- [Grid](/docs/catalog/Grid) — puts two or three Metrics side by side
+- [KeyValue](/docs/catalog/KeyValue) — one record, many fields, no emphasis
+- [Progress](/docs/catalog/Progress) — when the number is a percentage of a whole
+- [BarChart](/docs/catalog/BarChart) — when the comparison matters more than any single value
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | Yes | Example: `"Users"` |
+| `value` | `string` | Yes | Example: `"12,480"` |
+| `detail` | `string \| null` | No | Example: `"+8% vs last week"` |
+| `trend` | `"up" \| "down" \| "neutral" \| null` | No | Example: `"up"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Metric",
+  "props": {
+    "label": "Users",
+    "value": "12,480",
+    "detail": "+8% vs last week",
+    "trend": "up"
+  }
+}
+```
+
+## Live example
+
+<Example id="metric" />
+
+{/* generated:end */}

@@ -1,7 +1,9 @@
 export { catalog, type Catalog } from "./catalog";
-export { createAgentModel } from "./openrouter";
 export {
   buildAgentInstructions,
   buildStandaloneAgentInstructions,
+  type PromptOptions,
+  type Persona,
+  type PersonaContext,
+  type PromptToolInfo,
 } from "./prompt";
-export { streamAgentChat } from "./chat";

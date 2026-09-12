@@ -1,0 +1,56 @@
+---
+title: "Timeline"
+description: "Vertical timeline for events or roadmap steps"
+---
+
+## Use it when
+
+Ordered events where each one carries its own time or explanation: a roadmap, a delivery history, an incident replay. The prompt sends plain steps to List and long collapsible text to Accordion, so reach for Timeline only when `time` or `detail` earns its place. A start and an end with nothing in between is FromTo. Never emit an empty `items` array — the catalog rules forbid shells with no content.
+
+## Prompt hints
+
+- "What's the roadmap for the next three weeks?"
+- "Track my order"
+- "Walk me through what happened during the outage"
+
+`time` is a free string, so `"Week 2"`, `"Mon"`, and `"14:32"` are all fine; it sits opposite the title and drops to its own line when the pair will not fit the panel. The connecting rail is drawn between dots and stops at the last item, so a one-item Timeline renders as a single dot — usually a sign that Text or IconText fits better.
+
+## Related
+
+- [List](/docs/catalog/List) — steps without times or detail
+- [FromTo](/docs/catalog/FromTo) — only a start and an end
+- [Accordion](/docs/catalog/Accordion) — when each step needs a paragraph the reader can collapse
+- [Table](/docs/catalog/Table) — when the events share fields worth comparing in columns
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `items` | `({ title: string; detail: string \| null; time: string \| null })[]` | Yes | Example: `[{"title":"Kickoff","detail":"Align goals","time":"Mon"}]` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Timeline",
+  "props": {
+    "items": [
+      {
+        "title": "Kickoff",
+        "detail": "Align goals",
+        "time": "Mon"
+      }
+    ]
+  }
+}
+```
+
+## Live example
+
+<Example id="timeline" />
+
+{/* generated:end */}

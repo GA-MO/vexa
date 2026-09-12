@@ -1,0 +1,69 @@
+---
+title: "Select"
+description: "Dropdown for choosing one option from a longer list. Bind with value: { $bindState: '/form/country' }."
+---
+
+## Use it when
+
+One choice out of a list too long to show at once — a country, a timezone, a size. Below roughly six options RadioGroup reads better because nothing is hidden; a yes/no is Checkbox or Switch; a typed value is Input. Select is a native control, so a long list costs the same vertical space as a short one and mobile gets the system picker.
+
+## Prompt hints
+
+- "Let me pick my country"
+- "Which timezone should I use?"
+- "Give me a dropdown of available sizes"
+
+`value: { "$bindState": "/ui/country" }` binds two-way through `useBoundProp` and holds `option.value`. Put it under `/ui/*` — `/tools/*` and `/host/*` are runtime-owned and spec writes there are dropped with a warning — and pair it with `watch` when a choice should trigger a host tool. `placeholder` renders as a disabled empty option shown whenever the bound value is empty or null, falling back to "Select…". There is no multi-select or option grouping.
+
+## Related
+
+- [RadioGroup](/docs/catalog/RadioGroup) — the same choice with every option visible
+- [Input](/docs/catalog/Input) — when the value is typed, not chosen
+- [Form](/docs/catalog/Form) — why a Stack of bound fields beats the shortcut
+- [State](/docs/concepts/state) — `$bindState`, `watch`, and `/tools` results feeding options
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string \| null` | No | Example: `"Country"` |
+| `name` | `string` | Yes | Example: `"country"` |
+| `placeholder` | `string \| null` | No | Example: `"Choose a country"` |
+| `options` | `{ value: string; label: string }[]` | Yes | Example: `[{"value":"th","label":"Thailand"},{"value":"sg","label":"Singapore"}]` |
+| `value` | `string \| null` | No | Example: `null` |
+| `disabled` | `boolean \| null` | No | Example: `false` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Select",
+  "props": {
+    "label": "Country",
+    "name": "country",
+    "placeholder": "Choose a country",
+    "options": [
+      {
+        "value": "th",
+        "label": "Thailand"
+      },
+      {
+        "value": "sg",
+        "label": "Singapore"
+      }
+    ],
+    "value": null,
+    "disabled": false
+  }
+}
+```
+
+## Live example
+
+<Example id="select" />
+
+{/* generated:end */}

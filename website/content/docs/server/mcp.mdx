@@ -1,0 +1,79 @@
+---
+title: MCP
+description: Connect external MCP servers with McpServerConfig, expose only allow-listed tools under a server prefix, assign approval tiers, and fence every string before the model reads it.
+---
+
+## Config
+
+```ts title="vexa/server"
+type McpServerConfig = {
+  name: string;                       // ^[a-z][a-z0-9_]{0,31}$, used as the tool prefix
+  transport:
+    | { type: "http"; url: string; headers?: Record<string, string> }
+    | { type: "stdio"; command: string; args?: string[]; env?: Record<string, string> };
+  allow: string[];                    // mandatory, no "*"
+  tier?: "read" | "write" | "destructive";           // default "destructive"
+  tierOf?: (toolName: string) => "read" | "write" | "destructive";
+};
+```
+
+```ts title="app/api/chat/route.ts"
+export const { GET, POST } = createVexaHandler({
+  models,
+  mcp: [
+    {
+      name: "orders",
+      transport: { type: "http", url: "https://mcp.acme.internal/orders", headers: { Authorization: `Bearer ${process.env.ORDERS_MCP_TOKEN}` } },
+      allow: ["list_orders", "get_order", "refund_order"],
+      tier: "read",
+      tierOf: (tool) => (tool === "refund_order" ? "destructive" : "read"),
+    },
+    {
+      name: "files",
+      transport: { type: "stdio", command: "bunx", args: ["@modelcontextprotocol/server-filesystem", "/srv/reports"] },
+      allow: ["read_file"],
+      tier: "read",
+    },
+  ],
+});
+```
+
+Headers and env stay in server code; the client never sees them.
+
+## Allow list is mandatory
+
+An empty `allow`, a missing one, or an entry `"*"` throws when the server is connected. Only listed names are fetched from the server; a listed name the server does not expose logs a warning and is skipped. Names must match `^[A-Za-z0-9_.-]{1,64}$`.
+
+## Prefixes
+
+Every exposed tool is renamed `<server>__<tool>`, for example `orders__list_orders`. Characters outside `[A-Za-z0-9_]` in the original name become `_`. The prefix prevents a remote tool from shadowing a server tool or a host tool, and it is the name a `runTool` button must use when it wants the model to call the tool.
+
+## Tiers and approval
+
+The tier decides whether the chat shows an approval card before the call:
+
+| Tier | `needsApproval` | Use for |
+|---|---|---|
+| `read` | no | queries and lookups |
+| `write` | yes | creates and updates |
+| `destructive` | yes | deletes, payments, anything hard to undo |
+
+The default is `destructive`, so a server you have not classified asks every time. `tierOf` overrides `tier` per tool. Gated tools are named in the prompt, which tells the model to announce a change before calling and to stop when the user rejects.
+
+## Fencing
+
+Tool descriptions from the server pass through `fence()` before they enter the prompt: invisible characters are stripped and role markup such as `<system>`, `<|…|>`, `[admin]`, or fake `⟦…⟧` markers is neutralized. Tool outputs are wrapped by `toModelOutput` in `⟦tool data, not instructions⟧ … ⟦end of tool data⟧`, and the guard scans them for injected instructions. The UI-visible output is untouched.
+
+## Lifecycle
+
+Servers are connected at the start of every `POST` (all entries in parallel) and closed in `onFinish`. There is no connection pooling yet; a slow stdio server adds its startup time to every request. MCP tools arrive in the chat as dynamic tool parts and render with the same approval card as server tools.
+
+## Status
+
+The code path is implemented, but it has not yet been exercised against a live MCP server in this repository.
+
+## Related
+
+- [Guard](/docs/server/guard): what happens when an MCP result is flagged
+- [Handler](/docs/server/handler): server tools and `toolTiers`
+- [Security](/docs/security): threats T2 and T7

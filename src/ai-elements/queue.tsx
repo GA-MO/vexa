@@ -1,13 +1,13 @@
 "use client";
 
-import { Button } from "agentic-ui/ui/button";
+import { Button } from "vexa/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "agentic-ui/ui/collapsible";
-import { ScrollArea } from "agentic-ui/ui/scroll-area";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/collapsible";
+import { ScrollArea } from "vexa/ui/scroll-area";
+import { cn } from "vexa/lib/utils";
 import { ChevronDownIcon, PaperclipIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 

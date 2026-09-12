@@ -1,0 +1,61 @@
+---
+title: "Form"
+description: "Convenience form with fields bound under /form/{name}. Prefer Stack of Input + Button for idiomatic binding."
+---
+
+## Use it when
+
+A few plain fields need collecting and nothing in the spec has to react to them individually. Both the catalog description and the prompt say to prefer a Stack of Input plus Button for idiomatic binding, and the implementation is why: every field is hard-bound to `/form/<name>` by the component itself, so you cannot choose the path, and the `fields` schema has no `checks`, so per-field validation is out of reach here. Anything that feeds `runTool` should be Inputs.
+
+## Prompt hints
+
+- "Give me a request-access form with name, email and seats"
+- "Collect my shipping details"
+- "Sign me up for the waitlist"
+
+The submit button fires the element's `submit` event, so the spec attaches actions with `on.submit` the way a Button uses `on.press`; alone, the form does nothing. `submitForm` then snapshots `/form` — falling back to `/ui/form` — into `/lastSubmit`, or into `statePath` if you pass one, as the form values plus an `at` timestamp. `/tools/*` and `/host/*` stay unwritable from a spec either way.
+
+## Related
+
+- [Input](/docs/catalog/Input) — the idiomatic path: your own binding plus `checks`
+- [Button](/docs/catalog/Button) — the pattern that replaces Form when actions are involved
+- [Actions](/docs/actions) — what `submitForm` writes and where
+- [State](/docs/concepts/state) — reserved namespaces and `/ui/*` for user values
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | `string \| null` | No | Example: `"Request access"` |
+| `submitLabel` | `string \| null` | No | Example: `"Submit"` |
+| `fields` | `({ label: string; name: string; placeholder: string \| null; inputType: "text" \| "email" \| "number" \| "textarea" \| null })[]` | Yes | Example: `[{"label":"Name","name":"name","placeholder":"Alex","inputType":"text"}]` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Form",
+  "props": {
+    "title": "Request access",
+    "submitLabel": "Submit",
+    "fields": [
+      {
+        "label": "Name",
+        "name": "name",
+        "placeholder": "Alex",
+        "inputType": "text"
+      }
+    ]
+  }
+}
+```
+
+## Live example
+
+<Example id="input-form" />
+
+{/* generated:end */}

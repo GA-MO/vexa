@@ -1,0 +1,56 @@
+---
+title: "List"
+description: "Bullet or numbered list"
+---
+
+## Use it when
+
+The answer is a set of short single-line points: steps to follow, things that changed, items to check. Each entry is one string, so the moment an entry has a second field — an amount, a status, a timestamp — it belongs in [Table](/docs/catalog/Table), [KeyValue](/docs/catalog/KeyValue) or [Timeline](/docs/catalog/Timeline) instead. The model is told never to emit a List with empty `items`.
+
+## Prompt hints
+
+- "what are the steps to set this up?"
+- "list what changed in this release"
+- "number the onboarding steps in order"
+
+`ordered: true` switches the element from `ul` to `ol` with decimal markers; leave it off for bullets. One implementation detail worth knowing: items are keyed by their own text, so two identical strings in the same list collide — vary the wording rather than repeating an entry verbatim.
+
+## Related
+
+- [Timeline](/docs/catalog/Timeline) — steps that carry a time or a detail line.
+- [Table](/docs/catalog/Table) — entries with more than one field each.
+- [KeyValue](/docs/catalog/KeyValue) — label/value pairs for a single record.
+- [Accordion](/docs/catalog/Accordion) — when each point expands into a paragraph.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `items` | `string[]` | Yes | Example: `["Plan","Build","Ship"]` |
+| `ordered` | `boolean \| null` | No | Example: `true` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "List",
+  "props": {
+    "items": [
+      "Plan",
+      "Build",
+      "Ship"
+    ],
+    "ordered": true
+  }
+}
+```
+
+## Live example
+
+<Example id="list" />
+
+{/* generated:end */}

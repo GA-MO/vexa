@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Spec } from "@json-render/core";
 import { App as McpApp } from "@modelcontextprotocol/ext-apps";
-import { SpecView } from "agentic-ui/react";
+import { SpecView } from "vexa/react";
 
 function isSpec(value: unknown): value is Spec {
   return (
@@ -63,7 +63,7 @@ export function McpAppView() {
 
     window.addEventListener("message", onMessage);
 
-    const app = new McpApp({ name: "Agentic UI", version: "0.1.0" });
+    const app = new McpApp({ name: "Vexa", version: "0.1.0" });
     app.ontoolresult = (result) => {
       const parsed = parseSpecFromToolResult(
         result as { content?: Array<{ type: string; text?: string }> },

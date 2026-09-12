@@ -8,38 +8,38 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from "agentic-ui/ui/command";
+} from "vexa/ui/command";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "agentic-ui/ui/dropdown-menu";
+} from "vexa/ui/dropdown-menu";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "agentic-ui/ui/hover-card";
+} from "vexa/ui/hover-card";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupTextarea,
-} from "agentic-ui/ui/input-group";
+} from "vexa/ui/input-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "agentic-ui/ui/select";
-import { Spinner } from "agentic-ui/ui/spinner";
+} from "vexa/ui/select";
+import { Spinner } from "vexa/ui/spinner";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "agentic-ui/ui/tooltip";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/tooltip";
+import { cn } from "vexa/lib/utils";
 import type { ChatStatus, FileUIPart, SourceDocumentUIPart } from "ai";
 import {
   CornerDownLeftIcon,
@@ -917,7 +917,9 @@ export const PromptInput = ({
         ref={formRef}
         {...props}
       >
-        <InputGroup className="overflow-hidden">{children}</InputGroup>
+        <InputGroup className="overflow-hidden rounded-[inherit] border-transparent bg-transparent has-disabled:bg-transparent has-disabled:opacity-100 dark:bg-transparent dark:has-disabled:bg-transparent">
+          {children}
+        </InputGroup>
       </form>
     </>
   );
@@ -1184,7 +1186,11 @@ export const PromptInputActionMenuContent = ({
   className,
   ...props
 }: PromptInputActionMenuContentProps) => (
-  <DropdownMenuContent align="start" className={cn(className)} {...props} />
+  <DropdownMenuContent
+    align="start"
+    className={cn("w-max min-w-44 [&_[role=menuitem]]:whitespace-nowrap", className)}
+    {...props}
+  />
 );
 
 export type PromptInputActionMenuItemProps = ComponentProps<

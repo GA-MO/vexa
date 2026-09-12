@@ -1,0 +1,59 @@
+---
+title: Models and picker
+description: The chat picker fetches its model list from GET /api/chat, so ids live only in the server registry; chat.models on the client is presentation and cannot widen what the server accepts.
+---
+
+## The list is defined once, on the server
+
+`createVexaHandler({ models })` is the allowlist. `GET /api/chat` returns it as JSON:
+
+```json title="GET /api/chat"
+{
+  "models": [
+    { "id": "claude-sonnet-4", "name": "Claude Sonnet 4", "provider": "anthropic", "maxTokens": 200000 }
+  ],
+  "default": "claude-sonnet-4"
+}
+```
+
+`VexaChat` fetches this on mount when neither the `models` prop nor `chat.models` is set, fills the picker in the composer, and selects `default`. The selected id is sent as `model` in every `POST`. The client never repeats the ids in code.
+
+## What the client sends and what the server does
+
+| Client sends | Server response |
+|---|---|
+| an id from the registry | that model streams the reply |
+| no `model` field or an empty string | the first registry key |
+| an id that is not in the registry | `400 Model "x" is not allowed by this endpoint` |
+
+When the route uses `model` (a fixed model or a resolver) instead of `models`, `GET` returns an empty list and the picker shows the built-in fallback entries; the server ignores the id and uses its own model.
+
+## Overriding the picker
+
+`chat.models` on the provider, or the `models` prop on the overlay, replaces the fetched list. Use it to hide entries or rename them. The ids must still exist in the server registry or the request is rejected. Resolution order: `models` prop, then `chat.models`, then the `GET` result, then the built-in `MODELS` constant.
+
+```tsx title="show one model only"
+<VexaChatOverlay
+  models={[{ id: "claude-sonnet-4", name: "Claude", provider: "anthropic", maxTokens: 200_000 }]}
+/>
+```
+
+`defaultModel` (prop or `chat.defaultModel`) picks the initial selection and must be one of the listed ids; otherwise the first entry wins.
+
+## What maxTokens is for
+
+`maxTokens` feeds the usage meter next to the composer. The chat estimates tokens in the conversation and shows them against the selected model's context size. It does not truncate or block anything.
+
+## The ChatModel type
+
+```ts title="vexa/chat"
+type ChatModel = { id: string; name: string; provider: string; maxTokens: number };
+```
+
+On the server, `provider` is inferred from the id when the registry entry omits it (`claude` gives `anthropic`, `gpt` gives `openai`, `gemini` gives `google`, otherwise `openrouter`) and `maxTokens` defaults to 128,000.
+
+## Related
+
+- [Models](/docs/server/models): the registry, lazy entries, per-request resolvers
+- [Handler](/docs/server/handler): `GET` and `POST`
+- [Provider](/docs/host/provider): `chat` defaults

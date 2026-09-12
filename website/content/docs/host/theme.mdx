@@ -1,0 +1,70 @@
+---
+title: Theme
+description: Map your brand once with VexaProvider theme, which sets the design tokens every catalog component and the chat chrome read, and pick light, dark, or system mode.
+---
+
+## Tokens, not props
+
+No catalog component has a color prop. Everything reads CSS variables: `primary`, `brand-violet` (the gradient end), `foreground`, `muted-foreground`, `card`, `border`, `input`, `ring`, `success`, `warning`, `danger`, `info`, and `--chart-1` to `--chart-5`. `VexaProvider theme` writes overrides inline on a `display: contents` wrapper marked `[data-vexa-theme]`, so a host maps its brand once and every component, including the model's output, follows.
+
+## VexaTheme
+
+```ts title="vexa/react"
+type VexaTheme = {
+  primary?: string;      // --primary and --ring
+  primaryDark?: string;  // --primary in dark mode
+  secondary?: string;    // --brand-violet, the gradient end
+  secondaryDark?: string;
+  radius?: string;       // --radius
+  chart?: readonly string[];   // --chart-1 .. --chart-5 (first five used)
+  success?: string;
+  warning?: string;
+  danger?: string;
+  info?: string;
+  mode?: "light" | "dark" | "system";
+};
+```
+
+```tsx title="app/providers.tsx"
+<VexaProvider
+  theme={{
+    primary: "#0F766E",
+    primaryDark: "#5EEAD4",
+    secondary: "#0891B2",
+    radius: "0.5rem",
+    chart: ["#0F766E", "#0891B2", "#F59E0B", "#E11D48", "#7C3AED"],
+    mode: "system",
+  }}
+>
+```
+
+Colors are plain CSS strings and are not validated; a typo shows up as the browser ignoring the variable.
+
+## Modes
+
+| `mode` | What the wrapper does |
+|---|---|
+| `"light"` (default) | sets `data-vexa-mode="light"`; light tokens from your stylesheet apply |
+| `"dark"` | adds the `dark` class and `data-vexa-mode="dark"`; the library's dark palette applies |
+| `"system"` | sets `data-vexa-mode="system"`; the dark palette applies under `prefers-color-scheme: dark` |
+
+The dark palette lives in `vexa/styles.css` under `[data-vexa-theme].dark` and the `system` media query. It uses `--vexa-primary-dark` and `--vexa-secondary-dark` when set, so `primaryDark` and `secondaryDark` are how you keep an accent readable on dark surfaces.
+
+If your app already toggles a `dark` class on `<html>`, you can leave `mode` unset: the `.dark` selector in the stylesheet also matches ancestors, so the semantic tokens (`success`, `chart-*`) switch with it. Only the surface tokens (`background`, `card`, `border`) need the wrapper to be dark, which `mode: "dark"` provides.
+
+## styles.css
+
+Import it once in your global stylesheet. It declares the `success` / `warning` / `danger` / `info` token mapping for Tailwind, the chart palette, and the dark palette. The demo does it from `globals.css`:
+
+```css title="app/globals.css"
+@import "tailwindcss";
+@import "vexa/styles.css";
+```
+
+Tailwind v4 is expected in the host, because the library's components are styled with utility classes and rely on `@theme` variables for `--color-primary` and friends. The base surface tokens (`--background`, `--card`, `--border`, `--primary`) follow the shadcn convention; if your app does not already define them, copy the light values from `demo/app/globals.css`.
+
+## Related
+
+- [Provider](/docs/host/provider): the wrapper the theme is applied to
+- [Get started](/docs/get-started): importing the stylesheet
+- [Labels and i18n](/docs/host/labels-and-i18n): the other presentation layer

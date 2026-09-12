@@ -1,14 +1,14 @@
 "use client";
 
-import { Button } from "agentic-ui/ui/button";
+import { Button } from "vexa/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "agentic-ui/ui/select";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/select";
+import { cn } from "vexa/lib/utils";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import type { ComponentProps, CSSProperties, HTMLAttributes } from "react";
 import {

@@ -12,9 +12,11 @@
     "skipLibCheck": true,
     "jsx": "react-jsx",
     "paths": {
-      "agentic-ui/core": ["../src/core/index.ts"],
-      "agentic-ui/react": ["../src/react/index.ts"],
-      "agentic-ui/protocol": ["../src/protocol/index.ts"]
+      "vexa/core": ["../src/core/index.ts"],
+      "vexa/examples": ["../src/examples/index.ts"],
+      "vexa/server": ["../src/server/index.ts"],
+      "vexa/react": ["../src/react/index.ts"],
+      "vexa/protocol": ["../src/protocol/index.ts"]
     }
   },
   "include": ["src", "server.ts", "vite.config.ts"]

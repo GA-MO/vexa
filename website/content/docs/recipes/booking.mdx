@@ -1,0 +1,112 @@
+---
+title: Booking
+description: Collect a room, headcount, setup, and title with bound inputs, validate them, and book through a host tool with confirmation, all inside one generated Card.
+---
+
+## Goal
+
+"Book a room tomorrow afternoon" needs details the user has not given yet. Instead of asking four questions in a row, the assistant renders a small form: `Select`, `Input`, `RadioGroup`, and `Switch` bound to state, a validating Button, and an `Alert` that appears once the booking went through. The values never leave the browser until the user presses Confirm.
+
+## What the user asks
+
+- "จองห้องประชุมพรุ่งนี้บ่ายให้หน่อย"
+- "Book a meeting room for 8 people tomorrow at 1pm"
+- "I need the boardroom with coffee for the Q4 planning"
+
+## Live example
+
+<Example id="booking" />
+
+The example stops at `validateForm`, `submitForm`, and `toast`, so it runs without a host. The version below replaces `submitForm` with `runTool` so the press reaches your booking API.
+
+## How it works
+
+Every input binds a path with `$bindState`. The Button chains three actions: validate, run the host tool with the bound values, and show a toast. `runTool` inputs may use `$state`, so the tool receives what the user typed.
+
+```json title="the Confirm button"
+{
+  "type": "Button",
+  "props": { "label": "Confirm booking", "variant": "primary" },
+  "on": {
+    "press": [
+      { "action": "validateForm", "params": { "statePath": "/ui/bookingResult" } },
+      {
+        "action": "runTool",
+        "params": {
+          "name": "book_room",
+          "input": {
+            "room": { "$state": "/ui/room" },
+            "attendees": { "$state": "/ui/attendees" },
+            "setup": { "$state": "/ui/setup" },
+            "catering": { "$state": "/ui/catering" },
+            "title": { "$state": "/ui/title" }
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+The host tool validates the input again with its own schema, asks for confirmation, and calls the API. Its `summary` lands in `/toast`, which the closing `Alert` reads.
+
+```tsx title="app/providers.tsx"
+"use client";
+
+import { z } from "zod";
+import { VexaProvider, defineTool } from "vexa/react";
+import { VexaChatOverlay } from "vexa/chat";
+
+const bookRoom = defineTool({
+  description: "Book a meeting room. room is the room id, attendees a number, setup one of boardroom, classroom, standing.",
+  input: z.object({
+    room: z.enum(["orchid", "lotus", "bamboo"]),
+    attendees: z.coerce.number().int().min(1).max(16),
+    setup: z.enum(["boardroom", "classroom", "standing"]),
+    catering: z.boolean(),
+    title: z.string().min(1),
+  }),
+  confirm: true,
+  run: async (input) => {
+    const response = await fetch("/api/rooms/book", { method: "POST", body: JSON.stringify(input) });
+    if (!response.ok) return { ok: false, error: "That slot is no longer free" };
+    return { ok: true, summary: "Room booked — invites sent" };
+  },
+});
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <VexaProvider tools={{ book_room: bookRoom }}>
+      {children}
+      <VexaChatOverlay />
+    </VexaProvider>
+  );
+}
+```
+
+`attendees` arrives as a string because `Input` with `inputType: "number"` stores text; `z.coerce.number()` handles it. A cancelled confirmation resolves to `{ ok: false, error: "The user declined to run this tool" }`, the error goes to `/toast`, and nothing is booked.
+
+On the server, tell the model which fields to collect and that the booking happens through the host tool, not through a server tool:
+
+```ts title="app/api/chat/route.ts"
+export const { GET, POST } = createVexaHandler({
+  models,
+  rules: [
+    "To book a room render a Card with Select room (orchid, lotus, bamboo), Input attendees (number, required), RadioGroup setup, Switch catering and Input title (required), all bound under /ui, then a primary Button that runs validateForm and runTool book_room with the bound values.",
+    "Add an Alert with tone success, title from /toast and visible when /toast is set.",
+  ],
+});
+```
+
+## Prompt hints
+
+- Pre-fill from the request: "If the user names a headcount or a time, seed the bound state with it" so the form opens half done.
+- Use `checks` for the required fields (`{ type: "required", message }`) and `validateOn: "blur"` to keep the form quiet until the user leaves a field.
+- Keep the form under one screen: two columns via `Grid columns "2"` for room and attendees, the rest stacked.
+
+## Related
+
+- [Select](/docs/catalog/Select), [Input](/docs/catalog/Input), [RadioGroup](/docs/catalog/RadioGroup), [Switch](/docs/catalog/Switch)
+- [State](/docs/concepts/state): `$bindState`, `visible`, and `/ui/*`
+- [Actions](/docs/actions): `submitForm`, `toast`, `runTool`
+- [Host tools](/docs/host/host-tools): `confirm` and result shapes

@@ -1,0 +1,72 @@
+---
+title: State
+description: The spec state store, its reserved /tools and /host namespaces, and the expressions ($bindState, $state, $template, visible, repeat, watch) that read and write it.
+---
+
+## One store per rendered spec
+
+Every `SpecView` creates a json-render state store seeded from the spec's `/state` root. Inputs write to it, display components read from it, and the runtime writes tool results and page context into it. The store lives as long as the message; it is not shared between messages.
+
+## Namespaces
+
+Only two prefixes are reserved. Everything else is writable from a spec; `/ui/*` is the recommended home for user-entered values, and older paths such as `/form/*` and `/toast` keep working.
+
+| Prefix | Written by | Read by | Notes |
+|---|---|---|---|
+| `/ui/*` and any other non-reserved root | specs through `$bindState` and `setState` | specs, `runTool` input | prefer `/ui/*` for user input |
+| `/tools/<name>` | runtime only: results of `runTool` and of model tool calls | specs through `$state` and `$bindState` | writes from specs are dropped |
+| `/host/*` | runtime from the provider's `context()` on mount | specs | read-only |
+
+`createGuardedStore` in `src/react/runtime.ts` wraps the store. A write to a reserved namespace, to a path with an empty segment or `..`, or longer than 200 characters is a no-op with a `console.warn`. The system prompt tells the model the same rule.
+
+## Reading and writing values
+
+```json title="two-way binding on an Input"
+{ "type": "Input", "props": { "label": "Country code", "name": "country", "value": { "$bindState": "/ui/country" } } }
+```
+
+| Expression | Meaning |
+|---|---|
+| `{ "$bindState": "/ui/country" }` | two-way: the component reads and writes the path |
+| `{ "$state": "/tools/load_cities/cities" }` | one-way read |
+| `{ "$template": "Cities: ${/tools/load_cities/cities}" }` | string interpolation; use `${/path}`, not `{{path}}` |
+| `{ "$item": "title" }` | field of the current item inside a `repeat` |
+| `{ "$cond": { "$item": "done" }, "$then": "Done", "$else": "Pending" }` | conditional value |
+| `{ "$computed": "formatCurrency", "args": { "value": 1200 } }` | calls a computed function (built-in or from `functions`) |
+
+## Showing and hiding
+
+`visible` on an element takes a condition. `{ "$state": "/toast" }` shows the element when the path is truthy; add `"not": true` to invert.
+
+```json title="Alert that appears after a tool result"
+{ "type": "Alert", "props": { "title": "Last result", "body": { "$state": "/toast" }, "tone": "info" }, "visible": { "$state": "/toast" } }
+```
+
+## Lists
+
+`repeat` re-renders an element's children once per item in a state array. Children read fields with `$item`.
+
+```json title="Column repeating over /todos"
+{ "type": "Column", "props": { "gap": "xs" }, "repeat": { "statePath": "/todos", "key": "id" }, "children": ["item-row"] }
+```
+
+## Reacting to changes with watch
+
+`watch` maps a state path to an action that runs whenever the path changes. Combined with `runTool` it cascades user input into host code:
+
+```json title="load cities when the country changes"
+"watch": {
+  "/ui/country": {
+    "action": "runTool",
+    "params": { "name": "load_cities", "input": { "country": { "$state": "/ui/country" } } }
+  }
+}
+```
+
+The result lands under `/tools/load_cities`, so a Text or Select can bind to `/tools/load_cities/cities`.
+
+## Related
+
+- [runTool](/docs/host/runtool): what lands under `/tools` and in which shape
+- [Format and functions](/docs/host/format-and-functions): the built-in `$computed` functions
+- [Security](/docs/security): why `/tools` and `/host` are runtime-owned

@@ -1,0 +1,64 @@
+---
+title: "Map"
+description: "Location map with center coordinates and optional labeled markers"
+---
+
+## Use it when
+
+The answer is a place and the coordinates are known. A route between two named points is FromTo, an address as a line of contact detail is IconText, and a list of branches with opening hours is a Table or repeated KeyValue. Map needs real numbers: `latitude` and `longitude` are required, so it cannot stand in for "somewhere in Bangkok".
+
+## Prompt hints
+
+- "Where is the Bangkok office?"
+- "Show the two nearest branches on a map"
+- "Put this address on a map"
+
+The frame is an OpenStreetMap embed with a single pin at the centre coordinate. `markers` does not add pins to the tiles: it renders as a labelled list under the map with each position to four decimals, and when it is `null` one row is synthesised from `title` (or "Location") and the centre. `zoom` (default 12) is converted into a bounding-box span rather than passed as a tile zoom level, so treat it as approximate framing.
+
+## Related
+
+- [FromTo](/docs/catalog/FromTo) — origin and destination instead of a position
+- [IconText](/docs/catalog/IconText) — the address as a contact row
+- [KeyValue](/docs/catalog/KeyValue) — hours, phone, and other branch fields
+- [Image](/docs/catalog/Image) — a static picture when there are no coordinates
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | `string \| null` | No | Example: `"Bangkok HQ"` |
+| `latitude` | `number` | Yes | Example: `13.7563` |
+| `longitude` | `number` | Yes | Example: `100.5018` |
+| `zoom` | `number \| null` | No | Example: `12` |
+| `markers` | `{ label: string; latitude: number; longitude: number }[] \| null` | No | Example: `[{"label":"HQ","latitude":13.7563,"longitude":100.5018}]` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Map",
+  "props": {
+    "title": "Bangkok HQ",
+    "latitude": 13.7563,
+    "longitude": 100.5018,
+    "zoom": 12,
+    "markers": [
+      {
+        "label": "HQ",
+        "latitude": 13.7563,
+        "longitude": 100.5018
+      }
+    ]
+  }
+}
+```
+
+## Live example
+
+<Example id="map" />
+
+{/* generated:end */}

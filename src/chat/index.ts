@@ -1,6 +1,7 @@
-export { AgenticChat, type AgenticChatProps, type AgenticChatLayout } from "./agentic-chat";
+export { VexaChat, type VexaChatProps, type VexaChatLayout } from "./vexa-chat";
 export {
-  AgenticChatOverlay,
-  type AgenticChatOverlayProps,
+  VexaChatOverlay,
+  type VexaChatOverlayProps,
 } from "./overlay";
-export { MODELS, SUGGESTIONS, type ChatModel } from "./constants";
+export { MODELS, SUGGESTIONS, DEFAULT_LABELS, type ChatModel, type ChatSuggestion, type ChatLabels, type ChatStepsDisplay } from "./constants";
+export { AssistantMessage, UserMessage } from "./messages";

@@ -1,0 +1,54 @@
+---
+title: "Card"
+description: "Elevated surface for related content. Never nest Card in Card."
+---
+
+## Use it when
+
+The answer needs a titled panel: a group of metrics, a record summary, one block the reader should treat as a unit. `SpecView` draws no outer card of its own, so a plain `Stack` already reads as a block — reach for `Card` only when the group needs a title of its own. Never nest a Card inside a Card; put a [Grid](/docs/catalog/Grid), [Stack](/docs/catalog/Stack) or [Column](/docs/catalog/Column) inside instead, and never emit an empty shell.
+
+## Prompt hints
+
+- "give me an ops snapshot with open tickets and SLA"
+- "summarise order A-1042 in one panel"
+- "group this quarter's numbers under a heading"
+
+`title` and `description` are the only props and both are nullable: a Card with neither renders as a bare bordered surface. The header only takes a bottom margin when the card actually has children, so a title-only Card has no dangling space. Padding steps up from `p-3` to `p-4` on a container query against `SpecView`, never the viewport.
+
+## Related
+
+- [Grid](/docs/catalog/Grid) — the usual child when a card holds several peer tiles.
+- [Stack](/docs/catalog/Stack) — section-level grouping when you do not need a titled panel.
+- [Metric](/docs/catalog/Metric) — the tile a card most often wraps.
+- [Spec stream](/docs/concepts/spec-stream) — how UI emitted after a tool call patches the card you already started.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | `string \| null` | No | Example: `"Overview"` |
+| `description` | `string \| null` | No | Example: `"Key metrics for this week"` |
+
+Slots: `default`
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Card",
+  "props": {
+    "title": "Overview",
+    "description": "Key metrics for this week"
+  }
+}
+```
+
+## Live example
+
+<Example id="card-grid" />
+
+{/* generated:end */}

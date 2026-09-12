@@ -1,0 +1,50 @@
+---
+title: "Divider"
+description: "Horizontal divider with optional centered label (e.g. 'or', 'Today')"
+---
+
+## Use it when
+
+You are breaking a dense group into parts and the break wants a caption — "Today", "Yesterday", "or". The prompt names `Divider` with a label as the way to separate groups inside a compact record layout. For an unlabelled rule, `Divider` and [Separator](/docs/catalog/Separator) genuinely overlap and neither the catalog nor the prompt says which wins; the practical difference is that `Divider` carries its own small vertical margin and accepts a label, while [Separator](/docs/catalog/Separator) is a bare rule with no props.
+
+## Prompt hints
+
+- "split today's orders from yesterday's"
+- "put an 'or' between the two payment options"
+- "separate the line items from the totals"
+
+`label` is the only prop. With it you get an uppercase 11px caption centred between two hairlines; without it you get a plain rule. Either way the component adds a `my-1` margin of its own, on top of whatever gap the parent [Column](/docs/catalog/Column) or [Stack](/docs/catalog/Stack) already applies.
+
+## Related
+
+- [Separator](/docs/catalog/Separator) — the prop-less plain rule.
+- [Column](/docs/catalog/Column) — the dense container dividers usually sit in.
+- [Heading](/docs/catalog/Heading) — when the break deserves a real section title instead of a caption.
+- [LineItems](/docs/catalog/LineItems) — already draws its own rule above the summary lines.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string \| null` | No | Example: `"Today"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Divider",
+  "props": {
+    "label": "Today"
+  }
+}
+```
+
+## Live example
+
+<Example id="divider" />
+
+{/* generated:end */}

@@ -1,0 +1,85 @@
+---
+title: "BarChart"
+description: "Bar chart comparing categories. 1-4 series (values align with labels). horizontal=true reads best in chat; stacked=true for part-of-whole."
+---
+
+## Use it when
+
+You are comparing named categories and the reader needs axes, ticks and a legend — regions, priorities, product lines. The prompt tells the model to prefer BarChart over [Chart](/docs/catalog/Chart) `kind="bar"` whenever there are 2–4 series or many categories, leaving `Chart` for a single quick visual. Anything moving over time is a [LineChart](/docs/catalog/LineChart); a single number with a trend is a [Metric](/docs/catalog/Metric).
+
+## Prompt hints
+
+- "compare sales by region for 2025 and 2026"
+- "which ticket priorities have the most open items?"
+- "break monthly revenue down by product line"
+
+`horizontal: true` reads best in a chat panel: category names get a real label column (28% of the measured width, clamped to 64–108px, ellipsised past that) instead of being crushed under vertical bars. `stacked: true` is for part-of-whole and `showValues` prints the row total beside each bar. `format: "currency"` takes its symbol from the host's `format` config, and axis ticks are always compacted to `1.2K` / `3M`. `height` only affects the vertical layout — a horizontal chart sizes itself from the row count.
+
+## Related
+
+- [LineChart](/docs/catalog/LineChart) — the same axis machinery for trends over time.
+- [Chart](/docs/catalog/Chart) — lighter, and the only route to pie and spark.
+- [Metric](/docs/catalog/Metric) — when one number beats a whole chart.
+- [Card](/docs/catalog/Card) — wrap several charts under one title.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | `string \| null` | No | Example: `"Sales by region"` |
+| `labels` | `string[]` | Yes | Example: `["Bangkok","Chiang Mai","Phuket"]` |
+| `series` | `{ name: string; values: number[] }[]` | Yes | Example: `[{"name":"2025","values":[120,80,64]},{"name":"2026","values":[150,92,71]}]` |
+| `horizontal` | `boolean \| null` | No | Example: `true` |
+| `stacked` | `boolean \| null` | No | Example: `false` |
+| `showValues` | `boolean \| null` | No | Example: `true` |
+| `format` | `"number" \| "currency" \| "percent" \| null` | No | Example: `"number"` |
+| `height` | `"sm" \| "md" \| "lg" \| null` | No | Example: `"md"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "BarChart",
+  "props": {
+    "title": "Sales by region",
+    "labels": [
+      "Bangkok",
+      "Chiang Mai",
+      "Phuket"
+    ],
+    "series": [
+      {
+        "name": "2025",
+        "values": [
+          120,
+          80,
+          64
+        ]
+      },
+      {
+        "name": "2026",
+        "values": [
+          150,
+          92,
+          71
+        ]
+      }
+    ],
+    "horizontal": true,
+    "stacked": false,
+    "showValues": true,
+    "format": "number",
+    "height": "md"
+  }
+}
+```
+
+## Live example
+
+<Example id="bar-chart" />
+
+{/* generated:end */}

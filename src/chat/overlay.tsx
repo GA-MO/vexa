@@ -2,26 +2,38 @@
 
 import { useEffect, useId, useState } from "react";
 import { MessageCircleIcon, XIcon } from "lucide-react";
-import { cn } from "agentic-ui/lib/utils";
-import { AgenticChat, type AgenticChatProps } from "./agentic-chat";
+import { cn } from "vexa/lib/utils";
+import { useVexaHostContext } from "vexa/react";
+import { VexaChat, type VexaChatProps } from "./vexa-chat";
+import { DEFAULT_LABELS } from "./constants";
 
-export type AgenticChatOverlayProps = Omit<AgenticChatProps, "layout" | "onClose"> & {
-  defaultOpen?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  launcherLabel?: string;
-  position?: "bottom-right" | "bottom-left";
-};
+type OpenStateProps =
+  | { open: boolean; onOpenChange: (open: boolean) => void; defaultOpen?: undefined }
+  | { open?: undefined; onOpenChange?: (open: boolean) => void; defaultOpen?: boolean };
 
-export function AgenticChatOverlay({
-  defaultOpen = false,
+export type VexaChatOverlayProps = Omit<VexaChatProps, "layout" | "onClose"> &
+  OpenStateProps & {
+    launcherIcon?: React.ReactNode;
+    launcherLabel?: string;
+    position?: "bottom-right" | "bottom-left";
+  };
+
+export function VexaChatOverlay({
+  defaultOpen: defaultOpenProp,
   open: openProp,
   onOpenChange,
-  launcherLabel = "Open assistant",
-  position = "bottom-right",
+  launcherLabel: launcherLabelProp,
+  launcherIcon: launcherIconProp,
+  position: positionProp,
   className,
   ...chatProps
-}: AgenticChatOverlayProps) {
+}: VexaChatOverlayProps) {
+  const host = useVexaHostContext();
+  const defaultOpen = defaultOpenProp ?? host?.chat.defaultOpen ?? false;
+  const labels = { ...DEFAULT_LABELS, ...host?.chat.labels, ...chatProps.labels };
+  const launcherLabel = launcherLabelProp ?? host?.chat.launcherLabel ?? labels.openAssistant;
+  const position = positionProp ?? host?.chat.position ?? "bottom-right";
+  const launcherIcon = launcherIconProp ?? host?.chat.launcherIcon ?? <MessageCircleIcon className="size-5" />;
   const titleId = useId();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
   const isControlled = openProp !== undefined;
@@ -53,7 +65,7 @@ export function AgenticChatOverlay({
         tabIndex={open ? 0 : -1}
         onClick={() => setOpen(false)}
         className={cn(
-          "pointer-events-auto absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] transition-opacity duration-300",
+          "pointer-events-auto absolute inset-0 bg-foreground/20 backdrop-blur-[2px] transition-opacity duration-300",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       />
@@ -78,9 +90,9 @@ export function AgenticChatOverlay({
           )}
         >
           <span id={titleId} className="sr-only">
-            {chatProps.title ?? "Agentic UI"}
+            {chatProps.title ?? host?.chat.title ?? "Vexa"}
           </span>
-          <AgenticChat
+          <VexaChat
             {...chatProps}
             className={cn("h-full min-h-0", className)}
             layout="panel"
@@ -91,7 +103,7 @@ export function AgenticChatOverlay({
         <button
           type="button"
           aria-expanded={open}
-          aria-label={open ? "Close assistant" : launcherLabel}
+          aria-label={open ? labels.closeAssistant : launcherLabel}
           onClick={() => setOpen(!open)}
           className={cn(
             "pointer-events-auto group relative inline-flex size-14 items-center justify-center rounded-full text-primary-foreground transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
@@ -104,11 +116,7 @@ export function AgenticChatOverlay({
             className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-brand-violet opacity-60 blur-md transition group-hover:opacity-80"
           />
           <span className="relative">
-            {open ? (
-              <XIcon className="size-5" />
-            ) : (
-              <MessageCircleIcon className="size-5" />
-            )}
+            {open ? <XIcon className="size-5" /> : launcherIcon}
           </span>
         </button>
       </div>

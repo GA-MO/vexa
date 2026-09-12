@@ -1,0 +1,54 @@
+---
+title: "Grid"
+description: "Responsive multi-column grid"
+---
+
+## Use it when
+
+Several peer tiles should sit side by side — KPI metrics, plan cards, comparable summaries. The model is told to use `columns="2"` or `"3"` only when each cell still reads, and to fall back to `columns="1"` or [Stack](/docs/catalog/Stack) otherwise, because a half-empty grid in a chat panel looks broken. For a single vertical run of blocks use [Stack](/docs/catalog/Stack); for one horizontal label/value pair use [Row](/docs/catalog/Row).
+
+## Prompt hints
+
+- "give me a dashboard of this quarter's KPIs"
+- "show these three plans side by side"
+- "compare Bangkok and Chiang Mai in two columns"
+
+`columns` is a ceiling, not a promise. The breakpoints are container queries against `SpecView` (`@md/vexa`, `@xl/vexa`, `@2xl/vexa`, `@3xl/vexa`), not viewport breakpoints, so in a 340–600px chat panel a `columns="4"` grid still renders one or two columns and only reaches four in a wide host. `gap` defaults to `md` and `columns` defaults to `2`.
+
+## Related
+
+- [Stack](/docs/catalog/Stack) — the right container when the content is one column deep.
+- [Card](/docs/catalog/Card) — wrap the grid when the group needs a title.
+- [Metric](/docs/catalog/Metric) — the tile grids are usually filled with.
+- [Row](/docs/catalog/Row) — for inline pairs rather than a real column structure.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `columns` | `"1" \| "2" \| "3" \| "4" \| null` | No | Example: `"2"` |
+| `gap` | `"sm" \| "md" \| "lg" \| null` | No | Example: `"md"` |
+
+Slots: `default`
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Grid",
+  "props": {
+    "columns": "2",
+    "gap": "md"
+  }
+}
+```
+
+## Live example
+
+<Example id="card-grid" />
+
+{/* generated:end */}

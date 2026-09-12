@@ -1,0 +1,54 @@
+---
+title: "IconText"
+description: "Icon + text row for contact details, addresses, opening hours"
+---
+
+## Use it when
+
+A detail line whose icon says what kind of detail it is: a phone number, an address, opening hours, a pickup note. Where KeyValue answers "field: value" for a whole record, IconText answers "here is one contactable fact", which is why the prompt lists it for contact rows. It is not a link or a button, and for a status word Badge is denser.
+
+## Prompt hints
+
+- "Show the café's phone number, address and opening hours"
+- "Where do I pick the order up?"
+- "List the contact details for this supplier"
+
+The icon is fixed at the muted tone and the small size — there are no `tone` or `size` props here, so a coloured or larger icon means composing `Row` + `Icon` + `Text` yourself. `icon` draws from the same 29-name enum as Icon. `hint` renders as a second, smaller muted line under `text`, and `text` wraps on long words rather than overflowing the panel.
+
+## Related
+
+- [Icon](/docs/catalog/Icon) — the standalone glyph, with tone and size
+- [KeyValue](/docs/catalog/KeyValue) — label and value pairs for one record
+- [Column](/docs/catalog/Column) — stacks several IconText rows tightly
+- [Map](/docs/catalog/Map) — when the address deserves a map, not a line
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `icon` | `"phone" \| "mail" \| "pin" \| "clock" \| "star" \| "check" \| "alert" \| "plane" \| "cart" \| "user" \| "calendar" \| "tag" \| "box" \| "receipt" \| "truck" \| "arrowRight" \| "arrowLeft" \| "search" \| "edit" \| "trash" \| "info" \| "play" \| "music" \| "coffee" \| "home" \| "chart" \| "list" \| "send" \| "heart"` | Yes | Example: `"phone"` |
+| `text` | `string` | Yes | Example: `"02-123-4567"` |
+| `hint` | `string \| null` | No | Example: `"Mon-Fri 9:00-18:00"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "IconText",
+  "props": {
+    "icon": "phone",
+    "text": "02-123-4567",
+    "hint": "Mon-Fri 9:00-18:00"
+  }
+}
+```
+
+## Live example
+
+<Example id="icon-icontext" />
+
+{/* generated:end */}

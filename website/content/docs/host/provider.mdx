@@ -1,0 +1,101 @@
+---
+title: Provider
+description: Every prop of VexaProvider, the client component that holds chat defaults, theme, format, computed functions, host tools, and page context for the overlay and every rendered spec.
+---
+
+## What the provider does
+
+`VexaProvider` from `vexa/react` is a small context provider. `VexaChatOverlay`, `VexaChat`, and every `SpecView` rendered inside a message read it to find the API endpoint, the registered host tools, the formatter, the theme tokens, and the chat defaults. It renders a `display: contents` wrapper marked `[data-vexa-theme]` that carries the theme CSS variables, and a confirmation tray when a tool needs approval and no chat is mounted.
+
+`VexaChatOverlay` outside a provider still works, with no tools and built-in defaults.
+
+## Props
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `api` | `string` | `"/api/chat"` | endpoint used for `POST` (chat) and `GET` (model list) |
+| `chat` | `VexaChatDefaults` | `{}` | app-wide defaults for the chat chrome, see below |
+| `theme` | `VexaTheme` | none | token overrides and `mode`; see [Theme](/docs/host/theme) |
+| `format` | `Partial<VexaFormat>` | `en-US` / `THB` | locale and currency for every catalog component |
+| `functions` | `Record<string, ComputedFunction>` | `{}` | extra `$computed` functions merged with the built-ins |
+| `tools` | `Record<string, HostTool>` | `{}` | host tools; names must match `^[a-z][a-z0-9_]{0,63}$` |
+| `contextSchema` | `FlexibleSchema` | none | schema for `context()`; required when `context` is set |
+| `context` | `() => InferSchema<S>` | none | page state sent with every request, capped at 4 KB on the server |
+| `onToolResult` | `(name, result) => void` | none | called after every host tool run, from the model or a button |
+| `children` | `ReactNode` | | |
+
+`context` and `contextSchema` are typed together: the provider infers `S` from the schema, `context` must return that shape, and `context` without a schema is a TypeScript error and a thrown error on mount. Schemas can be zod, valibot, arktype, or an AI SDK `jsonSchema()`; the provider validates the value on every request and sends `{}` with a warning when validation fails.
+
+## Chat defaults
+
+`chat` accepts the same fields as `VexaChatOverlay` props. Resolution order for every field: component props, then provider `chat`, then built-in defaults.
+
+| Field | Type | Built-in default |
+|---|---|---|
+| `title` | `string` | `"Vexa"` |
+| `subtitle` | `string` | `"Ask · stream · render UI"` |
+| `logo` | `ReactNode` | Sparkles icon |
+| `launcherIcon` | `ReactNode` | MessageCircle icon |
+| `launcherLabel` | `string` | `labels.openAssistant` |
+| `position` | `"bottom-right" \| "bottom-left"` | `"bottom-right"` |
+| `defaultOpen` | `boolean` | `false` |
+| `labels` | `Partial<ChatLabels>` | English strings |
+| `steps` | `"collapsible" \| "hidden"` | `"collapsible"`: reasoning and tool calls in one collapsed block the user can expand ("Thinking…" while streaming, "N steps" after; opens by itself only while a tool awaits approval). `"hidden"`: only the thinking indicator; approval cards still show |
+| `suggestions` | `ChatSuggestion[]` | four built-in prompts |
+| `models` | `ChatModel[]` | fetched from `GET api` |
+| `defaultModel` | `string` | first model in the list |
+
+## Rules enforced on mount
+
+- A tool name that does not match the regex, or that collides with a built-in action (`setState`, `pushState`, `removeState`, `push`, `runTool`, `submitForm`, `toast`), throws.
+- `context` without `contextSchema` throws.
+
+## Full example
+
+```tsx title="app/providers.tsx"
+"use client";
+
+import { z } from "zod";
+import { useRouter } from "next/navigation";
+import { VexaProvider, defineTool } from "vexa/react";
+import { VexaChatOverlay } from "vexa/chat";
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  return (
+    <VexaProvider
+      api="/api/chat"
+      theme={{ primary: "#0F766E", secondary: "#0891B2", radius: "0.5rem", mode: "system" }}
+      format={{ locale: "th-TH", currency: "THB" }}
+      chat={{
+        title: "Acme assistant",
+        suggestions: [{ label: "Open settings", prompt: "Take me to the settings page." }],
+        labels: { emptyTitle: "ถามได้เลย", thinking: "กำลังคิด…" },
+      }}
+      context={() => ({ path: window.location.pathname })}
+      contextSchema={z.object({ path: z.string() })}
+      tools={{
+        navigate: defineTool({
+          description: "Open a page of this app",
+          input: z.object({ to: z.string() }),
+          run: ({ to }) => {
+            router.push(to);
+            return { ok: true, summary: `Opened ${to}` };
+          },
+        }),
+      }}
+      onToolResult={(name, result) => console.info("host tool", name, result)}
+    >
+      {children}
+      <VexaChatOverlay />
+    </VexaProvider>
+  );
+}
+```
+
+## Related
+
+- [Host tools](/docs/host/host-tools): `defineTool` and typed input
+- [Theme](/docs/host/theme): `VexaTheme` fields and dark mode
+- [Labels and i18n](/docs/host/labels-and-i18n): every `ChatLabels` key
+- [Models and picker](/docs/host/models-and-picker): how the picker list is filled

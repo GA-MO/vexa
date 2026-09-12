@@ -1,25 +1,37 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { RotateCcwIcon, Sparkles, XIcon } from "lucide-react";
-import type { AgenticMessage } from "agentic-ui/protocol";
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithApprovalResponses,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from "ai";
+import { CheckIcon, RotateCcwIcon, Sparkles, XIcon } from "lucide-react";
+import type { VexaMessage } from "vexa/protocol";
+import { useVexaHostContext, type PendingConfirmation } from "vexa/react";
+import {
+  Confirmation,
+  ConfirmationAction,
+  ConfirmationActions,
+  ConfirmationRequest,
+  ConfirmationTitle,
+} from "vexa/ai-elements/confirmation";
 import {
   Checkpoint,
   CheckpointIcon,
   CheckpointTrigger,
-} from "agentic-ui/ai-elements/checkpoint";
+} from "vexa/ai-elements/checkpoint";
 import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
   ConversationScrollButton,
-} from "agentic-ui/ai-elements/conversation";
+} from "vexa/ai-elements/conversation";
 import {
   PromptInput,
   type PromptInputMessage,
-} from "agentic-ui/ai-elements/prompt-input";
+} from "vexa/ai-elements/prompt-input";
 import {
   Queue,
   QueueItem,
@@ -33,50 +45,129 @@ import {
   QueueSectionLabel,
   QueueSectionTrigger,
   type QueueMessage,
-} from "agentic-ui/ai-elements/queue";
+} from "vexa/ai-elements/queue";
 import {
   Suggestion,
   Suggestions,
-} from "agentic-ui/ai-elements/suggestion";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ai-elements/suggestion";
+import { cn } from "vexa/lib/utils";
 import { ChatComposer } from "./composer";
-import { MODELS, SUGGESTIONS } from "./constants";
+import {
+  DEFAULT_LABELS,
+  MODELS,
+  SUGGESTIONS,
+  type ChatLabels,
+  type ChatModel,
+  type ChatStepsDisplay,
+  type ChatSuggestion,
+} from "./constants";
 import { AssistantMessage, UserMessage } from "./messages";
 import { estimateTokens, estimateUsage } from "./usage";
 
-export type AgenticChatLayout = "page" | "panel";
+export type VexaChatLayout = "page" | "panel";
 
-export type AgenticChatProps = {
+export type VexaChatProps = {
   api?: string;
   title?: string;
   subtitle?: string;
-  layout?: AgenticChatLayout;
+  layout?: VexaChatLayout;
   className?: string;
+  models?: readonly ChatModel[];
+  defaultModel?: string;
+  suggestions?: readonly ChatSuggestion[];
+  labels?: Partial<ChatLabels>;
+  steps?: ChatStepsDisplay;
+  logo?: React.ReactNode;
   onClose?: () => void;
+  /** Called with the full message list whenever it changes, so hosts can inspect streamed specs. */
+  onMessagesChange?: (messages: VexaMessage[]) => void;
 };
+
+function firstNonEmpty<T>(...candidates: Array<readonly T[] | undefined>): readonly T[] {
+  return candidates.find((list) => list && list.length > 0) ?? [];
+}
+
+type RemoteModels = { models: readonly ChatModel[]; defaultModel?: string };
+
+function useRemoteModels(endpoint: string, enabled: boolean): RemoteModels {
+  const [remote, setRemote] = useState<RemoteModels>({ models: [] });
+  useEffect(() => {
+    if (!enabled) return;
+    const controller = new AbortController();
+    fetch(endpoint, { method: "GET", signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: { models?: ChatModel[]; default?: string | null } | null) => {
+        if (!payload || !Array.isArray(payload.models) || payload.models.length === 0) return;
+        setRemote({ models: payload.models, defaultModel: payload.default ?? undefined });
+      })
+      .catch(() => undefined);
+    return () => controller.abort();
+  }, [endpoint, enabled]);
+  return remote;
+}
+
+const STREAM_THROTTLE_MS = 50;
 
 type CheckpointRecord = {
   id: string;
   messageIndex: number;
 };
 
-export function AgenticChat({
-  api = "/api/chat",
-  title = "Agentic UI",
-  subtitle = "Ask · stream · render UI",
+export function VexaChat({
+  api,
+  title: titleProp,
+  subtitle: subtitleProp,
   layout = "panel",
   className,
+  models: modelsProp,
+  defaultModel,
+  suggestions: suggestionsProp,
+  labels: labelsProp,
+  steps: stepsProp,
+  logo: logoProp,
   onClose,
-}: AgenticChatProps) {
-  const transport = useMemo(
-    () => new DefaultChatTransport({ api }),
-    [api],
+  onMessagesChange,
+}: VexaChatProps) {
+  const host = useVexaHostContext();
+  const endpoint = api ?? host?.api ?? "/api/chat";
+  const title = titleProp ?? host?.chat.title ?? "Vexa";
+  const logo = logoProp ?? host?.chat.logo ?? <Sparkles className="size-4" />;
+  const subtitle = subtitleProp ?? host?.chat.subtitle ?? "Ask · stream · render UI";
+  const steps = stepsProp ?? host?.chat.steps ?? "collapsible";
+  const labels = useMemo<ChatLabels>(
+    () => ({ ...DEFAULT_LABELS, ...host?.chat.labels, ...labelsProp }),
+    [host?.chat.labels, labelsProp],
   );
-
+  const remote = useRemoteModels(endpoint, !modelsProp && !host?.chat.models);
+  const models = firstNonEmpty(modelsProp, host?.chat.models, remote.models, MODELS);
+  const suggestions = firstNonEmpty(suggestionsProp, host?.chat.suggestions, SUGGESTIONS);
+  const initialModel = defaultModel ?? host?.chat.defaultModel ?? remote.defaultModel ?? models[0].id;
   const [text, setText] = useState("");
-  const [model, setModel] = useState<string>(MODELS[0].id);
+  const [model, setModel] = useState<string>(initialModel);
+
+  useEffect(() => {
+    if (models.some((item) => item.id === model)) return;
+    setModel(initialModel);
+  }, [initialModel, model, models]);
   const [checkpoints, setCheckpoints] = useState<CheckpointRecord[]>([]);
   const [queue, setQueue] = useState<QueueMessage[]>([]);
+  const modelRef = useRef(model);
+  modelRef.current = model;
+  const hostRef = useRef(host);
+  hostRef.current = host;
+
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport<VexaMessage>({
+        api: endpoint,
+        body: async () => ({
+          model: modelRef.current,
+          context: (await hostRef.current?.readContext()) ?? {},
+          hostTools: hostRef.current?.schemas ?? [],
+        }),
+      }),
+    [endpoint],
+  );
 
   const {
     messages,
@@ -85,10 +176,36 @@ export function AgenticChat({
     status,
     error,
     addToolApprovalResponse,
-  } = useChat<AgenticMessage>({ transport });
+    addToolOutput,
+  } = useChat<VexaMessage>({
+    transport,
+    experimental_throttle: STREAM_THROTTLE_MS,
+    sendAutomaticallyWhen: (options) =>
+      lastAssistantMessageIsCompleteWithToolCalls(options) ||
+      lastAssistantMessageIsCompleteWithApprovalResponses(options),
+    onToolCall: ({ toolCall }) => {
+      const currentHost = hostRef.current;
+      if (toolCall.dynamic || !currentHost?.hasTool(toolCall.toolName)) return;
+      void (async () => {
+        const output = await currentHost.runTool(toolCall.toolName, toolCall.input, {
+          toolCallId: toolCall.toolCallId,
+          source: "model",
+        });
+        addToolOutput({
+          tool: toolCall.toolName as never,
+          toolCallId: toolCall.toolCallId,
+          output: output as never,
+        });
+      })();
+    },
+  });
+
+  useEffect(() => {
+    onMessagesChange?.(messages);
+  }, [messages, onMessagesChange]);
 
   const isStreaming = status === "streaming" || status === "submitted";
-  const selected = MODELS.find((item) => item.id === model) ?? MODELS[0];
+  const selected = models.find((item) => item.id === model) ?? models[0];
   const usedTokens = useMemo(() => estimateTokens(messages), [messages]);
   const usage = useMemo(() => estimateUsage(messages), [messages]);
   const isPanel = layout === "panel";
@@ -100,15 +217,12 @@ export function AgenticChat({
       if (!next && files.length === 0) return;
 
       setText("");
-      await sendMessage(
-        {
-          text: next || "Sent with attachments",
-          files,
-        },
-        { body: { model } },
-      );
+      await sendMessage({
+        text: next || labels.sentWithAttachments,
+        files,
+      });
     },
-    [model, sendMessage],
+    [labels.sentWithAttachments, sendMessage],
   );
 
   useEffect(() => {
@@ -135,7 +249,7 @@ export function AgenticChat({
           {
             id: crypto.randomUUID(),
             parts: [
-              { type: "text", text: next || "Sent with attachments" },
+              { type: "text", text: next || labels.sentWithAttachments },
               ...(files.map((file) => ({
                 type: "file",
                 url: file.url,
@@ -151,7 +265,7 @@ export function AgenticChat({
 
       await sendNow(message);
     },
-    [isStreaming, sendNow],
+    [isStreaming, labels.sentWithAttachments, sendNow],
   );
 
   const submitText = useCallback(
@@ -160,6 +274,12 @@ export function AgenticChat({
     },
     [submitPrompt],
   );
+
+  useEffect(() => {
+    if (!host) return;
+    host.registerChatSender((value) => void submitText(value));
+    return () => host.registerChatSender(null);
+  }, [host, submitText]);
 
   const resetChat = useCallback(() => {
     setMessages([]);
@@ -222,7 +342,7 @@ export function AgenticChat({
 
       <header className="relative z-10 flex items-center gap-3 border-b border-border/60 px-4 py-3 backdrop-blur-md">
         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-brand-violet text-primary-foreground shadow-md shadow-primary/35">
-          <Sparkles className="size-4" />
+          {logo}
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-sm font-semibold tracking-tight">
@@ -238,7 +358,7 @@ export function AgenticChat({
           {messages.length > 0 ? (
             <button
               type="button"
-              aria-label="Start over"
+              aria-label={labels.startOver}
               onClick={resetChat}
               className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
@@ -248,7 +368,7 @@ export function AgenticChat({
           {onClose ? (
             <button
               type="button"
-              aria-label="Close chat"
+              aria-label={labels.closeChat}
               onClick={onClose}
               className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
@@ -266,8 +386,8 @@ export function AgenticChat({
             {messages.length === 0 ? (
               <ConversationEmptyState
                 className="px-2"
-                title="Ask anything. Get UI back."
-                description="Stream an answer, or generate cards, metrics, and tables in place."
+                title={labels.emptyTitle}
+                description={labels.emptyDescription}
                 icon={
                   <div className="flex size-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-brand-violet/15 text-primary">
                     <Sparkles className="size-5" />
@@ -276,9 +396,10 @@ export function AgenticChat({
               />
             ) : (
               messages.map((message, index) => {
-                const checkpoint = checkpoints.find(
-                  (item) => item.messageIndex === index,
-                );
+                const hasLaterMessages = index < messages.length - 1;
+                const checkpoint = hasLaterMessages
+                  ? checkpoints.find((item) => item.messageIndex === index)
+                  : undefined;
 
                 return (
                   <Fragment key={message.id}>
@@ -288,8 +409,10 @@ export function AgenticChat({
                       <AssistantMessage
                         isLast={index === messages.length - 1}
                         isStreaming={isStreaming}
+                        labels={labels}
                         message={message}
                         messages={messages}
+                        steps={steps}
                         onApproval={(id, approved) =>
                           void addToolApprovalResponse({ id, approved })
                         }
@@ -302,9 +425,9 @@ export function AgenticChat({
                           onClick={() =>
                             restoreCheckpoint(checkpoint.messageIndex)
                           }
-                          tooltip="Restore conversation to this point"
+                          tooltip={labels.restoreTooltip}
                         >
-                          Restore
+                          {labels.restore}
                         </CheckpointTrigger>
                       </Checkpoint>
                     ) : null}
@@ -326,14 +449,14 @@ export function AgenticChat({
             <Queue className="rounded-xl border border-border/70 bg-muted/40 p-1.5">
               <QueueSection defaultOpen>
                 <QueueSectionTrigger>
-                  <QueueSectionLabel count={queue.length} label="Queued" />
+                  <QueueSectionLabel count={queue.length} label={labels.queued} />
                 </QueueSectionTrigger>
                 <QueueSectionContent>
                   <QueueList>
                     {queue.map((item) => {
                       const label =
                         item.parts.find((part) => part.type === "text")
-                          ?.text ?? "Attachment";
+                          ?.text ?? labels.attachment;
                       return (
                         <QueueItem key={item.id}>
                           <div className="flex items-start gap-2">
@@ -341,7 +464,7 @@ export function AgenticChat({
                             <QueueItemContent>{label}</QueueItemContent>
                             <QueueItemActions>
                               <QueueItemAction
-                                aria-label="Remove queued message"
+                                aria-label={labels.removeQueued}
                                 onClick={() =>
                                   setQueue((current) =>
                                     current.filter(
@@ -365,7 +488,7 @@ export function AgenticChat({
 
           {messages.length === 0 ? (
             <Suggestions className="px-0.5">
-              {SUGGESTIONS.map((item) => (
+              {suggestions.map((item) => (
                 <Suggestion
                   key={item.label}
                   suggestion={item.prompt}
@@ -377,19 +500,29 @@ export function AgenticChat({
             </Suggestions>
           ) : null}
 
+          {host?.pending.map((item) => (
+            <HostToolConfirmation
+              key={item.id}
+              item={item}
+              labels={labels}
+              onDecide={(approved) => host.resolveConfirmation(item.id, approved)}
+            />
+          ))}
+
           {error ? (
             <p className="text-sm text-destructive">{error.message}</p>
           ) : null}
 
           <PromptInput
             accept="image/*,application/pdf,text/*"
-            className="rounded-2xl border border-border/80 bg-background shadow-[0_10px_30px_-18px_rgba(79,70,229,0.45)]"
+            className="rounded-2xl border border-border/80 bg-background shadow-[0_10px_30px_-18px] shadow-primary/45"
             globalDrop
             multiple
             onSubmit={(message) => void submitPrompt(message)}
           >
             <ChatComposer
               maxTokens={selected.maxTokens}
+              models={models}
               model={model}
               setModel={setModel}
               setText={setText}
@@ -402,5 +535,42 @@ export function AgenticChat({
         </div>
       </div>
     </section>
+  );
+}
+
+function HostToolConfirmation({
+  item,
+  labels,
+  onDecide,
+}: {
+  item: PendingConfirmation;
+  labels: ChatLabels;
+  onDecide: (approved: boolean) => void;
+}) {
+  return (
+    <Confirmation
+      approval={{ id: item.id }}
+      className="rounded-xl border border-border/70 bg-muted/40 p-3"
+      state="approval-requested"
+    >
+      <ConfirmationTitle>
+        <ConfirmationRequest>
+          <span>
+            {labels.runOnPage(item.name)}
+            <span className="block text-xs text-muted-foreground">{item.description}</span>
+          </span>
+        </ConfirmationRequest>
+      </ConfirmationTitle>
+      <ConfirmationActions>
+        <ConfirmationAction onClick={() => onDecide(false)} variant="outline">
+          <XIcon className="size-3.5" />
+          {labels.cancel}
+        </ConfirmationAction>
+        <ConfirmationAction onClick={() => onDecide(true)} variant="default">
+          <CheckIcon className="size-3.5" />
+          {labels.run}
+        </ConfirmationAction>
+      </ConfirmationActions>
+    </Confirmation>
   );
 }

@@ -1,0 +1,54 @@
+---
+title: "Icon"
+description: "Single decorative icon next to a heading or inside a Row (not a button)"
+---
+
+## Use it when
+
+A glyph carries meaning next to something else — a heading, a Text inside a Row, a status line. The catalog is explicit that it is not a button: anything pressable is a Button with `on.press`. If the icon always travels with a line of text, IconText already is that pairing, and it needs no Row around it.
+
+## Prompt hints
+
+- "Put a truck icon next to the delivery status"
+- "Mark the finished steps with a check"
+- "Show a small warning icon on the overdue row"
+
+`name` is a closed enum of 29 lucide icons; anything outside it fails catalog validation, so there is no way to reach an arbitrary lucide name or an emoji from a spec. `tone` maps to design tokens (`default`, `muted`, `primary`, `success`, `warning`, `danger`) rather than colours, so icons follow a host theme override. `size` is fixed at 14, 18 and 24px for `sm`, `md` and `lg` — small by default because these render in a 340–600px panel.
+
+## Related
+
+- [IconText](/docs/catalog/IconText) — icon plus text as one component
+- [Row](/docs/catalog/Row) — the container when you need a custom tone or size beside text
+- [Button](/docs/catalog/Button) — anything the user can press
+- [Badge](/docs/catalog/Badge) — status as a word rather than a symbol
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `"phone" \| "mail" \| "pin" \| "clock" \| "star" \| "check" \| "alert" \| "plane" \| "cart" \| "user" \| "calendar" \| "tag" \| "box" \| "receipt" \| "truck" \| "arrowRight" \| "arrowLeft" \| "search" \| "edit" \| "trash" \| "info" \| "play" \| "music" \| "coffee" \| "home" \| "chart" \| "list" \| "send" \| "heart"` | Yes | Example: `"truck"` |
+| `tone` | `"default" \| "muted" \| "primary" \| "success" \| "warning" \| "danger" \| null` | No | Example: `"primary"` |
+| `size` | `"sm" \| "md" \| "lg" \| null` | No | Example: `"md"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Icon",
+  "props": {
+    "name": "truck",
+    "tone": "primary",
+    "size": "md"
+  }
+}
+```
+
+## Live example
+
+<Example id="icon-icontext" />
+
+{/* generated:end */}

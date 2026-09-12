@@ -1,0 +1,55 @@
+---
+title: "Accordion"
+description: "Expandable FAQ or policy sections for dense text"
+---
+
+## Use it when
+
+The answer is several blocks of dense text the reader will skim rather than read — FAQs, policy clauses, per-option explanations. Every title stays on screen, which is the difference from [Tabs](/docs/catalog/Tabs): the catalog frames Tabs as switching between related views and Accordion as collapsing dense sections. If each entry is one short line, [List](/docs/catalog/List) is lighter. An Accordion with empty `items` renders nothing at all.
+
+## Prompt hints
+
+- "answer these questions about the refund policy"
+- "explain each plan, collapsed"
+- "give me the FAQ for onboarding"
+
+`items` is the only prop and `content` is a plain string, so a section cannot contain another component. Behaviour worth knowing: exactly one section is open at a time, the first one opens by default, and clicking the open title collapses everything — there is no prop for the initial index and the open state is local React state, not spec state.
+
+## Related
+
+- [Tabs](/docs/catalog/Tabs) — same text-only limit, one visible title at a time.
+- [List](/docs/catalog/List) — when each point is one line and nothing needs hiding.
+- [Text](/docs/catalog/Text) — for prose short enough to leave expanded.
+- [Callout](/docs/catalog/Callout) — pull the one answer that matters out of the accordion.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `items` | `{ title: string; content: string }[]` | Yes | Example: `[{"title":"What is Vexa?","content":"Chat that can emit constrained generative UI."}]` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Accordion",
+  "props": {
+    "items": [
+      {
+        "title": "What is Vexa?",
+        "content": "Chat that can emit constrained generative UI."
+      }
+    ]
+  }
+}
+```
+
+## Live example
+
+<Example id="accordion" />
+
+{/* generated:end */}

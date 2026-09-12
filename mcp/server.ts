@@ -2,7 +2,7 @@ import { createMcpApp } from "@json-render/mcp";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
-import { catalog } from "agentic-ui/core";
+import { catalog } from "vexa/core";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -21,15 +21,15 @@ function loadHtml() {
 
 async function createServer() {
   return createMcpApp({
-    name: "Agentic UI",
+    name: "Vexa",
     version: "0.1.0",
     catalog,
     html: loadHtml(),
     tool: {
       name: "render_ui",
-      title: "Render Agentic UI",
+      title: "Render Vexa",
       description:
-        "Render an interactive UI from a json-render spec constrained to the Agentic UI catalog. Use when the user asks for dashboards, cards, metrics, tables, comparisons, or any visual layout.",
+        "Render an interactive UI from a json-render spec constrained to the Vexa catalog. Use when the user asks for dashboards, cards, metrics, tables, comparisons, or any visual layout.",
     },
   });
 }

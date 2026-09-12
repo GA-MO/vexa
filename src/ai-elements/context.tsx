@@ -1,13 +1,13 @@
 "use client";
 
-import { Button } from "agentic-ui/ui/button";
+import { Button } from "vexa/ui/button";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "agentic-ui/ui/hover-card";
-import { Progress } from "agentic-ui/ui/progress";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/hover-card";
+import { Progress } from "vexa/ui/progress";
+import { cn } from "vexa/lib/utils";
 import type { LanguageModelUsage } from "ai";
 import type { ComponentProps } from "react";
 import { createContext, useContext, useMemo } from "react";

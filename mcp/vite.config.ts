@@ -13,12 +13,14 @@ export default defineConfig({
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
-      "agentic-ui/core": path.resolve(root, "../src/core/index.ts"),
-      "agentic-ui/react": path.resolve(root, "../src/react/index.ts"),
-      "agentic-ui/protocol": path.resolve(root, "../src/protocol/index.ts"),
-      "agentic-ui/lib": path.resolve(root, "../src/lib"),
-      "agentic-ui/ui": path.resolve(root, "../src/ui"),
-      "agentic-ui/ai-elements": path.resolve(root, "../src/ai-elements"),
+      "vexa/core": path.resolve(root, "../src/core/index.ts"),
+      "vexa/examples": path.resolve(root, "../src/examples/index.ts"),
+      "vexa/server": path.resolve(root, "../src/server/index.ts"),
+      "vexa/react": path.resolve(root, "../src/react/index.ts"),
+      "vexa/protocol": path.resolve(root, "../src/protocol/index.ts"),
+      "vexa/lib": path.resolve(root, "../src/lib"),
+      "vexa/ui": path.resolve(root, "../src/ui"),
+      "vexa/ai-elements": path.resolve(root, "../src/ai-elements"),
     },
   },
   build: {

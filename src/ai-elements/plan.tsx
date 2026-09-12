@@ -8,13 +8,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "agentic-ui/ui/card";
+} from "vexa/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "agentic-ui/ui/collapsible";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/collapsible";
+import { cn } from "vexa/lib/utils";
 import { ChevronsUpDownIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { createContext, useContext, useMemo } from "react";

@@ -1,0 +1,54 @@
+---
+title: "Stack"
+description: "Flex stack for grouping children"
+---
+
+## Use it when
+
+This is the default container for a multi-part answer: a heading, a paragraph, then a chart. The prompt splits layout duties explicitly — `Stack` and [Grid](/docs/catalog/Grid) are for section-level structure, while [Column](/docs/catalog/Column) and [Row](/docs/catalog/Row) are for tight layout inside a card. Use [Column](/docs/catalog/Column) when the group is dense, and [Row](/docs/catalog/Row) for any horizontal arrangement that needs alignment control.
+
+## Prompt hints
+
+- "summarise this, then show me the chart"
+- "explain the steps and give me a button to start"
+- "put a heading, a short summary and the table in one answer"
+
+`direction` defaults to `vertical` and `gap` to `md` (`gap-3`), the roomy spacing meant for section breaks. A `horizontal` stack wraps and stretches its children to equal height but exposes no `justify` or `align` props, so anything that needs `justify="between"` or a non-wrapping line belongs in a [Row](/docs/catalog/Row).
+
+## Related
+
+- [Column](/docs/catalog/Column) — tighter vertical spacing for dense groups.
+- [Row](/docs/catalog/Row) — horizontal layout with alignment and wrap control.
+- [Grid](/docs/catalog/Grid) — when children are peers that should share a line.
+- [Card](/docs/catalog/Card) — when the stack needs a title and a border.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `direction` | `"vertical" \| "horizontal" \| null` | No | Example: `"vertical"` |
+| `gap` | `"sm" \| "md" \| "lg" \| null` | No | Example: `"md"` |
+
+Slots: `default`
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Stack",
+  "props": {
+    "direction": "vertical",
+    "gap": "md"
+  }
+}
+```
+
+## Live example
+
+<Example id="card-grid" />
+
+{/* generated:end */}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AgenticChatOverlay } from "agentic-ui/chat";
+import { VexaChatOverlay } from "vexa/chat";
 
 export default function Page() {
   return (
@@ -26,13 +26,13 @@ export default function Page() {
         <h1 className="mt-3 max-w-xl text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
           Your app stays here.
           <span className="block bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-            Agentic chat floats on top.
+            Vexa chat floats on top.
           </span>
         </h1>
         <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600">
           Drop{" "}
           <code className="rounded-md bg-white px-1.5 py-0.5 text-sm text-indigo-700 shadow-sm ring-1 ring-slate-200">
-            AgenticChatOverlay
+            VexaChatOverlay
           </code>{" "}
           into any project. Review every generative UI type in the{" "}
           <Link href="/catalog" className="font-medium text-indigo-600 underline-offset-2 hover:underline">
@@ -59,7 +59,7 @@ export default function Page() {
       </div>
 
       <div id="chat">
-        <AgenticChatOverlay defaultOpen={false} />
+        <VexaChatOverlay defaultOpen={false} />
       </div>
     </main>
   );

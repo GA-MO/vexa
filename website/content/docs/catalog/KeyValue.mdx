@@ -1,0 +1,65 @@
+---
+title: "KeyValue"
+description: "Two-column label: value list for details of one record (order, profile, config). Use Table for many records."
+---
+
+## Use it when
+
+The attributes of exactly one record: an order, a profile, a booking, a config. The catalog description draws the line directly — use Table once there are many records. Money lines that add up to a total are LineItems' job, a two-value before/after or origin/destination pair is FromTo's, and a single headline figure is Metric's. KeyValue has no emphasis of its own, which is why it survives a dozen rows without shouting.
+
+## Prompt hints
+
+- "Show me the details of order A-1042"
+- "What's on my account?"
+- "Summarise this booking"
+
+`value` is a string, so format before it arrives: a `$template` such as `${/host/path}`, `$format`, or the `formatCurrency` computed function all resolve to the string KeyValue renders. Labels keep their width and values wrap and stay right-aligned, so short labels read best. `size` defaults to `sm` (13px); `md` is worth it only for a standalone card.
+
+## Related
+
+- [Table](/docs/catalog/Table) — the same fields across many records
+- [LineItems](/docs/catalog/LineItems) — when the values are amounts with a total
+- [FromTo](/docs/catalog/FromTo) — when the record is really a route or a change
+- [State](/docs/concepts/state) — `$template` and `$state` for values that come from state
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `pairs` | `{ label: string; value: string }[]` | Yes | Example: `[{"label":"Order","value":"#A-1042"},{"label":"Status","value":"Shipped"},{"label":"Total","value":"฿283.55"}]` |
+| `size` | `"sm" \| "md" \| null` | No | Example: `"sm"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "KeyValue",
+  "props": {
+    "pairs": [
+      {
+        "label": "Order",
+        "value": "#A-1042"
+      },
+      {
+        "label": "Status",
+        "value": "Shipped"
+      },
+      {
+        "label": "Total",
+        "value": "฿283.55"
+      }
+    ],
+    "size": "sm"
+  }
+}
+```
+
+## Live example
+
+<Example id="key-value" />
+
+{/* generated:end */}

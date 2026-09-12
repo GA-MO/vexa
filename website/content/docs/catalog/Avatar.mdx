@@ -1,0 +1,56 @@
+---
+title: "Avatar"
+description: "Person avatar with name and optional role"
+---
+
+## Use it when
+
+A person is part of the answer: an owner, an assignee, an account manager, the people on a project. Avatar is a person row, not a picture — it always renders the name beside the image, so a standalone photo is Image and a gallery is Carousel. For someone's attributes (email, team, joined date) put a KeyValue under it rather than stuffing them into `role`.
+
+## Prompt hints
+
+- "Who owns this ticket?"
+- "Show the team working on the migration"
+- "Who's my account manager and what's their role?"
+
+`src` is optional: with no image, Avatar builds initials from the first letter of each of the first two words of `name`, uppercased, on the brand gradient, and falls back to `?` when nothing usable is left. Both `name` and `role` are single-line and truncate with an ellipsis, so full titles belong elsewhere. `size` is 32, 40 and 56px for `sm`, `md` and `lg`.
+
+## Related
+
+- [KeyValue](/docs/catalog/KeyValue) — the person's other fields
+- [Column](/docs/catalog/Column) — stack several people tightly
+- [Image](/docs/catalog/Image) — a picture that is not a person
+- [IconText](/docs/catalog/IconText) — their contact details
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | Yes | Example: `"Alex Kim"` |
+| `role` | `string \| null` | No | Example: `"Owner"` |
+| `src` | `string \| null` | No | Example: `null` |
+| `size` | `"sm" \| "md" \| "lg" \| null` | No | Example: `"md"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Avatar",
+  "props": {
+    "name": "Alex Kim",
+    "role": "Owner",
+    "src": null,
+    "size": "md"
+  }
+}
+```
+
+## Live example
+
+<Example id="avatar" />
+
+{/* generated:end */}

@@ -1,12 +1,12 @@
 "use client";
 
-import { Button } from "agentic-ui/ui/button";
+import { Button } from "vexa/ui/button";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "agentic-ui/ui/hover-card";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/hover-card";
+import { cn } from "vexa/lib/utils";
 import type { FileUIPart, SourceDocumentUIPart } from "ai";
 import {
   FileTextIcon,

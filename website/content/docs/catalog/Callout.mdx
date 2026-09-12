@@ -1,0 +1,56 @@
+---
+title: "Callout"
+description: "Prominent highlighted callout for key takeaways. Prefer over Alert when the message should stand out."
+---
+
+## Use it when
+
+There is one thing the reader must leave with — the recommendation, the gotcha, the next step — and it should out-weigh everything around it. The catalog says to prefer it over [Alert](/docs/catalog/Alert) whenever the message should stand out, and the prompt reserves Alert for warnings and Callout for takeaways. Routine explanation stays in [Text](/docs/catalog/Text); a one-word state is a [Badge](/docs/catalog/Badge).
+
+## Prompt hints
+
+- "what's the one thing I should know here?"
+- "highlight which plan you'd recommend"
+- "make the upgrade note impossible to miss"
+
+`title` and `body` are both required, so a Callout is never a one-liner — if you only have a sentence, that is a sign [Alert](/docs/catalog/Alert) fits better. `eyebrow` prints a small uppercase kicker above the title. `tone` defaults to `brand`, the primary-to-violet gradient tint that follows whatever theme the host set; the other four tones colour the body text as well as the frame, so long bodies read best in `brand`.
+
+## Related
+
+- [Alert](/docs/catalog/Alert) — the quieter form for warnings and tips.
+- [Text](/docs/catalog/Text) — supporting prose around the takeaway.
+- [Badge](/docs/catalog/Badge) — when a label would do the same work.
+- [Button](/docs/catalog/Button) — pair the takeaway with the action it implies.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `eyebrow` | `string \| null` | No | Example: `"Tip"` |
+| `title` | `string` | Yes | Example: `"Ask for a carousel of plans"` |
+| `body` | `string` | Yes | Example: `"Use Carousel variant='card' for side-by-side plan cards you can swipe."` |
+| `tone` | `"brand" \| "info" \| "success" \| "warning" \| "danger" \| null` | No | Example: `"brand"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Callout",
+  "props": {
+    "eyebrow": "Tip",
+    "title": "Ask for a carousel of plans",
+    "body": "Use Carousel variant='card' for side-by-side plan cards you can swipe.",
+    "tone": "brand"
+  }
+}
+```
+
+## Live example
+
+<Example id="callout" />
+
+{/* generated:end */}

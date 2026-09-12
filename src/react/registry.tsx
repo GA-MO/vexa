@@ -1,6 +1,6 @@
 "use client";
 
-import { catalog } from "agentic-ui/core";
+import { catalog } from "vexa/core";
 import { defineRegistry } from "@json-render/react";
 import {
   Accordion,
@@ -45,9 +45,15 @@ import {
   Timeline,
   Video,
 } from "./components";
-import { registryActions } from "./runtime";
 
-export const { registry, handlers: registryHandlers } = defineRegistry(
+/** Spec actions are executed by the handlers SpecView passes to JSONUIProvider, so the registry only needs type-level stubs. */
+const registryActionStubs = {
+  runTool: async () => {},
+  submitForm: async () => {},
+  toast: async () => {},
+};
+
+export const { registry } = defineRegistry(
   catalog,
   {
     components: {
@@ -115,6 +121,6 @@ export const { registry, handlers: registryHandlers } = defineRegistry(
       FromTo: ({ props }) => <FromTo props={props as never} />,
       KeyValue: ({ props }) => <KeyValue props={props as never} />,
     },
-    actions: registryActions,
+    actions: registryActionStubs,
   },
 );

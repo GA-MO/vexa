@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { TooltipProvider } from "agentic-ui/ui/tooltip";
+import { TooltipProvider } from "vexa/ui/tooltip";
+import { DemoHost } from "@/components/demo-host";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Agentic UI Demo",
-  description: "Host preview for the Agentic UI overlay",
+  title: "Vexa Demo",
+  description: "Host preview for the Vexa overlay",
 };
 
 export default function RootLayout({
@@ -13,9 +14,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="font-sans">
+    <html lang="en" className="vexa-scrollbar font-sans">
       <body className="min-h-dvh antialiased">
-        <TooltipProvider>{children}</TooltipProvider>
+        <TooltipProvider>
+          <DemoHost>{children}</DemoHost>
+        </TooltipProvider>
       </body>
     </html>
   );

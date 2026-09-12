@@ -1,0 +1,111 @@
+---
+title: Host tools
+description: Declare browser capabilities with defineTool using zod, valibot, arktype, or jsonSchema, get typed run input, gate side effects with confirm, and read results under /tools.
+---
+
+## Declare a tool
+
+```tsx title="tools.ts"
+import { z } from "zod";
+import { defineTool } from "vexa/react";
+
+export const openCatalogItem = defineTool({
+  description: "Scroll the catalog page to one component or example. item is the section id, for example bar-chart.",
+  input: z.object({ tab: z.enum(["composed", "primitives", "interactive"]), item: z.string().min(1) }),
+  run: ({ tab, item }) => {
+    window.location.hash = `${tab}/${item}`;
+    return { ok: true, summary: `Showing ${tab} › ${item}` };
+  },
+});
+```
+
+Register it on the provider under a name that matches `^[a-z][a-z0-9_]{0,63}$`: `tools={{ open_catalog_item: openCatalogItem }}`. The name is what the model and `runTool` buttons use.
+
+## The HostTool type
+
+```ts title="vexa/react"
+type HostTool<I = unknown> = {
+  description: string;
+  input?: FlexibleSchema<I>;
+  confirm?: boolean;
+  run(input: I, ctx: HostToolContext): HostToolResult | Promise<HostToolResult>;
+};
+
+type HostToolContext = { toolCallId: string | null; source: "model" | "button" };
+
+type HostToolResult =
+  | { ok: true; summary?: string; data?: unknown }
+  | { ok: false; error: string };
+```
+
+`description` is truncated to 300 characters before it is sent; write the first sentence for the model and put argument hints after it. `toolCallId` is `null` and `source` is `"button"` when a spec triggered the tool.
+
+## Any schema library
+
+`input` accepts an AI SDK `FlexibleSchema`: any Standard Schema implementation (zod 4, valibot, arktype) or a plain `jsonSchema()`. The provider converts it with `asSchema()` to produce the JSON Schema sent to the server and to validate the input before `run` is called. Invalid input returns `{ ok: false, error: "Invalid input: …" }` without running the tool.
+
+```ts title="valibot and jsonSchema variants"
+import * as v from "valibot";
+import { jsonSchema } from "ai";
+
+const setTheme = defineTool({
+  description: "Switch the page between light and dark theme.",
+  input: v.object({ theme: v.picklist(["light", "dark"]) }),
+  confirm: true,
+  run: ({ theme }) => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    return { ok: true, data: { theme } };
+  },
+});
+
+const reload = defineTool({
+  description: "Reload the current page.",
+  input: jsonSchema<{ hard: boolean }>({ type: "object", properties: { hard: { type: "boolean" } }, required: ["hard"] }),
+  run: ({ hard }) => {
+    window.location.reload();
+    return { ok: true, summary: hard ? "Hard reload" : "Reload" };
+  },
+});
+```
+
+A tool with no `input` uses the second overload of `defineTool` and receives an empty object; the schema sent to the model is `{ type: "object", properties: {} }`.
+
+## Typed pairs
+
+`defineTool` infers the type of `run`'s first argument from `input`. A raw object literal in `tools={{ … }}` also works but leaves the input as `unknown`. The same idea applies to `contextSchema` and `context` on the provider.
+
+## Confirmation
+
+`confirm: true` shows a Run / Cancel card before the tool executes, whether the caller is the model or a button. A cancel resolves to `{ ok: false, error: "The user declined to run this tool" }`, which the model reports as "nothing changed". Use it for anything the user would notice: navigation, theme, opening windows, scrolling away from a form.
+
+## Results under /tools
+
+Every result is written to `/tools/<name>` in the state store of the spec that triggered it. The shape depends on the caller:
+
+- From a button or `watch`: `data` when present, otherwise `{ ok: true, summary }`; on failure the whole `{ ok: false, error }`. `summary` or `error` is also copied to `/toast`.
+- From a model tool call: the whole result object as returned by `run`, so `data` sits at `/tools/<name>/data`.
+
+Bind with `{ "$state": "/tools/load_cities/cities" }` for the button path. The provider's `onToolResult` callback receives every result regardless of caller.
+
+## useVexaHost
+
+Host code can run a registered tool through the same gate (input validation, confirmation, `onToolResult`) with the hook:
+
+```tsx title="any client component"
+import { useVexaHost } from "vexa/react";
+
+const { runTool, tools } = useVexaHost();
+await runTool("set_theme", { theme: "dark" });
+```
+
+`tools` is the list of `{ name, description, inputSchema }` descriptors sent to the server.
+
+## WebMCP
+
+`registerWebMcp(tools)` from `vexa/react` registers tools without `confirm` on `navigator.modelContext` when the browser provides it and returns an unregister function. It is independent of the provider and the demo does not call it.
+
+## Related
+
+- [Host tools concept](/docs/concepts/host-tools): the model call round trip
+- [runTool](/docs/host/runtool): calling tools from specs
+- [Provider](/docs/host/provider): registering tools and context

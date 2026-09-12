@@ -1,1 +1,138 @@
+@import "streamdown/styles.css";
+
 @source "./";
+@source "../node_modules/streamdown/dist/*.js";
+@source "../node_modules/@streamdown/*/dist/*.js";
+
+@theme inline {
+  --color-success: var(--vexa-success);
+  --color-warning: var(--vexa-warning);
+  --color-danger: var(--vexa-danger);
+  --color-info: var(--vexa-info);
+  --color-popover: var(--popover, var(--card));
+  --color-popover-foreground: var(--popover-foreground, var(--card-foreground));
+  --color-destructive: var(--destructive, var(--vexa-danger));
+  --color-destructive-foreground: var(--destructive-foreground, #ffffff);
+  --color-sidebar: var(--sidebar, var(--muted));
+  --color-sidebar-foreground: var(--sidebar-foreground, var(--foreground));
+  --color-sidebar-border: var(--sidebar-border, var(--border));
+}
+
+:root,
+[data-vexa-theme] {
+  --vexa-success: #059669;
+  --vexa-warning: #d97706;
+  --vexa-danger: #e11d48;
+  --vexa-info: #0284c7;
+  --chart-1: #4f46e5;
+  --chart-2: #a78bfa;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #f43f5e;
+}
+
+.dark,
+[data-vexa-theme].dark {
+  --vexa-success: #34d399;
+  --vexa-warning: #fbbf24;
+  --vexa-danger: #fb7185;
+  --vexa-info: #38bdf8;
+  --chart-1: #818cf8;
+  --chart-2: #c4b5fd;
+  --chart-3: #34d399;
+  --chart-4: #fbbf24;
+  --chart-5: #fb7185;
+}
+
+[data-vexa-theme].dark {
+  color-scheme: dark;
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: var(--vexa-primary-dark, #818cf8);
+  --primary-foreground: #0f172a;
+  --secondary: #1e293b;
+  --secondary-foreground: #e0e7ff;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #312e81;
+  --accent-foreground: #e0e7ff;
+  --destructive: #f87171;
+  --border: rgb(255 255 255 / 10%);
+  --input: rgb(255 255 255 / 15%);
+  --ring: var(--vexa-primary-dark, #818cf8);
+  --brand-violet: var(--vexa-secondary-dark, #a78bfa);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-vexa-theme][data-vexa-mode="system"] {
+    color-scheme: dark;
+    --vexa-success: #34d399;
+    --vexa-warning: #fbbf24;
+    --vexa-danger: #fb7185;
+    --vexa-info: #38bdf8;
+    --chart-1: #818cf8;
+    --chart-2: #c4b5fd;
+    --chart-3: #34d399;
+    --chart-4: #fbbf24;
+    --chart-5: #fb7185;
+    --background: #0f172a;
+    --foreground: #f8fafc;
+    --card: #1e293b;
+    --card-foreground: #f8fafc;
+    --popover: #1e293b;
+    --popover-foreground: #f8fafc;
+    --primary: var(--vexa-primary-dark, #818cf8);
+    --primary-foreground: #0f172a;
+    --secondary: #1e293b;
+    --secondary-foreground: #e0e7ff;
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+    --accent: #312e81;
+    --accent-foreground: #e0e7ff;
+    --destructive: #f87171;
+    --border: rgb(255 255 255 / 10%);
+    --input: rgb(255 255 255 / 15%);
+    --ring: var(--vexa-primary-dark, #818cf8);
+    --brand-violet: var(--vexa-secondary-dark, #a78bfa);
+  }
+}
+
+[data-vexa-theme],
+.vexa-scrollbar {
+  --vexa-scrollbar-thumb: color-mix(in oklab, var(--foreground) 22%, transparent);
+  --vexa-scrollbar-thumb-hover: color-mix(in oklab, var(--foreground) 38%, transparent);
+  scrollbar-width: thin;
+  scrollbar-color: var(--vexa-scrollbar-thumb) transparent;
+}
+
+[data-vexa-theme] *::-webkit-scrollbar,
+.vexa-scrollbar *::-webkit-scrollbar,
+.vexa-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-vexa-theme] *::-webkit-scrollbar-track,
+.vexa-scrollbar *::-webkit-scrollbar-track,
+.vexa-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-vexa-theme] *::-webkit-scrollbar-thumb,
+.vexa-scrollbar *::-webkit-scrollbar-thumb,
+.vexa-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  background-color: var(--vexa-scrollbar-thumb);
+}
+
+[data-vexa-theme] *::-webkit-scrollbar-thumb:hover,
+.vexa-scrollbar *::-webkit-scrollbar-thumb:hover,
+.vexa-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--vexa-scrollbar-thumb-hover);
+}

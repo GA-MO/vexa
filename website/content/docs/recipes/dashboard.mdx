@@ -1,0 +1,78 @@
+---
+title: Dashboard
+description: Answer "how are sales this quarter" with a Metric grid, a horizontal BarChart, and a Table, all grounded in numbers from one server tool.
+---
+
+## Goal
+
+A question about performance should come back as a compact dashboard, not a paragraph of numbers. The assistant calls a server tool that returns the figures, then composes Metric tiles, a BarChart by region, and a Table of top products inside a Stack that fits the chat panel.
+
+## What the user asks
+
+- "สรุปยอดขายไตรมาสนี้ให้หน่อย เทียบกับปีที่แล้ว"
+- "How did we do this quarter compared to last year?"
+- "Show revenue by region and the top three products"
+
+## Live example
+
+<Example id="dashboard" />
+
+## How it works
+
+The spec is a `Stack` holding a `Row` (Heading and Badge), a three-column `Grid` of `Metric`, a `BarChart` with `horizontal: true` and `format: "currency"`, a `Card` around a `Table`, and a trailing `Row` of Buttons. Every number comes from a server tool, because the operational rules tell the model to call a tool before answering and never to invent figures.
+
+```ts title="app/api/chat/route.ts"
+import { tool } from "ai";
+import { z } from "zod";
+import { createVexaHandler } from "vexa/server";
+import { models } from "@/lib/models";
+import { salesSummary } from "@/lib/reports";
+
+const tools = {
+  salesSummary: tool({
+    description: "Revenue, orders, and average order value for a quarter, with a per-region breakdown and the top products. Compares with the same quarter last year.",
+    inputSchema: z.object({ quarter: z.string().describe("for example 2026-Q3") }),
+    execute: async ({ quarter }) => salesSummary(quarter),
+  }),
+};
+
+export const { GET, POST } = createVexaHandler({
+  models,
+  tools,
+  rules: [
+    "For a sales summary start with a Grid of three Metric tiles (revenue, orders, average order), then one BarChart by region with horizontal true and format currency, then a Table of top products inside a Card.",
+    "Put the period and the update time in a Row with a Heading and a Badge above the metrics.",
+  ],
+});
+```
+
+A tool without `needsApproval` is a read tool: it runs without an approval card and its output is fenced as data before the model sees it, so a region name that contains instructions cannot steer the reply.
+
+On the client, `format` decides how the axis labels and Metric values print. The example uses baht; switch the whole dashboard to dollars with one prop:
+
+```tsx title="app/providers.tsx"
+<VexaProvider format={{ locale: "en-US", currency: "USD" }}>
+```
+
+The Buttons at the bottom are plain `Button` elements here. Wire them to your app with a host tool and `runTool`:
+
+```json title="open the full report from the spec"
+{
+  "type": "Button",
+  "props": { "label": "Open full report", "variant": "primary" },
+  "on": { "press": [{ "action": "runTool", "params": { "name": "navigate", "input": { "to": "/reports/2026-q3" } } }] }
+}
+```
+
+## Prompt hints
+
+- Name the tool's vocabulary in `persona`: "'this quarter' means the current calendar quarter; 'last year' means the same quarter one year earlier."
+- Keep the model on `BarChart` for four or fewer regions; `Chart` with `kind: "pie"` only when the user asks for share of total.
+- `Metric.value` is a string the model writes, while chart axes are formatted by the host. Say "write Metric values compact, for example ฿2.4M, and use format currency on charts" so the two agree.
+
+## Related
+
+- [Metric](/docs/catalog/Metric), [BarChart](/docs/catalog/BarChart), [Table](/docs/catalog/Table): the components used
+- [Handler](/docs/server/handler): server tools and `experimental_context`
+- [Format and functions](/docs/host/format-and-functions): locale and currency
+- [Trend](/docs/recipes/trend): the same pattern with a LineChart

@@ -1,0 +1,81 @@
+---
+title: Trend
+description: Answer "how is conversion this month" with three Metric tiles, a two-series LineChart over daily points, and the insight in an Alert, from a server tool that returns the series.
+---
+
+## Goal
+
+Trend questions are about shape, not single values. The assistant shows the headline numbers as `Metric` tiles, the daily series as a `LineChart` with two lines, and what changed as an `Alert`. The chart handles 14 to 60 points and thins its axis labels itself, so the tool can return one value per day.
+
+## What the user asks
+
+- "conversion rate เดือนนี้เป็นยังไง"
+- "How is conversion trending this month, app versus web?"
+- "Did the checkout redesign change anything?"
+
+## Live example
+
+<Example id="trend-report" />
+
+## How it works
+
+The tool returns `labels` and one `values` array per series, already aligned. Percent values are plain percentages (`3.3`, not `0.033`), because `format: "percent"` appends the sign without scaling.
+
+```ts title="app/api/chat/route.ts"
+import { tool } from "ai";
+import { z } from "zod";
+import { createVexaHandler } from "vexa/server";
+import { models } from "@/lib/models";
+import { conversionSeries } from "@/lib/analytics";
+
+const tools = {
+  conversionSeries: tool({
+    description: "Daily conversion rate in percent for a month, per channel (app, web), with the monthly averages, month-over-month deltas, and dated release notes.",
+    inputSchema: z.object({ month: z.string().describe("YYYY-MM") }),
+    execute: async ({ month }) => conversionSeries(month),
+  }),
+};
+
+export const { GET, POST } = createVexaHandler({
+  models,
+  tools,
+  rules: [
+    "For a trend answer with a Stack: a Grid of three Metric tiles (one per channel plus blended, detail is the month-over-month delta, trend up or down), then one LineChart with the daily labels and one series per channel, format percent, area false, showDots false, then an Alert tone info titled 'What changed' that names the release that explains the shift.",
+    "Use LineChart for time series and BarChart for categories; never both for the same data.",
+  ],
+});
+```
+
+`Metric.value` is a string, so the model writes `"3.3%"` itself, while the chart axis is formatted by the host through the provider's locale:
+
+```tsx title="app/providers.tsx"
+<VexaProvider format={{ locale: "en-US", currency: "USD" }}>
+```
+
+For revenue trends switch the chart to `format: "currency"` and the axis shows compact money (`$1.3M`) in the same locale.
+
+If the page already knows the period, pass it as context so the user can say "this month" and the tool receives the right value:
+
+```tsx title="app/providers.tsx"
+import { z } from "zod";
+
+<VexaProvider
+  contextSchema={z.object({ month: z.string() })}
+  context={() => ({ month: new Date().toISOString().slice(0, 7) })}
+>
+```
+
+Server tools read it from `experimental_context` in `execute`, and `persona` can mention it: `"'this month' is ${String(context.month)}"`.
+
+## Prompt hints
+
+- Cap the series: "at most two series unless the user asks for more" keeps the legend readable in a 400 px panel.
+- Give the model the causal data: release notes in the tool output turn "it went up" into "it went up after the checkout redesign on the 14th".
+- For a single compact number with a trend, `Chart` with `kind: "spark"` inline in a Card is smaller than a full LineChart.
+
+## Related
+
+- [LineChart](/docs/catalog/LineChart), [Metric](/docs/catalog/Metric), [Alert](/docs/catalog/Alert)
+- [Dashboard](/docs/recipes/dashboard): categories with a BarChart
+- [Persona and rules](/docs/server/persona-and-rules): vocabulary such as "this month"
+- [Provider](/docs/host/provider): `context` and `contextSchema`

@@ -1,0 +1,56 @@
+---
+title: "Video"
+description: "Embedded video clip for demos and walkthroughs"
+---
+
+## Use it when
+
+The answer is a clip the user should watch: a walkthrough, a demo, a recorded step. A still is Image, several stills are a Carousel, and a sequence the reader should skim instead of watch is a Timeline or a List — a chat panel is a poor place to hide information inside playback.
+
+## Prompt hints
+
+- "Show me the product walkthrough"
+- "Is there a video of how to set this up?"
+- "Play the demo clip for this feature"
+
+`src` decides the renderer. A `youtube.com` or `youtu.be` URL is rewritten to an embed URL — the `v` query parameter, or the path for short links — and rendered in an iframe; every other URL renders a native `video` element with controls. `poster` therefore only applies to the native case, and YouTube ignores it. `aspect` uses the same fixed frames as Image (`wide` by default) and `caption` renders in a figcaption strip below.
+
+## Related
+
+- [Image](/docs/catalog/Image) — a still with the same frames and caption
+- [Carousel](/docs/catalog/Carousel) — several media items in one strip
+- [Timeline](/docs/catalog/Timeline) — the same walkthrough as readable steps
+- [Code](/docs/catalog/Code) — when the demo is really a snippet
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `src` | `string` | Yes | Example: `"https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4"` |
+| `poster` | `string \| null` | No | Example: `null` |
+| `caption` | `string \| null` | No | Example: `"Sample walkthrough"` |
+| `aspect` | `"wide" \| "square" \| "tall" \| null` | No | Example: `"wide"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Video",
+  "props": {
+    "src": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "poster": null,
+    "caption": "Sample walkthrough",
+    "aspect": "wide"
+  }
+}
+```
+
+## Live example
+
+<Example id="video" />
+
+{/* generated:end */}

@@ -1,0 +1,74 @@
+---
+title: "Input"
+description: "Labeled field. Bind with value: { $bindState: '/form/email' }. Optional checks for validation."
+---
+
+## Use it when
+
+The answer needs a value only the user has: an email, a quantity, a free-text note. Both the catalog and the prompt prefer a Stack of Input plus Button over Form, because Input is the field that binds to a path you choose. Known options are Select or RadioGroup, a yes/no is Checkbox or Switch.
+
+## Prompt hints
+
+- "Ask me for my email before you send the request"
+- "Let me type a delivery address"
+- "Collect a short note with this order"
+
+`value: { "$bindState": "/ui/email" }` makes the field two-way through `useBoundProp`; without a binding it keeps local state nothing else in the spec can read. Keep user-entered values under `/ui/*`: `/tools/*` and `/host/*` are runtime-owned and a spec write there is dropped with a console warning. `submitForm` snapshots `/form` and falls back to `/ui/form`, so bind at `/ui/form/<name>` if that action should pick the field up. `checks` renders errors under the field on `validateOn` — `blur` is the default, `change` fires per keystroke, `submit` waits for a `validateForm` action.
+
+## Related
+
+- [Form](/docs/catalog/Form) — the shortcut that binds under `/form/` for you
+- [Button](/docs/catalog/Button) — carries the `on.press` actions that consume the value
+- [Select](/docs/catalog/Select) — when the value comes from a known list
+- [State](/docs/concepts/state) — namespaces, `$bindState`, and `watch`
+- [Actions](/docs/actions) — `submitForm`, `toast`, and `runTool` params
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string` | Yes | Example: `"Email"` |
+| `name` | `string` | Yes | Example: `"email"` |
+| `placeholder` | `string \| null` | No | Example: `"you@company.com"` |
+| `inputType` | `"text" \| "email" \| "number" \| "textarea" \| null` | No | Example: `"email"` |
+| `value` | `string \| null` | No | Example: `null` |
+| `checks` | `({ type: string; message: string; args: Record<string, string \| number \| boolean \| null> \| null })[] \| null` | No | Example: `[{"type":"required","message":"Email is required","args":null},{"type":"email","message":"Invalid email","args":null}]` |
+| `validateOn` | `"change" \| "blur" \| "submit" \| null` | No | Example: `"blur"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Input",
+  "props": {
+    "label": "Email",
+    "name": "email",
+    "placeholder": "you@company.com",
+    "inputType": "email",
+    "value": null,
+    "checks": [
+      {
+        "type": "required",
+        "message": "Email is required",
+        "args": null
+      },
+      {
+        "type": "email",
+        "message": "Invalid email",
+        "args": null
+      }
+    ],
+    "validateOn": "blur"
+  }
+}
+```
+
+## Live example
+
+<Example id="input-form" />
+
+{/* generated:end */}

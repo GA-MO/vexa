@@ -1,0 +1,111 @@
+---
+title: Dark mode
+description: Switch the chat and every generated component to the dark palette with theme.mode, keep your accent readable with primaryDark, and let the assistant flip the theme through a host tool.
+---
+
+## Goal
+
+Dark mode has to cover two things at once: the chat chrome and whatever the assistant renders next. Because no catalog component owns a color, one setting on the provider handles both. The recipe adds a host tool so "switch to dark mode" typed into the chat works too.
+
+## What the user asks
+
+- "Switch to dark mode"
+- "เปลี่ยนเป็นโหมดมืด"
+- "Follow my system theme"
+
+## Live example
+
+<Example id="dashboard" />
+
+There is no dark-mode-specific example: every example on this site is one. This site toggles a `dark` class on `<html>` and leaves `mode` unset, the second setup described below; switch the site theme and watch the chart palette, the Metric trends, and the Badge tones follow.
+
+## How it works
+
+### Pick a mode
+
+`theme.mode` accepts `"light"` (default), `"dark"`, or `"system"`. The provider renders a `display: contents` wrapper marked `[data-vexa-theme]` with `data-vexa-mode` set; `"dark"` also adds the `dark` class. The dark palette in `vexa/styles.css` matches `[data-vexa-theme].dark` and, for `"system"`, `prefers-color-scheme: dark`.
+
+```tsx title="app/providers.tsx"
+"use client";
+
+import { VexaProvider } from "vexa/react";
+import { VexaChatOverlay } from "vexa/chat";
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <VexaProvider
+      theme={{
+        primary: "#0F766E",
+        primaryDark: "#5EEAD4",
+        secondary: "#0891B2",
+        secondaryDark: "#67E8F9",
+        mode: "system",
+      }}
+    >
+      {children}
+      <VexaChatOverlay />
+    </VexaProvider>
+  );
+}
+```
+
+`primaryDark` and `secondaryDark` matter: a brand teal that reads on white usually vanishes on a dark card. The dark palette reads `--vexa-primary-dark` for `--primary` and `--ring`, and `--vexa-secondary-dark` for the gradient end, falling back to the library's indigo when unset.
+
+### Follow the app's own toggle
+
+If your app already flips a `dark` class on `<html>`, the stylesheet's `.dark` selector matches that ancestor too, so the semantic tokens (`success`, `chart-*`) switch with `mode` unset. The surface tokens (`background`, `card`, `border`) only switch when the wrapper itself is dark, so for a full dark chat drive `mode` from the class:
+
+```tsx title="app/providers.tsx"
+import { useSyncExternalStore } from "react";
+
+function subscribe(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
+}
+
+function readMode() {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  const mode = useSyncExternalStore(subscribe, readMode, () => "light");
+  return <VexaProvider theme={{ mode, primaryDark: "#5EEAD4" }}>{children}</VexaProvider>;
+}
+```
+
+### Let the assistant switch it
+
+A host tool with `confirm: true` makes "switch to dark mode" a one-line request. The tool toggles the class on `<html>`; the provider above picks it up.
+
+```tsx title="tools.ts"
+import { z } from "zod";
+import { defineTool } from "vexa/react";
+
+export const setTheme = defineTool({
+  description: "Switch the page between light and dark theme.",
+  input: z.object({ theme: z.enum(["light", "dark"]) }),
+  confirm: true,
+  run: ({ theme }) => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    return { ok: true, data: { theme } };
+  },
+});
+```
+
+Register it as `tools={{ set_theme: setTheme }}`. The result lands in `/tools/set_theme`, and the model closes the turn with a sentence such as "Switched to dark". A Button in a spec can call the same tool through `runTool` with `{ "name": "set_theme", "input": { "theme": "dark" } }`.
+
+### Charts
+
+The five chart tokens have their own dark values. When you pass `theme.chart`, the same five colors are used in both modes, so pick shades that hold up on `--card` in each palette or leave `chart` unset and let the palette switch.
+
+## Prompt hints
+
+- No prompt work is needed for colors: the model never sees a color and cannot emit one.
+- Name the tool's vocabulary if your users mix languages: "'โหมดมืด' means the dark theme".
+
+## Related
+
+- [Theme](/docs/host/theme): every `VexaTheme` field and the mode table
+- [Host tools](/docs/host/host-tools): `defineTool` and `confirm`
+- [Get started](/docs/get-started): importing `vexa/styles.css`

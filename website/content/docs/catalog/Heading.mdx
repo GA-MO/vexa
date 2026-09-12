@@ -1,0 +1,52 @@
+---
+title: "Heading"
+description: "Section heading"
+---
+
+## Use it when
+
+Generated UI has more than one part and each part needs a name. Inside a [Card](/docs/catalog/Card) the card's own `title` already acts as the heading, so adding one straight after it duplicates the label. A KPI does not need a heading either — [Metric](/docs/catalog/Metric) renders its own `label` — and body copy under the heading belongs in [Text](/docs/catalog/Text).
+
+## Prompt hints
+
+- "title this section Revenue"
+- "give each part of the answer a heading"
+- "break the summary into labelled sections"
+
+`level` defaults to `"2"` and maps to `text-lg`. Level 1 is the only one with the indigo-to-violet gradient treatment, and it is still only `text-xl`, because these headings live in a 340–600px chat panel — treat level 1 as the title of an answer, not of a page. Level 3 drops to `text-base`, barely above body text, which is what makes it usable as a sub-label inside a card.
+
+## Related
+
+- [Text](/docs/catalog/Text) — the body copy that follows a heading.
+- [Card](/docs/catalog/Card) — supplies its own title and description.
+- [Stack](/docs/catalog/Stack) — the container that spaces heading and body apart.
+- [Catalog](/docs/concepts/catalog) — how the model picks between these building blocks.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `text` | `string` | Yes | Example: `"Revenue"` |
+| `level` | `"1" \| "2" \| "3" \| null` | No | Example: `"2"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Heading",
+  "props": {
+    "text": "Revenue",
+    "level": "2"
+  }
+}
+```
+
+## Live example
+
+<Example id="heading-text" />
+
+{/* generated:end */}

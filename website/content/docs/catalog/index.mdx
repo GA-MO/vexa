@@ -1,0 +1,77 @@
+---
+title: Catalog
+description: Every component the assistant can render, grouped the way it reaches for them, with one page per component for props, an example spec, and prompt hints.
+---
+
+The catalog is the whole vocabulary of generative UI in Vexa. The model can only emit these 41 components, with the props their zod schemas allow, so every answer renders with your tokens inside a 340 to 600 px chat panel. Each page below is generated from `src/core/catalog.ts` and adds hand-written guidance on when the model should pick it.
+
+## Layout
+
+- [Card](/docs/catalog/Card): Elevated surface for related content. Never nest Card in Card.
+- [Grid](/docs/catalog/Grid): Responsive multi-column grid.
+- [Stack](/docs/catalog/Stack): Flex stack for grouping children.
+- [Column](/docs/catalog/Column): Lay children out top-to-bottom. Tighter than Stack; use for dense groups.
+- [Row](/docs/catalog/Row): Lay children out left-to-right; wraps on narrow widths unless wrap=false.
+- [Divider](/docs/catalog/Divider): Horizontal divider with optional centered label.
+- [Separator](/docs/catalog/Separator): Horizontal divider.
+- [Button](/docs/catalog/Button): Action button. Prefer primary for the main CTA.
+- [Tabs](/docs/catalog/Tabs): Tabbed text panels for switching related views.
+- [Accordion](/docs/catalog/Accordion): Expandable FAQ or policy sections for dense text.
+
+## Text and status
+
+- [Heading](/docs/catalog/Heading): Section heading.
+- [Text](/docs/catalog/Text): Body copy.
+- [Badge](/docs/catalog/Badge): Compact status pill.
+- [Alert](/docs/catalog/Alert): Callout for tips, warnings, or errors.
+- [Callout](/docs/catalog/Callout): Prominent highlighted callout for key takeaways. Prefer over Alert when the message should stand out.
+- [List](/docs/catalog/List): Bullet or numbered list.
+- [Code](/docs/catalog/Code): Code snippet block for examples and configs.
+
+## Data display
+
+- [Metric](/docs/catalog/Metric): Single KPI with optional trend.
+- [Table](/docs/catalog/Table): Simple data table.
+- [KeyValue](/docs/catalog/KeyValue): Two-column label: value list for details of one record. Use Table for many records.
+- [LineItems](/docs/catalog/LineItems): Receipt or order lines with qty, name and amount, plus summary lines.
+- [FromTo](/docs/catalog/FromTo): Large origin to destination display with optional via label.
+- [Progress](/docs/catalog/Progress): Progress bar from 0 to 100.
+- [Timeline](/docs/catalog/Timeline): Vertical timeline for events or roadmap steps.
+- [Rating](/docs/catalog/Rating): Star rating display with optional review count. Read-only.
+
+## Charts
+
+- [BarChart](/docs/catalog/BarChart): Bar chart comparing categories, 1 to 4 series. horizontal=true reads best in chat.
+- [LineChart](/docs/catalog/LineChart): Line chart for trends over time, 1 to 4 series, 14 to 60 points.
+- [Chart](/docs/catalog/Chart): Bar for comparisons, line for trends, pie for share of total, spark for a compact inline trend.
+
+## Inputs
+
+- [Input](/docs/catalog/Input): Labeled field with optional validation checks. Bind with `$bindState`.
+- [Form](/docs/catalog/Form): Convenience form with fields bound under /form. Prefer Stack of Input + Button.
+- [Checkbox](/docs/catalog/Checkbox): Single boolean checkbox with label.
+- [Switch](/docs/catalog/Switch): Toggle switch for on/off settings.
+- [RadioGroup](/docs/catalog/RadioGroup): Pick exactly one option from 2 to 6 choices.
+- [Select](/docs/catalog/Select): Dropdown for choosing one option from a longer list.
+
+## Media and icons
+
+- [Icon](/docs/catalog/Icon): Single decorative icon next to a heading or inside a Row.
+- [IconText](/docs/catalog/IconText): Icon plus text row for contact details, addresses, opening hours.
+- [Avatar](/docs/catalog/Avatar): Person avatar with name and optional role.
+- [Image](/docs/catalog/Image): Image with optional caption.
+- [Video](/docs/catalog/Video): Embedded video clip for demos and walkthroughs.
+- [Map](/docs/catalog/Map): Location map with center coordinates and optional labeled markers.
+- [Carousel](/docs/catalog/Carousel): Free-scroll swipeable strip of images or plan and feature cards.
+
+## Live gallery
+
+Every example below runs at chat width, the 340 to 600 px panel these components are designed for. Follow a component name for its props table and prompt hints.
+
+<CatalogGallery />
+
+## Related
+
+- [Catalog concept](/docs/concepts/catalog): how the schema becomes the prompt and the registry
+- [Actions](/docs/actions): `submitForm`, `toast`, `runTool`
+- [Recipes](/docs/recipes): the components composed into whole answers

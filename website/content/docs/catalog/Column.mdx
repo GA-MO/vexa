@@ -1,0 +1,54 @@
+---
+title: "Column"
+description: "Lay children out top-to-bottom. Tighter than Stack; use for dense groups."
+---
+
+## Use it when
+
+A group of lines should sit close together — stacked [Row](/docs/catalog/Row) pairs inside a card, a dense list of details, a run of [IconText](/docs/catalog/IconText) contact lines. The prompt reserves `Column` and [Row](/docs/catalog/Row) for tight layout and [Stack](/docs/catalog/Stack) / [Grid](/docs/catalog/Grid) for section-level structure, so use [Stack](/docs/catalog/Stack) when you are separating whole sections of an answer rather than packing one.
+
+## Prompt hints
+
+- "show the delivery details compactly"
+- "list the order fields tightly under the title"
+- "put these rows right on top of each other"
+
+`gap` defaults to `sm` (`gap-1.5`), half of Stack's default, which is the whole reason `Column` exists; `gap="none"` and `"xs"` go tighter still. `align` defaults to `stretch`, so children fill the width — switch to `start` when you want a child such as a [Badge](/docs/catalog/Badge) to shrink to its own content instead of spanning the column.
+
+## Related
+
+- [Row](/docs/catalog/Row) — the horizontal counterpart, with `justify` for label/value pairs.
+- [Stack](/docs/catalog/Stack) — looser spacing for section-level layout.
+- [Card](/docs/catalog/Card) — the surface a dense column usually sits in.
+- [Divider](/docs/catalog/Divider) — separates groups inside a column without adding a heading.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `gap` | `"none" \| "xs" \| "sm" \| "md" \| "lg" \| null` | No | Example: `"sm"` |
+| `align` | `"start" \| "center" \| "end" \| "stretch" \| null` | No | Example: `"stretch"` |
+
+Slots: `default`
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Column",
+  "props": {
+    "gap": "sm",
+    "align": "stretch"
+  }
+}
+```
+
+## Live example
+
+<Example id="column-row" />
+
+{/* generated:end */}

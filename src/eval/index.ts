@@ -1,5 +1,5 @@
-import { catalog } from "agentic-ui/core";
-import type { Spec } from "agentic-ui/protocol";
+import { catalog } from "vexa/core";
+import type { Spec } from "vexa/protocol";
 
 export type SpecIssue = {
   path: string;

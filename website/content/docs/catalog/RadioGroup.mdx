@@ -1,0 +1,67 @@
+---
+title: "RadioGroup"
+description: "Pick exactly one option from 2-6 choices. Bind with value: { $bindState: '/form/plan' }."
+---
+
+## Use it when
+
+Exactly one of two to six choices that the user should be able to compare at a glance — a plan, a milk, a shipping speed. Every option renders as its own full-width row, so the component grows with the list; past six the prompt sends you to Select. A yes/no is Checkbox or Switch, and a score the user picks is RadioGroup too, because Rating is display only.
+
+## Prompt hints
+
+- "Which plan should I pick — show me the options"
+- "Let me choose oat, almond or whole milk"
+- "Ask me whether I want standard or express shipping"
+
+`value: { "$bindState": "/ui/plan" }` binds two-way through `useBoundProp` and stores `option.value`, not the label, so labels are free to carry prices or descriptions. Keep the path under `/ui/*`: `/tools/*` and `/host/*` are runtime-owned and spec writes to them are dropped with a warning. `label` renders as the group's legend and may be `null`; `disabled` applies to the whole group — there is no per-option disable.
+
+## Related
+
+- [Select](/docs/catalog/Select) — the same single choice once the list gets long
+- [Checkbox](/docs/catalog/Checkbox) — one yes/no rather than one of several
+- [Rating](/docs/catalog/Rating) — displays a score, never collects one
+- [State](/docs/concepts/state) — `$bindState` and reacting to the choice with `visible` or `watch`
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string \| null` | No | Example: `"Plan"` |
+| `name` | `string` | Yes | Example: `"plan"` |
+| `options` | `{ value: string; label: string }[]` | Yes | Example: `[{"value":"free","label":"Free"},{"value":"pro","label":"Pro"}]` |
+| `value` | `string \| null` | No | Example: `"pro"` |
+| `disabled` | `boolean \| null` | No | Example: `false` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "RadioGroup",
+  "props": {
+    "label": "Plan",
+    "name": "plan",
+    "options": [
+      {
+        "value": "free",
+        "label": "Free"
+      },
+      {
+        "value": "pro",
+        "label": "Pro"
+      }
+    ],
+    "value": "pro",
+    "disabled": false
+  }
+}
+```
+
+## Live example
+
+<Example id="radio-group" />
+
+{/* generated:end */}

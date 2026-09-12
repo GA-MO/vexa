@@ -1,0 +1,73 @@
+---
+title: Labels and i18n
+description: Override any string of the chat chrome with chat.labels on the provider or the labels prop, and let the model answer in the user's language.
+---
+
+## Two layers of language
+
+Text in the chat has two sources. Strings the library renders (empty state, thinking indicator, approval buttons, security notice) come from `ChatLabels` and are English by default. Text the model writes follows the catalog rule "Respond in the user's language", so a Thai question gets a Thai answer without configuration.
+
+## Overriding labels
+
+Pass a partial object. Missing keys keep the built-in string. Provider `chat.labels` applies app-wide; the `labels` prop on `VexaChatOverlay` or `VexaChat` overrides per instance.
+
+```tsx title="app/providers.tsx"
+<VexaProvider
+  chat={{
+    labels: {
+      emptyTitle: "ถามได้เลย",
+      emptyDescription: "พิมพ์คำถาม แล้วรับคำตอบพร้อม UI",
+      thinking: "กำลังคิด…",
+      approve: "อนุมัติ",
+      reject: "ปฏิเสธ",
+      tasks: (count) => `${count} งาน`,
+    },
+  }}
+>
+```
+
+## Every key
+
+| Key | Default | Where |
+|---|---|---|
+| `emptyTitle` | Ask anything. Get UI back. | empty conversation |
+| `emptyDescription` | Stream an answer, or generate cards, metrics, and tables in place. | empty conversation |
+| `thinking` | Thinking... | streaming indicator |
+| `reasoning` | Reasoning | reasoning step label |
+| `steps(count)` | `${count} steps` | header of the collapsed reasoning and tool block; `thinking` is shown there while the reply streams (not shown when `steps: "hidden"`) |
+| `approveTool(tool)` | Approve running `${tool}`? | server or MCP approval card |
+| `approved` | Approved | approval card result |
+| `rejected` | Rejected | approval card result |
+| `approve` | Approve | approval card button |
+| `reject` | Reject | approval card button |
+| `runOnPage(tool)` | Run `${tool}` on this page? | host tool confirmation |
+| `run` | Run | host tool confirmation button |
+| `cancel` | Cancel | host tool confirmation button |
+| `restore` | Restore | checkpoint link |
+| `restoreTooltip` | Restore conversation to this point | checkpoint tooltip |
+| `startOver` | Start over | header button aria-label |
+| `closeChat` | Close chat | header button aria-label |
+| `openAssistant` | Open assistant | launcher aria-label |
+| `closeAssistant` | Close assistant | launcher aria-label when open |
+| `queued` | Queued | queued messages section |
+| `removeQueued` | Remove queued message | queued item button |
+| `sentWithAttachments` | Sent with attachments | message text when only files were sent |
+| `attachment` | Attachment | queued item without text |
+| `securityTitle` | Suspicious text in tool data | injection notice card |
+| `securityBody(tool)` | Data returned by `${tool}` contained instructions aimed at the assistant… | injection notice card |
+
+Function-valued keys receive the count or the tool name so the sentence can be built in any word order.
+
+## Other presentation strings
+
+`title`, `subtitle`, `launcherLabel`, and `suggestions` are separate fields of `chat`, not labels, because they are content rather than chrome. `launcherLabel` falls back to `labels.openAssistant` when unset.
+
+## Model output
+
+Persona text on the server can fix a language for the assistant ("Always answer in Thai") when the app is single-language. Otherwise leave the catalog rule to follow the user. Currency and number formatting come from `format`, not from labels.
+
+## Related
+
+- [Provider](/docs/host/provider): where `chat` defaults live
+- [Format and functions](/docs/host/format-and-functions): locale for numbers and money
+- [Persona and rules](/docs/server/persona-and-rules): fixing the assistant's language

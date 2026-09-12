@@ -1,0 +1,54 @@
+---
+title: "Alert"
+description: "Callout for tips, warnings, or errors"
+---
+
+## Use it when
+
+Something about the answer needs a caveat: a limit, a risk, an error that came back, a tip the reader would otherwise miss. The prompt splits this cleanly — Alert for warnings, [Callout](/docs/catalog/Callout) for key takeaways — and the catalog is explicit that [Callout](/docs/catalog/Callout) wins whenever the message should stand out. A one-word state is a [Badge](/docs/catalog/Badge), and plain supporting prose is [Text](/docs/catalog/Text).
+
+## Prompt hints
+
+- "warn me if anything is out of stock"
+- "tell me what will change before I confirm"
+- "note the rate limits on this plan"
+
+`body` is required and `title` is not, so a bare body renders as a single tinted paragraph and reads like an inline note. `tone` defaults to `info` and only tints the border and background — the text itself stays `foreground`, which is the visible difference from [Callout](/docs/catalog/Callout), where each tone colours the body text too.
+
+## Related
+
+- [Callout](/docs/catalog/Callout) — the louder version; preferred when the message is the point.
+- [Badge](/docs/catalog/Badge) — a status label rather than a message.
+- [Text](/docs/catalog/Text) — for a note that needs no tint at all.
+- [Catalog](/docs/concepts/catalog) — how the model is told to choose between these.
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `title` | `string \| null` | No | Example: `"Tip"` |
+| `body` | `string` | Yes | Example: `"Ask for a dashboard to get visual cards."` |
+| `tone` | `"info" \| "success" \| "warning" \| "danger" \| null` | No | Example: `"info"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Alert",
+  "props": {
+    "title": "Tip",
+    "body": "Ask for a dashboard to get visual cards.",
+    "tone": "info"
+  }
+}
+```
+
+## Live example
+
+<Example id="alert" />
+
+{/* generated:end */}

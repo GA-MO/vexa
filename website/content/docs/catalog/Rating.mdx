@@ -1,0 +1,58 @@
+---
+title: "Rating"
+description: "Star rating display (supports half stars) with optional review count. Read-only."
+---
+
+## Use it when
+
+Showing a score out of five that already exists — a review average, a satisfaction result, a supplier score. The prompt rule is absolute: Rating displays, it never collects. Unlike Input, Select, Checkbox, Switch and RadioGroup it does not call `useBoundProp` and has no `name`, so `$bindState` on it does nothing; to ask the user for a score use RadioGroup for two to six options or Select for a longer scale. A percentage is Progress, a bare number is Metric.
+
+## Prompt hints
+
+- "How do customers rate this café?"
+- "Show the store score with the number of reviews"
+- "Compare these three hotels by rating"
+
+`value` accepts decimals and each star is filled by a gradient stop, so 4.5 really renders as half a star; it is clamped to `max` (default 5, rounded, never below 1). `showValue` defaults to true and prints one decimal, and `count` is formatted through the host locale before "(1,280 reviews)". To display a score held in state, read it one way with `{ "$state": "/ui/score" }`.
+
+## Related
+
+- [RadioGroup](/docs/catalog/RadioGroup) — to actually collect a score
+- [Progress](/docs/catalog/Progress) — a share of a whole rather than stars
+- [Metric](/docs/catalog/Metric) — the score as a headline number
+- [State](/docs/concepts/state) — `$state` reads versus `$bindState` writes
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `label` | `string \| null` | No | Example: `"Customer rating"` |
+| `value` | `number` | Yes | Example: `4.5` |
+| `max` | `number \| null` | No | Example: `5` |
+| `count` | `number \| null` | No | Example: `1280` |
+| `showValue` | `boolean \| null` | No | Example: `true` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "Rating",
+  "props": {
+    "label": "Customer rating",
+    "value": 4.5,
+    "max": 5,
+    "count": 1280,
+    "showValue": true
+  }
+}
+```
+
+## Live example
+
+<Example id="rating" />
+
+{/* generated:end */}

@@ -6,7 +6,7 @@ import useEmblaCarousel, {
   type UseEmblaCarouselType,
 } from "embla-carousel-react"
 
-import { Button } from "agentic-ui/ui/button"
+import { Button } from "vexa/ui/button"
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 
 type CarouselApi = UseEmblaCarouselType[1]

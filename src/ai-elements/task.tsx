@@ -4,8 +4,8 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "agentic-ui/ui/collapsible";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/collapsible";
+import { cn } from "vexa/lib/utils";
 import { ChevronDownIcon, SearchIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 

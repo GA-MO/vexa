@@ -1,0 +1,56 @@
+---
+title: "FromTo"
+description: "Large origin -> destination display (warehouse -> customer, old -> new value) with optional via label"
+---
+
+## Use it when
+
+Exactly two values that read as a movement or a change: BKK to CNX, warehouse to customer, Free plan to Pro plan. Anything with a third field is a KeyValue; a sequence of more than two steps is a Timeline; many routes at once are Table rows or a repeated FromTo. A real geographic position, rather than a pair of place names, is a Map.
+
+## Prompt hints
+
+- "Show my flight from Bangkok to Chiang Mai"
+- "Where is my parcel going?"
+- "What changes if I upgrade from Free to Pro?"
+
+Both sides get equal width and wrap, so two long labels stay balanced instead of one crowding the other. `via` renders under the icon at about 10px on a single unwrapped line — it is for a flight number, a courier, or a duration, not a sentence. `icon` is deliberately narrower than the Icon catalog: only `arrowRight` (the default), `plane`, `truck`, and `send`.
+
+## Related
+
+- [KeyValue](/docs/catalog/KeyValue) — once there is a third field
+- [Timeline](/docs/catalog/Timeline) — more than two points in the journey
+- [Icon](/docs/catalog/Icon) — the full icon set, for anything outside the four here
+- [Map](/docs/catalog/Map) — when the answer is a location, not a pair
+
+{/* generated:start */}
+
+## Props
+
+> Nullable props are optional from the model's point of view: the model must send `null` explicitly, it cannot omit the key.
+
+| Prop | Type | Required | Description |
+| --- | --- | --- | --- |
+| `from` | `string` | Yes | Example: `"BKK"` |
+| `to` | `string` | Yes | Example: `"CNX"` |
+| `via` | `string \| null` | No | Example: `"TG 102"` |
+| `icon` | `"arrowRight" \| "plane" \| "truck" \| "send" \| null` | No | Example: `"plane"` |
+
+## Example spec
+
+```json title="spec.json"
+{
+  "type": "FromTo",
+  "props": {
+    "from": "BKK",
+    "to": "CNX",
+    "via": "TG 102",
+    "icon": "plane"
+  }
+}
+```
+
+## Live example
+
+<Example id="from-to" />
+
+{/* generated:end */}

@@ -1,0 +1,61 @@
+---
+title: Catalog
+description: Why generated UI is limited to a closed catalog, how props are declared as nullable zod schemas, and how the catalog drives both the prompt and the renderer.
+---
+
+## Constrained, not free-form
+
+The model never writes HTML, CSS, or JSX. It composes components from a catalog defined once in `src/core/catalog.ts` with `defineCatalog` from `@json-render/core`. The same object feeds two consumers:
+
+- `catalog.prompt()` generates the component list, prop types, and examples that go into the system prompt.
+- The React registry maps each catalog type to one implementation that reads design tokens, never fixed colors.
+
+Because both sides read one definition, the prompt cannot drift from what renders, and a host cannot receive a component it has not shipped.
+
+## One entry per component
+
+```ts title="src/core/catalog.ts"
+Metric: {
+  props: z.object({
+    label: z.string(),
+    value: z.string(),
+    detail: z.string().nullable(),
+    trend: z.enum(["up", "down", "neutral"]).nullable(),
+  }),
+  description: "Single KPI with optional trend",
+  example: { label: "Users", value: "12,480", detail: "+8% vs last week", trend: "up" },
+},
+```
+
+Each entry has `props` (a zod object), an optional `slots` list for components that take children, a `description` that says when to use it and which component it replaces, and an `example` with real content. Layout components such as `Stack`, `Card`, and `Grid` declare `slots: ["default"]`.
+
+## Every optional prop is nullable
+
+Non-required props are declared with `.nullable()`, never `.optional()`. The model can send `null` but cannot omit a key. This keeps the JSON schema shown to the model explicit and keeps streaming predictable: a patch that adds an element always carries the full prop set, so the renderer does not have to guess which keys may arrive later.
+
+## Actions are declared too
+
+Buttons carry `on.press` with a list of actions. The catalog declares exactly three custom actions and validation rejects any other name:
+
+| Action | Params | Effect |
+|---|---|---|
+| `submitForm` | `statePath` (nullable) | snapshots form state into `/lastSubmit` or `statePath` |
+| `toast` | `message` | sets `/toast` for a short confirmation callout |
+| `runTool` | `name`, `input` (nullable) | calls a host tool in the browser or forwards to the model |
+
+Host-specific behavior (loading options, navigation, opening a drawer) is a host tool called through `runTool`, never a new action baked into the library. The built-in state actions `setState`, `pushState`, and `removeState` come from json-render.
+
+## UI after a tool call patches the existing spec
+
+A model turn can call a tool and then continue with UI. The prompt rule is: emit patches against the spec you already started, reusing element ids. json-render merges every spec part of one message into a single spec, so a second `/root` would replace the first rather than append to it.
+
+## Rules that shape the prompt
+
+`src/core/prompt.ts` adds catalog rules on top of the generated list: which component wins when two overlap (BarChart over Chart for many categories), when to use Grid versus Stack, how to bind inputs, and that array props must never be empty. A host appends its own rules with `createVexaHandler({ rules })`.
+
+## Related
+
+- [Spec stream](/docs/concepts/spec-stream): how a spec arrives as JSONL patches
+- [State](/docs/concepts/state): binding props to state paths
+- [runTool](/docs/host/runtool): the action that reaches host code
+- [Persona and rules](/docs/server/persona-and-rules): where host rules land in the prompt

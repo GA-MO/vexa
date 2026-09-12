@@ -1,13 +1,13 @@
 "use client";
 
-import { Button } from "agentic-ui/ui/button";
-import { Separator } from "agentic-ui/ui/separator";
+import { Button } from "vexa/ui/button";
+import { Separator } from "vexa/ui/separator";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "agentic-ui/ui/tooltip";
-import { cn } from "agentic-ui/lib/utils";
+} from "vexa/ui/tooltip";
+import { cn } from "vexa/lib/utils";
 import type { LucideProps } from "lucide-react";
 import { BookmarkIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes } from "react";

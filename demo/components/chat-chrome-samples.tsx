@@ -1,30 +1,30 @@
 "use client";
 
 import { CheckIcon, SearchIcon, XIcon } from "lucide-react";
-import { Button } from "agentic-ui/ui/button";
+import { Button } from "vexa/ui/button";
 import {
   Attachment,
   AttachmentInfo,
   AttachmentPreview,
   Attachments,
-} from "agentic-ui/ai-elements/attachments";
+} from "vexa/ai-elements/attachments";
 import {
   ChainOfThought,
   ChainOfThoughtContent,
   ChainOfThoughtHeader,
   ChainOfThoughtStep,
-} from "agentic-ui/ai-elements/chain-of-thought";
+} from "vexa/ai-elements/chain-of-thought";
 import {
   Checkpoint,
   CheckpointIcon,
   CheckpointTrigger,
-} from "agentic-ui/ai-elements/checkpoint";
+} from "vexa/ai-elements/checkpoint";
 import {
   CodeBlock,
   CodeBlockCopyButton,
   CodeBlockHeader,
   CodeBlockTitle,
-} from "agentic-ui/ai-elements/code-block";
+} from "vexa/ai-elements/code-block";
 import {
   Confirmation,
   ConfirmationAction,
@@ -33,7 +33,7 @@ import {
   ConfirmationRejected,
   ConfirmationRequest,
   ConfirmationTitle,
-} from "agentic-ui/ai-elements/confirmation";
+} from "vexa/ai-elements/confirmation";
 import {
   Context,
   ContextCacheUsage,
@@ -45,7 +45,7 @@ import {
   ContextOutputUsage,
   ContextReasoningUsage,
   ContextTrigger,
-} from "agentic-ui/ai-elements/context";
+} from "vexa/ai-elements/context";
 import {
   InlineCitation,
   InlineCitationCard,
@@ -53,12 +53,12 @@ import {
   InlineCitationCardTrigger,
   InlineCitationSource,
   InlineCitationText,
-} from "agentic-ui/ai-elements/inline-citation";
+} from "vexa/ai-elements/inline-citation";
 import {
   Message,
   MessageContent,
   MessageResponse,
-} from "agentic-ui/ai-elements/message";
+} from "vexa/ai-elements/message";
 import {
   ModelSelector,
   ModelSelectorContent,
@@ -70,7 +70,7 @@ import {
   ModelSelectorLogo,
   ModelSelectorName,
   ModelSelectorTrigger,
-} from "agentic-ui/ai-elements/model-selector";
+} from "vexa/ai-elements/model-selector";
 import {
   Plan,
   PlanContent,
@@ -78,7 +78,7 @@ import {
   PlanHeader,
   PlanTitle,
   PlanTrigger,
-} from "agentic-ui/ai-elements/plan";
+} from "vexa/ai-elements/plan";
 import {
   Queue,
   QueueItem,
@@ -90,35 +90,35 @@ import {
   QueueSectionContent,
   QueueSectionLabel,
   QueueSectionTrigger,
-} from "agentic-ui/ai-elements/queue";
+} from "vexa/ai-elements/queue";
 import {
   Reasoning,
   ReasoningContent,
   ReasoningTrigger,
-} from "agentic-ui/ai-elements/reasoning";
-import { Shimmer } from "agentic-ui/ai-elements/shimmer";
+} from "vexa/ai-elements/reasoning";
+import { Shimmer } from "vexa/ai-elements/shimmer";
 import {
   Source,
   Sources,
   SourcesContent,
   SourcesTrigger,
-} from "agentic-ui/ai-elements/sources";
-import { Suggestion, Suggestions } from "agentic-ui/ai-elements/suggestion";
+} from "vexa/ai-elements/sources";
+import { Suggestion, Suggestions } from "vexa/ai-elements/suggestion";
 import {
   Task,
   TaskContent,
   TaskItem,
   TaskItemFile,
   TaskTrigger,
-} from "agentic-ui/ai-elements/task";
+} from "vexa/ai-elements/task";
 import {
   Tool,
   ToolContent,
   ToolHeader,
   ToolInput,
   ToolOutput,
-} from "agentic-ui/ai-elements/tool";
-import { MODELS, SUGGESTIONS } from "agentic-ui/chat";
+} from "vexa/ai-elements/tool";
+import { MODELS, SUGGESTIONS } from "vexa/chat";
 
 function ChromeBlock({
   title,
@@ -403,10 +403,10 @@ export function ChatChromeSamples() {
         note="Syntax-highlighted snippet inside chat."
       >
         <CodeBlock
-          code={`import { AgenticChatOverlay } from "agentic-ui/chat";
+          code={`import { VexaChatOverlay } from "vexa/chat";
 
 export function App() {
-  return <AgenticChatOverlay api="/api/chat" />;
+  return <VexaChatOverlay api="/api/chat" />;
 }`}
           language="tsx"
         >
