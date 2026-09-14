@@ -166,7 +166,7 @@ export type VexaProviderProps = {
 export function VexaProvider<S extends z.ZodObject>(props: VexaProviderProps<S>): JSX.Element;
 // Declare tools with defineTool({ input: z.object(...), run: (typedInput) => ... }); a raw object literal leaves run's input as unknown.
 export function defineTool<S extends z.ZodObject<any>>(t: Omit<HostTool<z.output<S>>, "input"> & { input: S }): HostTool<z.output<S>>;
-export function useVexaHost(): { runTool(name: string, input: unknown): Promise<HostToolResult>; tools: HostToolDescriptor[] };
+export function useVexaHost(): { runTool(name: string, input: unknown): Promise<HostToolResult>; sendToChat(text: string): boolean; tools: HostToolDescriptor[] };   // sendToChat submits text to the mounted chat; false when no chat is mounted
 ```
 
 `VexaChatOverlay` / `VexaChat` accept the same fields as props. Resolution order for every field: component props → provider `chat` → built-in defaults (`"Vexa"`, `MODELS`, `SUGGESTIONS`, `"Open assistant"`, `bottom-right`).
@@ -325,6 +325,8 @@ The library ships exactly three: `submitForm`, `toast`, and `runTool`. Anything 
 ```
 
 The result lands under `/tools/load_cities`, so a Select can bind `options: { "$state": "/tools/load_cities/cities" }`. The demo's former `loadCities` action moved to `demo/components/demo-host.tsx` for exactly this reason: the library must not ship demo behavior.
+
+`submitForm` is validation-aware: json-render's `validateForm` never short-circuits the rest of an `on.press` array, so `submitForm` itself reads `/formValidation` (the default result path of `validateForm`) and skips its write when `valid` is `false`. `[validateForm, submitForm]` therefore blocks an invalid submit; any other action placed after `validateForm` (`toast`, `runTool`) still runs and must be gated with `visible` or its own state check. Found by demo scenario `form-submit`.
 
 ### 4.4 Spec action: `catalog.actions.runTool`
 

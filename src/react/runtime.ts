@@ -89,6 +89,8 @@ export function createVexaHandlers(store: StateStore, host: VexaHostValue | null
         typeof params.statePath === "string" && params.statePath.length > 0
           ? params.statePath
           : "/lastSubmit";
+      const validation = store.get("/formValidation") as { valid?: boolean } | undefined;
+      if (validation?.valid === false) return;
       const form = store.get("/form") ?? store.get("/ui/form");
       store.set(path, { form, at: new Date().toISOString() });
     },

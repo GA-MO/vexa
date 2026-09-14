@@ -23,6 +23,7 @@ export {
   type HostToolResult,
   type HostToolDescriptor,
   type PendingConfirmation,
+  type VexaHostValue,
   type VexaProviderProps,
   type VexaChatDefaults,
 } from "./host";

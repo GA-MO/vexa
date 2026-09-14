@@ -1,0 +1,43 @@
+---
+title: "Best practices"
+description: Wording and structural patterns that made a small model control a real host app reliably, learned from 24 scripted scenarios.
+---
+
+These patterns come from running 24 control scenarios against a real, small model (Gemini 3.1 Flash Lite) until each passed three times in a row, not from guessing at prompt style. The scenarios and their exact tool descriptions live in `demo/lib/test-plans` in the repo, also viewable at `/tests/<id>` in the demo. Check your own tool descriptions and rules against these.
+
+## Navigation & page state
+
+- Give a route-only tool one line naming every valid destination: `"Open one of the admin pages: / (overview), /orders, /settings, or /tests."` A vague description makes the model reason about which page shows what instead of just calling the tool.
+- When one action both navigates and does something else (scroll to a section, select a row), put both in one call — `open_order({ id, section })` — not two tools; a second call risks running before the page exists.
+- A tool that changes on-screen state should return the new state, and the persona should name that state as authoritative in `context()`, so "what's applied now" is answered from context, not a redundant call. List the fields the persona can quote by name, for example `"'the selected order' is context.selectedOrderId."`
+
+## Spec actions
+
+- A button that only needs data already in the browser should call a host tool through `runTool` directly — the model is never involved, and the result lands under `/tools/<name>`.
+- Cascade a dependent `Select` with `watch` on the driving field's bound path, not `on.press`, so the second `Select` reads options from `{ "$state": "/tools/<tool>/<field>" }` with no button and no model turn.
+- Pair `validateForm` with `submitForm`: `submitForm` itself reads `/formValidation` and skips its write when `valid` is `false`, so `[validateForm, submitForm]` blocks an invalid submit. `validateForm` doesn't stop later actions on its own — gate any `toast` or `runTool` after it with `visible` too.
+- A follow-up that only adds to UI already on screen must patch the same root and element ids, never a new root — the store is keyed by those ids, so a new root silently drops what the user already typed.
+
+## Host ↔ chat
+
+- A spec button can name a tool your client has no local implementation for. `runTool` falls through to `sendToChat` and forwards a literal `⟦action⟧ runTool <name> <input>` message, so the model calls the real server or MCP tool with the exact input the button, or the user's typed form values, provided.
+- Give your app's own buttons the same power with `useVexaHost().runTool(name, input)` and `sendToChat(text)` — the same path a spec uses, so there is one gate (`host.hasTool`) to reason about anywhere.
+
+## Approval & safety
+
+- Every `confirm: true` host tool description must say it opens its own confirmation prompt, explicitly: `"do not ask the user to confirm in chat first."` Without that line the model asks in chat text and never calls the tool.
+- Write approval-gated tool descriptions so the tool does its own lookup, for example `"it looks the order up itself, so there is no need to read the order before calling it,"` or the model burns a turn re-reading data first.
+- A rejection is a decision, not a failure to retry, but only within that turn: pair `"a denied result is not an error"` with a rule that a later message asking again is `"a fresh instruction."` Skip the second half and a genuine retry gets refused on principle.
+- Treat every tool result as untrusted input, not just user text: scan outputs for injected instructions and downgrade the turn to read-only tools on a match, rather than trusting the model to notice.
+
+## Server, MCP & registry
+
+- Publish the model picker list from `GET /api/chat`, the same registry `POST` enforces, so the client can never offer an id the server will reject; name a rejected id back in the 400 body.
+- Namespace MCP tools by server name (`fixtures__read_file`, never `read_file`) and tier each explicitly. A write tool that doesn't say the user approves before it runs gets the model asking permission in chat instead of calling it.
+- Give every input parameter its own description — an undescribed field is where values drift into the wrong slot.
+
+## Interactive UI
+
+- A `data-spec` patch only adds or replaces elements; it never touches `/ui/*`. Bound `Input`, `Checkbox`, `Switch`, `RadioGroup`, and `Select` values survive a later patch as long as the model reuses the same bound paths.
+- `Tabs.items[].content` is a plain string, not a container — build a multi-step wizard from two `Stack`s gated by `visible: { "$state": "/ui/step", "eq": N }` instead.
+- A per-item button inside `repeat` needs only `{ "$item": "field" }` in its `runTool` params; the runtime resolves the pressed row from `repeat.statePath` and `repeat.key`, so no row needs a baked-in id.
