@@ -14,7 +14,9 @@ import {
   type Tool,
   type ToolSet,
   type UIMessage,
+  type UIMessageChunk,
 } from "ai";
+import { REASONING_METADATA_KEY } from "../protocol";
 import { buildAgentInstructions, type Persona, type PromptToolInfo, type ToolTier } from "./prompt";
 import { downgradeNotice, fence, fenceAsData, scanValue, type GuardFinding, type GuardRule } from "./guard";
 import { connectMcp, type McpServerConfig } from "./mcp";
@@ -53,6 +55,28 @@ export type StreamAgentChatOptions = {
   guard?: GuardConfig;
   req?: Request;
 };
+
+const MS_IN_SECOND = 1000;
+
+function stampReasoningSeconds() {
+  const startedAt = new Map<string, number>();
+  return new TransformStream<UIMessageChunk, UIMessageChunk>({
+    transform(chunk, controller) {
+      if (chunk.type === "reasoning-start") startedAt.set(chunk.id, Date.now());
+      const start = chunk.type === "reasoning-end" ? startedAt.get(chunk.id) : undefined;
+      if (chunk.type !== "reasoning-end" || start === undefined) {
+        controller.enqueue(chunk);
+        return;
+      }
+      startedAt.delete(chunk.id);
+      const seconds = Math.max(1, Math.round((Date.now() - start) / MS_IN_SECOND));
+      controller.enqueue({
+        ...chunk,
+        providerMetadata: { ...chunk.providerMetadata, [REASONING_METADATA_KEY]: { seconds } },
+      });
+    },
+  });
+}
 
 function hostToolSet(schemas: HostToolSchema[]): ToolSet {
   const tools: ToolSet = {};
@@ -182,7 +206,9 @@ export async function streamAgentChat(
         },
         ...(options.providerOptions ? { providerOptions: options.providerOptions as never } : {}),
       });
-      writer.merge(pipeJsonRender(result.toUIMessageStream({ sendReasoning: true })));
+      writer.merge(
+        pipeJsonRender(result.toUIMessageStream({ sendReasoning: true }).pipeThrough(stampReasoningSeconds())),
+      );
     },
   });
 

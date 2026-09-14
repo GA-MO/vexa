@@ -4,6 +4,7 @@ import { TypeTable } from "fumadocs-ui/components/type-table";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 import { CatalogGallery } from "@/components/catalog-gallery";
+import { ChatElements } from "@/components/chat-elements";
 import { Example } from "@/components/example";
 
 export { Example };
@@ -12,6 +13,7 @@ export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
     CatalogGallery,
+    ChatElements,
     Example,
     Step,
     Steps,

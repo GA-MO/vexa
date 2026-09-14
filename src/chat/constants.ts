@@ -8,6 +8,7 @@ export type ChatLabels = {
   emptyDescription: string;
   thinking: string;
   reasoning: string;
+  thoughtFor: (seconds: number) => string;
   steps: (count: number) => string;
   approveTool: (tool: string) => string;
   approved: string;
@@ -36,6 +37,7 @@ export const DEFAULT_LABELS: ChatLabels = {
   emptyDescription: "Stream an answer, or generate cards, metrics, and tables in place.",
   thinking: "Thinking...",
   reasoning: "Reasoning",
+  thoughtFor: (seconds) => (seconds === 1 ? "Thought for 1 second" : `Thought for ${seconds} seconds`),
   steps: (count) => (count === 1 ? "1 step" : `${count} steps`),
   approveTool: (tool) => `Approve running ${tool}?`,
   approved: "Approved",

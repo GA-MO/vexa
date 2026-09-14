@@ -1,7 +1,7 @@
 "use client";
 
 import { useJsonRenderMessage } from "@json-render/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getToolName,
   isFileUIPart,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import {
   SPEC_DATA_PART_TYPE,
+  reasoningSeconds as stampedSeconds,
   type VexaMessage,
 } from "vexa/protocol";
 import { DEFAULT_LABELS, type ChatLabels, type ChatStepsDisplay } from "./constants";
@@ -185,64 +186,146 @@ function HiddenSteps({
   );
 }
 
+const MS_IN_SECOND = 1000;
+
+type ProcessPart = ReasoningUIPart | ToolUIPart | DynamicToolUIPart;
+
+type IndexedPart = { part: ProcessPart; index: number };
+
+type ReasoningSeconds = Record<number, number>;
+
+const isReasoningPart = (part: VexaMessage["parts"][number]): part is ReasoningUIPart =>
+  part.type === "reasoning";
+
+const isProcessPart = (part: VexaMessage["parts"][number]): part is ProcessPart =>
+  isReasoningPart(part) || isToolUIPart(part);
+
+const FINISHED_TOOL_STATES = new Set(["output-available", "output-error", "output-denied"]);
+
+function useReasoningSeconds(parts: VexaMessage["parts"]) {
+  const startedAt = useRef(new Map<number, number>());
+  const [seconds, setSeconds] = useState<ReasoningSeconds>({});
+
+  useEffect(() => {
+    const now = Date.now();
+    parts.forEach((part, index) => {
+      if (!isReasoningPart(part)) return;
+      if (part.state === "streaming") {
+        if (!startedAt.current.has(index)) startedAt.current.set(index, now);
+        return;
+      }
+      const start = startedAt.current.get(index);
+      if (start === undefined) return;
+      startedAt.current.delete(index);
+      const elapsed = Math.max(1, Math.round((now - start) / MS_IN_SECOND));
+      setSeconds((prev) => ({ ...prev, [index]: elapsed }));
+    });
+  }, [parts]);
+
+  return Object.fromEntries(
+    parts.flatMap((part, index) => {
+      if (!isReasoningPart(part) || part.state === "streaming") return [];
+      const value = stampedSeconds(part) ?? seconds[index];
+      return value === undefined ? [] : [[index, value] as const];
+    }),
+  ) as ReasoningSeconds;
+}
+
+function reasoningLabel(isStreaming: boolean, seconds: number | undefined, labels: ChatLabels) {
+  if (isStreaming) return <Shimmer duration={1.2}>{labels.thinking}</Shimmer>;
+  if (seconds === undefined) return labels.reasoning;
+  return labels.thoughtFor(seconds);
+}
+
+function processHeader(
+  isStreaming: boolean,
+  seconds: number | undefined,
+  stepCount: number,
+  labels: ChatLabels,
+) {
+  if (isStreaming) return <Shimmer duration={1.2}>{labels.thinking}</Shimmer>;
+  if (seconds === undefined) return labels.steps(stepCount);
+  return labels.thoughtFor(seconds);
+}
+
+function totalSeconds(seconds: ReasoningSeconds) {
+  const measured = Object.values(seconds);
+  if (measured.length === 0) return undefined;
+  return measured.reduce((sum, value) => sum + value, 0);
+}
+
+function ReasoningBlock({
+  parts,
+  seconds,
+  labels,
+}: {
+  parts: VexaMessage["parts"];
+  seconds: ReasoningSeconds;
+  labels: ChatLabels;
+}) {
+  const reasoningParts = parts.filter(isReasoningPart);
+  const isStreaming = reasoningParts.some((part) => part.state === "streaming");
+  const text = reasoningParts.map((part) => part.text).join("\n\n");
+
+  return (
+    <Reasoning duration={totalSeconds(seconds)} isStreaming={isStreaming}>
+      <ReasoningTrigger
+        getThinkingMessage={(streaming, duration) => reasoningLabel(streaming, duration, labels)}
+      />
+      <ReasoningContent>{text}</ReasoningContent>
+    </Reasoning>
+  );
+}
+
 function ProcessSteps({
   message,
   isStreaming,
   onApproval,
   labels,
-  reasoningParts,
-  toolParts,
+  processParts,
+  reasoningSeconds,
 }: {
   message: VexaMessage;
   isStreaming: boolean;
   onApproval?: (id: string, approved: boolean) => void;
   labels: ChatLabels;
-  reasoningParts: ReasoningUIPart[];
-  toolParts: Array<ToolUIPart | DynamicToolUIPart>;
+  processParts: IndexedPart[];
+  reasoningSeconds: ReasoningSeconds;
 }) {
   const [open, setOpen] = useState(false);
-  const awaitingApproval = toolParts.some((part) => part.state === "approval-requested");
-  const stepCount = reasoningParts.length + toolParts.length;
+  const awaitingApproval = processParts.some(({ part }) => part.state === "approval-requested");
 
   return (
     <ChainOfThought onOpenChange={setOpen} open={open || awaitingApproval}>
       <ChainOfThoughtHeader>
-        {isStreaming ? <Shimmer duration={1.2}>{labels.thinking}</Shimmer> : labels.steps(stepCount)}
+        {processHeader(isStreaming, totalSeconds(reasoningSeconds), processParts.length, labels)}
       </ChainOfThoughtHeader>
       <ChainOfThoughtContent>
-        {reasoningParts.map((part, index) => (
-          <ChainOfThoughtStep
-            key={`${message.id}-cot-reasoning-${index}`}
-            label={labels.reasoning}
-            status={part.state === "streaming" ? "active" : "complete"}
-          >
-            <Reasoning className="w-full" isStreaming={part.state === "streaming"}>
-              <ReasoningTrigger />
-              <ReasoningContent>{part.text}</ReasoningContent>
-            </Reasoning>
-          </ChainOfThoughtStep>
-        ))}
-        {toolParts.map((part, index) => (
-          <ChainOfThoughtStep
-            key={`${message.id}-cot-tool-${index}`}
-            label={getToolName(part)}
-            status={
-              part.state === "output-available" ||
-              part.state === "output-error" ||
-              part.state === "output-denied"
-                ? "complete"
-                : "active"
-            }
-          >
-            <ToolPartView
-              index={index}
-              labels={labels}
-              messageId={message.id}
-              onApproval={onApproval}
-              part={part}
-            />
-          </ChainOfThoughtStep>
-        ))}
+        {processParts.map(({ part, index }) =>
+          isReasoningPart(part) ? (
+            <ChainOfThoughtStep
+              key={`${message.id}-cot-${index}`}
+              label={reasoningLabel(part.state === "streaming", undefined, labels)}
+              status={part.state === "streaming" ? "active" : "complete"}
+            >
+              <MessageResponse className="text-muted-foreground">{part.text}</MessageResponse>
+            </ChainOfThoughtStep>
+          ) : (
+            <ChainOfThoughtStep
+              key={`${message.id}-cot-${index}`}
+              label={getToolName(part)}
+              status={FINISHED_TOOL_STATES.has(part.state) ? "complete" : "active"}
+            >
+              <ToolPartView
+                index={index}
+                labels={labels}
+                messageId={message.id}
+                onApproval={onApproval}
+                part={part}
+              />
+            </ChainOfThoughtStep>
+          ),
+        )}
       </ChainOfThoughtContent>
     </ChainOfThought>
   );
@@ -272,12 +355,13 @@ export function AssistantMessage({
   const sourceUrls = sourceParts
     .filter((part) => part.type === "source-url")
     .map((part) => part.url);
-  const reasoningParts = message.parts.filter(
-    (part): part is ReasoningUIPart => part.type === "reasoning",
-  );
+  const hasReasoning = message.parts.some(isReasoningPart);
   const toolParts = message.parts.filter(isToolUIPart);
   const noticeParts = message.parts.filter((part) => part.type === "data-notice");
-  const processParts = [...reasoningParts, ...toolParts];
+  const processParts = message.parts
+    .map((part, index) => ({ part, index }))
+    .filter((entry): entry is IndexedPart => isProcessPart(entry.part));
+  const reasoningSeconds = useReasoningSeconds(message.parts);
 
   const lastTextIndex = message.parts.reduce(
     (last, part, index) =>
@@ -398,14 +482,18 @@ export function AssistantMessage({
           <HiddenSteps labels={labels} onApproval={onApproval} toolParts={toolParts} />
         ) : null}
 
-        {processParts.length > 0 && steps === "collapsible" ? (
+        {steps === "collapsible" && toolParts.length === 0 && hasReasoning ? (
+          <ReasoningBlock labels={labels} parts={message.parts} seconds={reasoningSeconds} />
+        ) : null}
+
+        {steps === "collapsible" && toolParts.length > 0 ? (
           <ProcessSteps
             isStreaming={isLast && isStreaming}
             labels={labels}
             message={message}
             onApproval={onApproval}
-            reasoningParts={reasoningParts}
-            toolParts={toolParts}
+            processParts={processParts}
+            reasoningSeconds={reasoningSeconds}
           />
         ) : null}
 

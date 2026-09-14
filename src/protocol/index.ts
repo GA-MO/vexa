@@ -41,6 +41,16 @@ export type VexaDataParts = {
 
 export type VexaMessage = UIMessage<unknown, VexaDataParts>;
 
+export const REASONING_METADATA_KEY = "vexa";
+
+/** Seconds a reasoning part took, stamped by the server on `providerMetadata.vexa.seconds` so history keeps it. */
+export function reasoningSeconds(part: { providerMetadata?: Record<string, unknown> }): number | undefined {
+  const meta = part.providerMetadata?.[REASONING_METADATA_KEY];
+  if (!meta || typeof meta !== "object") return undefined;
+  const seconds = (meta as { seconds?: unknown }).seconds;
+  return typeof seconds === "number" ? seconds : undefined;
+}
+
 export const COMPONENT_TYPES = [
   "Stack",
   "Card",

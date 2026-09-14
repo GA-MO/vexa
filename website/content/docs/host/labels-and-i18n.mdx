@@ -33,8 +33,9 @@ Pass a partial object. Missing keys keep the built-in string. Provider `chat.lab
 | `emptyTitle` | Ask anything. Get UI back. | empty conversation |
 | `emptyDescription` | Stream an answer, or generate cards, metrics, and tables in place. | empty conversation |
 | `thinking` | Thinking... | streaming indicator |
-| `reasoning` | Reasoning | reasoning step label |
-| `steps(count)` | `${count} steps` | header of the collapsed reasoning and tool block; `thinking` is shown there while the reply streams (not shown when `steps: "hidden"`) |
+| `reasoning` | Reasoning | label of each reasoning step inside the steps block, and of a lone Reasoning block that carries no timing |
+| `thoughtFor(seconds)` | Thought for `${seconds}` seconds | header of the collapsed steps block and of a lone Reasoning block once streaming ends; the seconds add up every reasoning step |
+| `steps(count)` | `${count} steps` | header of the steps block when no reasoning was timed; `thinking` is shown there while the reply streams (not shown when `steps: "hidden"`) |
 | `approveTool(tool)` | Approve running `${tool}`? | server or MCP approval card |
 | `approved` | Approved | approval card result |
 | `rejected` | Rejected | approval card result |

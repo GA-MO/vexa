@@ -1,14 +1,13 @@
 "use client";
 
-import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "vexa/ui/collapsible";
 import { cn } from "vexa/lib/utils";
+import { useControllableState } from "vexa/lib/use-controllable-state";
 import { cjk } from "@streamdown/cjk";
-import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
 import { BrainIcon, ChevronDownIcon } from "lucide-react";
@@ -25,6 +24,7 @@ import {
 } from "react";
 import { Streamdown } from "streamdown";
 
+import { vexaCode } from "./code-theme";
 import { Shimmer } from "./shimmer";
 
 interface ReasoningContextValue {
@@ -67,7 +67,6 @@ export const Reasoning = memo(
     ...props
   }: ReasoningProps) => {
     const resolvedDefaultOpen = defaultOpen ?? isStreaming;
-    // Track if defaultOpen was explicitly set to false (to prevent auto-open)
     const isExplicitlyClosed = defaultOpen === false;
 
     const [isOpen, setIsOpen] = useControllableState<boolean>({
@@ -84,7 +83,6 @@ export const Reasoning = memo(
     const [hasAutoClosed, setHasAutoClosed] = useState(false);
     const startTimeRef = useRef<number | null>(null);
 
-    // Track when streaming starts and compute duration
     useEffect(() => {
       if (isStreaming) {
         hasEverStreamedRef.current = true;
@@ -97,14 +95,12 @@ export const Reasoning = memo(
       }
     }, [isStreaming, setDuration]);
 
-    // Auto-open when streaming starts (unless explicitly closed)
     useEffect(() => {
       if (isStreaming && !isOpen && !isExplicitlyClosed) {
         setIsOpen(true);
       }
     }, [isStreaming, isOpen, setIsOpen, isExplicitlyClosed]);
 
-    // Auto-close when streaming ends (once only, and only if it ever streamed)
     useEffect(() => {
       if (
         hasEverStreamedRef.current &&
@@ -136,7 +132,7 @@ export const Reasoning = memo(
     return (
       <ReasoningContext.Provider value={contextValue}>
         <Collapsible
-          className={cn("not-prose mb-4", className)}
+          className={cn("not-prose w-full min-w-0", className)}
           onOpenChange={handleOpenChange}
           open={isOpen}
           {...props}
@@ -204,19 +200,24 @@ export type ReasoningContentProps = ComponentProps<
   children: string;
 };
 
-const streamdownPlugins = { cjk, code, math, mermaid };
+const streamdownPlugins = { cjk, code: vexaCode, math, mermaid };
 
 export const ReasoningContent = memo(
   ({ className, children, ...props }: ReasoningContentProps) => (
     <CollapsibleContent
       className={cn(
-        "mt-4 text-sm",
-        "data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-muted-foreground outline-none data-[state=closed]:animate-out data-[state=open]:animate-in",
+        "mt-2 min-w-0 text-muted-foreground text-sm outline-none",
+        "data-open:animate-in data-open:fade-in-0 data-open:slide-in-from-top-2 data-closed:animate-out data-closed:fade-out-0 data-closed:slide-out-to-top-2",
         className
       )}
       {...props}
     >
-      <Streamdown plugins={streamdownPlugins}>{children}</Streamdown>
+      <Streamdown
+        className="min-w-0 [&_pre]:whitespace-pre-wrap [&_pre]:wrap-anywhere [&_pre_code]:text-xs [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+        plugins={streamdownPlugins}
+      >
+        {children}
+      </Streamdown>
     </CollapsibleContent>
   )
 );

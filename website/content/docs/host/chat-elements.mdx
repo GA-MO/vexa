@@ -1,0 +1,33 @@
+---
+title: Chat elements
+description: Every message part the chat renders and the element it becomes, from fixed messages, at the width of the panel.
+---
+
+## Parts become elements
+
+`useChat` delivers each assistant turn as a list of parts. The chat maps every part type to one element from `vexa/ai-elements`, the shadcn-style AI Elements vendored into the library so a host does not have to install them. Long content wraps, tables and code scroll inside their own box, and nothing may widen the 340 to 600 px panel.
+
+| Part | Element | Labels |
+|---|---|---|
+| `text` | Streamdown markdown | – |
+| `file` (user) | Attachments | `attachment` |
+| `reasoning`, no tools in the turn | Reasoning | `thinking`, `thoughtFor(seconds)`, `reasoning` |
+| `reasoning` + `tool-*` | ChainOfThought with one step per part, in model order | `thinking`, `thoughtFor(seconds)`, `steps(count)`, `reasoning` |
+| `tool-*`, `dynamic-tool` | Tool with input and output | – |
+| `tool-*` in `approval-requested` | Confirmation card | `approveTool(tool)`, `approve`, `reject`, `approved`, `rejected` |
+| `source-url`, `source-document` | Sources | – |
+| `data-notice` | Security notice | `securityTitle`, `securityBody(tool)` |
+| `data-spec` | SpecView (all spec parts of a message merge into one) | – |
+| turn with later messages | Checkpoint (drawn by `VexaChat` from its own history, not from a part, so it is absent below) | `restore`, `restoreTooltip` |
+
+`steps: "hidden"` on the provider or the chat props removes the reasoning and tool block; approval cards still show.
+
+## Reasoning vs steps
+
+A model that thinks in one continuous block (extended thinking, R1) gets a Reasoning element: it opens while the text streams, then folds itself under "Thought for N seconds". `createVexaHandler` measures each reasoning part on the server and stamps the seconds on `providerMetadata.vexa.seconds`, so the number survives a reload from history; the chat also times parts in the browser for handlers that do not stamp them, and falls back to `reasoning` when neither is available.
+
+As soon as a turn contains a tool call, reasoning and tools become steps of one ChainOfThought block in the order the model produced them. Its header reads "Thinking…" while the reply streams, then "Thought for N seconds" with the time of every reasoning step added up; `steps(count)` is the fallback when nothing was timed. The block stays collapsed unless the user opens it or a tool waits for approval.
+
+## Every element
+
+<ChatElements />

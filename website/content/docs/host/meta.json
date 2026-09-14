@@ -1,4 +1,4 @@
 {
   "title": "Host integration",
-  "pages": ["provider", "host-tools", "runtool", "format-and-functions", "labels-and-i18n", "theme", "models-and-picker"]
+  "pages": ["provider", "host-tools", "runtool", "best-practices", "chat-elements", "format-and-functions", "labels-and-i18n", "theme", "models-and-picker"]
 }
