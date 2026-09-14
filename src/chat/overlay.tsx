@@ -107,7 +107,7 @@ export function VexaChatOverlay({
           onClick={() => setOpen(!open)}
           className={cn(
             "pointer-events-auto group relative inline-flex size-14 items-center justify-center rounded-full text-primary-foreground transition-transform duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "bg-gradient-to-br from-primary to-brand-violet shadow-[0_16px_40px_-12px_rgba(79,70,229,0.7)]",
+            "bg-gradient-to-br from-primary to-brand-violet shadow-[0_16px_40px_-12px_var(--vexa-glow-strong)]",
             "hover:scale-[1.04] active:scale-[0.98]",
           )}
         >

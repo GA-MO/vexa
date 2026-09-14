@@ -296,7 +296,7 @@ function ConfirmationTray({
           key={item.id}
           role="alertdialog"
           aria-label={`Run ${item.name}?`}
-          className="rounded-xl border border-border bg-card p-3 text-sm text-foreground shadow-[0_18px_40px_-16px_rgba(79,70,229,0.45)]"
+          className="rounded-xl border border-border bg-card p-3 text-sm text-foreground shadow-[0_18px_40px_-16px_var(--vexa-glow)]"
         >
           <p className="font-medium">
             Run <code className="rounded bg-muted px-1 py-0.5 text-xs">{item.name}</code> on this page?
@@ -341,6 +341,7 @@ export function useVexaHost() {
       host
         ? host.runTool(name, input, { toolCallId: null, source: "button" })
         : Promise.resolve<HostToolResult>({ ok: false, error: "No VexaProvider above this component" }),
+    sendToChat: (text: string) => host?.sendToChat(text) ?? false,
     tools: host?.schemas ?? [],
   };
 }

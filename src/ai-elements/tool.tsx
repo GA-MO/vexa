@@ -112,20 +112,22 @@ export const ToolContent = ({ className, ...props }: ToolContentProps) => (
   />
 );
 
-const WRAPPED_CODE = "[&_pre]:whitespace-pre-wrap [&_pre]:wrap-anywhere [&_pre]:text-xs [&_code]:text-xs";
+function isJsonText(text: string) {
+  try {
+    JSON.parse(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolPart["input"];
 };
 
 export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
-  <div className={cn("min-w-0 space-y-2", className)} {...props}>
-    <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-      Parameters
-    </h4>
-    <div className="rounded-md bg-muted/50">
-      <CodeBlock className={WRAPPED_CODE} code={JSON.stringify(input, null, 2)} language="json" />
-    </div>
+  <div className={cn("min-w-0", className)} {...props}>
+    <CodeBlock code={JSON.stringify(input, null, 2)} language="json" title="Parameters" />
   </div>
 );
 
@@ -147,29 +149,20 @@ export const ToolOutput = ({
   let Output = <div>{output as ReactNode}</div>;
 
   if (typeof output === "object" && !isValidElement(output)) {
-    Output = (
-      <CodeBlock className={WRAPPED_CODE} code={JSON.stringify(output, null, 2)} language="json" />
-    );
+    Output = <CodeBlock code={JSON.stringify(output, null, 2)} language="json" title="Result" />;
   } else if (typeof output === "string") {
-    Output = <CodeBlock className={WRAPPED_CODE} code={output} language="json" />;
+    Output = <CodeBlock code={output} language={isJsonText(output) ? "json" : "text"} title="Result" />;
   }
 
   return (
-    <div className={cn("space-y-2", className)} {...props}>
-      <h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-        {errorText ? "Error" : "Result"}
-      </h4>
-      <div
-        className={cn(
-          "overflow-x-auto rounded-md text-xs [&_table]:w-full",
-          errorText
-            ? "bg-destructive/10 text-destructive"
-            : "bg-muted/50 text-foreground"
-        )}
-      >
-        {errorText && <div>{errorText}</div>}
-        {Output}
-      </div>
+    <div className={cn("flex min-w-0 flex-col gap-2", className)} {...props}>
+      {errorText ? (
+        <div className="flex flex-col gap-1 rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-xs text-danger">
+          <span className="font-medium">Error</span>
+          <span className="wrap-anywhere">{errorText}</span>
+        </div>
+      ) : null}
+      {output !== undefined ? Output : null}
     </div>
   );
 };

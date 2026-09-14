@@ -38,6 +38,7 @@ import {
   useFieldValidation,
   useStateBinding,
 } from "@json-render/react";
+import { CodeBlock } from "vexa/ai-elements/code-block";
 import { cn } from "./cn";
 import { useVexaFormat } from "./host";
 import type { Formatter } from "./format";
@@ -90,7 +91,7 @@ export function Card({
 }) {
   const hasChildren = Children.toArray(children).length > 0;
   return (
-    <section className="w-full min-w-0 rounded-xl border border-border/80 bg-card p-3 shadow-[0_10px_30px_-12px_rgba(79,70,229,0.28)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-16px_rgba(79,70,229,0.35)] @md/vexa:p-4">
+    <section className="w-full min-w-0 rounded-xl border border-border/80 bg-card p-3 shadow-[0_10px_30px_-12px_var(--vexa-glow-soft)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-16px_var(--vexa-glow)] @md/vexa:p-4">
       {(props.title || props.description) && (
         <header className={cn("space-y-0.5", hasChildren && "mb-3")}>
           {props.title ? (
@@ -351,7 +352,7 @@ export function Button({
       className={cn(
         "inline-flex min-h-9 items-center justify-center rounded-lg px-3.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         variant === "primary"
-          ? "bg-gradient-to-r from-primary to-brand-violet text-white shadow-[0_10px_24px_-12px_rgba(79,70,229,0.8)] hover:brightness-105"
+          ? "bg-gradient-to-r from-primary to-brand-violet text-white shadow-[0_10px_24px_-12px_var(--vexa-glow-strong)] hover:brightness-105"
           : "border border-border bg-card text-foreground/85 hover:bg-muted",
       )}
     >
@@ -1018,15 +1019,12 @@ type CodeProps = {
 
 export function Code({ props }: { props: CodeProps }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 text-slate-100">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-3 py-2 text-xs text-muted-foreground/70">
-        <span>{props.filename ?? "snippet"}</span>
-        <span>{props.language ?? "text"}</span>
-      </div>
-      <pre className="overflow-x-auto p-3 text-xs leading-relaxed">
-        <code>{props.code}</code>
-      </pre>
-    </div>
+    <CodeBlock
+      className="rounded-xl"
+      code={props.code}
+      language={props.language ?? "text"}
+      title={props.filename ?? undefined}
+    />
   );
 }
 
@@ -1132,7 +1130,7 @@ export function Carousel({ props }: { props: CarouselProps }) {
                 key={`${item.title ?? item.src ?? "slide"}-${index}`}
                 className="min-w-0 shrink-0 grow-0 basis-[85%] @md/vexa:basis-[56%]"
               >
-                <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_12px_28px_-20px_rgba(15,23,42,0.35)]">
+                <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-[0_12px_28px_-20px_var(--vexa-shadow)]">
                   {item.src ? (
                     <img
                       src={item.src}
@@ -1377,7 +1375,7 @@ function youtubeEmbedUrl(src: string) {
     const id = url.searchParams.get("v");
     if (id) return `https://www.youtube.com/embed/${id}`;
   } catch {
-    // fall through
+    return src;
   }
   return src;
 }
@@ -1388,7 +1386,7 @@ export function Video({ props }: { props: VideoProps }) {
 
   return (
     <figure className="overflow-hidden rounded-xl border border-border bg-card">
-      <div className={cn("bg-slate-950", aspectClass[aspect])}>
+      <div className={cn("bg-media", aspectClass[aspect])}>
         {youtube ? (
           <iframe
             title={props.caption ?? "Video"}
@@ -1457,7 +1455,7 @@ export function Checkbox({
         className={cn(
           "mt-0.5 inline-flex size-4 shrink-0 items-center justify-center rounded border transition",
           isChecked
-            ? "border-primary bg-gradient-to-br from-primary to-brand-violet text-white shadow-[0_6px_14px_-8px_rgba(79,70,229,0.9)]"
+            ? "border-primary bg-gradient-to-br from-primary to-brand-violet text-white shadow-[0_6px_14px_-8px_var(--vexa-glow-strong)]"
             : "border-input bg-card",
         )}
       >
@@ -1520,7 +1518,7 @@ export function Switch({
         className={cn(
           "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition",
           isChecked
-            ? "border-transparent bg-gradient-to-r from-primary to-brand-violet shadow-[0_8px_18px_-10px_rgba(79,70,229,0.9)]"
+            ? "border-transparent bg-gradient-to-r from-primary to-brand-violet shadow-[0_8px_18px_-10px_var(--vexa-glow-strong)]"
             : "border-input bg-muted",
           disabled && "cursor-not-allowed opacity-50",
         )}

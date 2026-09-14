@@ -322,7 +322,7 @@ export function VexaChat({
       className={cn(
         "relative flex min-h-0 flex-col overflow-hidden bg-card text-card-foreground",
         isPanel
-          ? "h-full rounded-[1.35rem] border border-border/70 shadow-[0_28px_80px_-24px_rgba(79,70,229,0.45),0_12px_32px_-16px_rgba(124,58,237,0.25)]"
+          ? "h-full rounded-[1.35rem] border border-border/70 shadow-[0_28px_80px_-24px_var(--vexa-glow),0_12px_32px_-16px_var(--vexa-glow-violet)]"
           : "h-dvh bg-background",
         className,
       )}
