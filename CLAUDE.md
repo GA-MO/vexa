@@ -5,7 +5,8 @@ Vexa is a React library that embeds a chat overlay into any app. The assistant a
 ## Commands
 
 ```bash
-bun run dev          # demo at http://localhost:3001 (port 3000 may be taken by the harness project)
+bun install          # one bun workspace: root (the library), demo/, website/. Apps resolve `vexa/*` through tsconfig paths and the vite alias, not a package link; one React copy for everything
+bun run dev          # demo at http://localhost:3001 (pinned in demo/package.json)
 bun run typecheck    # tsc for root and demo. Must pass before any task is considered done
 bun run build
 bun run mcp:build && bun run mcp:http   # MCP provider that exposes render_ui
@@ -13,10 +14,11 @@ bun run mcp:build && bun run mcp:http   # MCP provider that exposes render_ui
 
 Verify a page renders without opening a browser:
 ```bash
-curl -s http://localhost:3001/catalog | grep -c "text you expect on the page"
+curl -s http://localhost:3001/orders | grep -c "C-1042"
 ```
-`/tests/chat-elements` renders every chat message part (user text + attachment, reasoning, every tool state, approval, dynamic tool, sources, security notice, markdown with table and code, a spec) from fixed messages in `demo/lib/test-plans/chat-elements.ts` at 340px and 600px. Open it after touching `src/chat` or `src/ai-elements`; nothing may overflow or be clipped.
-`/catalog` renders one tab at a time on the client. SSR only shows the Composed tab. To check data for other tabs, evaluate the module directly: `cd demo && bun -e 'import { GALLERY_SECTIONS } from "vexa/examples"; ...'`
+`/tests/chat-elements` renders every chat message part (user text + attachment, reasoning, every tool state, approval, dynamic tool, sources, security notice, markdown with table and code, a spec) from fixed messages in `src/examples/chat-elements.ts` at 340px and 600px. The same file feeds the docs page `website/content/docs/host/chat-elements.mdx` (one example per element, server-rendered). Open both after touching `src/chat` or `src/ai-elements`; nothing may overflow or be clipped.
+`bun run test:scenarios [id…]` runs `demo/lib/test-plans/*.ts` against the dev server with the real model (`demo/scripts/run-scenarios.ts` mirrors useChat: host tool round trips, approvals, ⟦action⟧ forwarding); `/tests` lists them with the last result. Add a scenario for every new control path and keep its `bestPractice` line in sync with `docs/control-best-practices.md`. The model picker also offers `mock` (`demo/lib/mock-model.ts`: scripted reasoning → `get_orders` → reasoning → text + spec through the real handler, no API key, no cost); use it or `VEXA_SCENARIO_MODEL=mock` to check chat UI and runtime behaviour, never to judge how a prompt steers a model.
+The demo is the Vexa Shop admin test bench (`/`, `/orders`, `/orders/[id]`, `/settings`, `/tests`): data in `demo/lib/shop/data.ts`, store in `demo/lib/shop/store.tsx`, host tools in `demo/components/demo-host.tsx`, server tools in `demo/lib/shop/server-tools.ts`. The catalog gallery lives on the docs site (`website/`), which renders `src/examples`; to check example data without a browser, evaluate the module directly: `cd demo && bun -e 'import { GALLERY_SECTIONS } from "vexa/examples"; ...'`
 
 ## Code rules
 
@@ -53,9 +55,12 @@ src/chat/constants.ts        built-in MODELS and SUGGESTIONS. Every VexaChat / o
 src/ai-elements/             shadcn-style AI Elements used as chat chrome (not catalog types). Long content wraps (`wrap-anywhere`), containers use `min-w-0` not `overflow-hidden`
 demo/lib/test-plans/         fixed message sets for /tests/<case> pages
 src/examples/                 example specs shared by demo (tests) and website (docs); no React here
-demo/components/catalog-gallery.tsx  /catalog page with tabs and sidebar
+demo/components/demo-host.tsx        VexaProvider for the shop admin: host tools, context, chat defaults, overlay
+demo/lib/shop/                       shop data, client store, server tools for the test bench
 docs/host-integration-spec.md        spec for VexaProvider / host tools / MCP. Read before touching chat, runtime, core
 docs/docs-site-plan.md               plan for the public docs site in website/; demo/ is the test bench only
+docs/demo-control-plan.md            plan for demo/ as a control test bench: the Vexa Shop admin app, 16 control scenarios under /tests/<id>, the scenario runner
+docs/examples-plan.md                next plan: scenario-aware mock model, /tests → /guides playable guide pages, demo/ → examples/shop-admin, more example apps. Read before touching demo/lib/mock-model.ts or /tests pages
 DESIGN.md                    design tokens (indigo → violet)
 ```
 
@@ -79,7 +84,7 @@ Components that take user input (Input, Select, Checkbox, ...) use `useBoundProp
 - Icons come from `lucide-react` through the `ICONS` map in components.tsx, never text glyphs
 - SVG charts measure the real container width (`useContainerWidth`) so axis text does not scale
 - `src/styles.css` registers streamdown's `@source` globs and imports `streamdown/styles.css`; without them Streamdown's Tailwind classes (sticky code actions, list markers) are missing from the host build
-- Colors are tokens only: `primary` / `brand-violet` (accent gradient), `foreground` / `muted-foreground`, `card` / `muted` / `border` / `input` / `ring`, and `success` / `warning` / `danger` / `info`. Charts use `var(--chart-1..5)`. Never write `indigo-600`, `slate-500`, `bg-white`, or a hex color in `src/` (the dark code block in `Code` is the one exception). `VexaProvider theme` overrides the variables; `src/styles.css` declares them and the dark palette
+- Colors are tokens only: `primary` / `brand-violet` (accent gradient), `foreground` / `muted-foreground`, `card` / `muted` / `border` / `input` / `ring`, and `success` / `warning` / `danger` / `info`. Charts use `var(--chart-1..5)`. Never write `indigo-600`, `slate-500`, `bg-white`, or a hex color in `src/`. Code (catalog `Code`, tool input/output) renders through `src/ai-elements/code-block.tsx`: token colors, JSON highlight, horizontal scroll, copy button. `VexaProvider theme` overrides the variables; `src/styles.css` declares them and the dark palette
 
 ## Spec and state
 
