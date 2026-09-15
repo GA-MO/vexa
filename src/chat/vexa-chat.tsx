@@ -64,7 +64,14 @@ import {
 import { AssistantMessage, UserMessage } from "./messages";
 import { estimateTokens, estimateUsage } from "./usage";
 
-export type VexaChatLayout = "page" | "panel";
+/** `panel` is a framed card that fills its box, `inline` fills its box flush (no radius, border, or shadow) to dock into the host's own layout, `page` takes the viewport. */
+export type VexaChatLayout = "page" | "panel" | "inline";
+
+const LAYOUT_FRAME: Record<VexaChatLayout, string> = {
+  panel: "h-full rounded-[1.35rem] border border-border/70 shadow-[0_28px_80px_-24px_var(--vexa-glow),0_12px_32px_-16px_var(--vexa-glow-violet)]",
+  inline: "h-full",
+  page: "h-dvh bg-background",
+};
 
 export type VexaChatProps = {
   api?: string;
@@ -215,7 +222,7 @@ export function VexaChat({
   const selected = models.find((item) => item.id === model) ?? models[0];
   const usedTokens = useMemo(() => estimateTokens(messages), [messages]);
   const usage = useMemo(() => estimateUsage(messages), [messages]);
-  const isPanel = layout === "panel";
+  const isCompact = layout !== "page";
 
   const sendNow = useCallback(
     async (message: PromptInputMessage) => {
@@ -328,9 +335,7 @@ export function VexaChat({
       aria-label={title}
       className={cn(
         "relative flex min-h-0 flex-col overflow-hidden bg-card text-card-foreground",
-        isPanel
-          ? "h-full rounded-[1.35rem] border border-border/70 shadow-[0_28px_80px_-24px_var(--vexa-glow),0_12px_32px_-16px_var(--vexa-glow-violet)]"
-          : "h-dvh bg-background",
+        LAYOUT_FRAME[layout],
         className,
       )}
     >
@@ -388,7 +393,7 @@ export function VexaChat({
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <Conversation className="relative min-h-0 flex-1">
           <ConversationContent
-            className={cn("gap-5", isPanel ? "px-3 py-3" : "px-4 py-4 sm:px-6")}
+            className={cn("gap-5", isCompact ? "px-3 py-3" : "px-4 py-4 sm:px-6")}
           >
             {messages.length === 0 ? (
               <ConversationEmptyState
@@ -449,7 +454,7 @@ export function VexaChat({
         <div
           className={cn(
             "shrink-0 space-y-2 border-t border-border/60 bg-card/80 backdrop-blur-md",
-            isPanel ? "p-3" : "p-4 sm:px-6",
+            isCompact ? "p-3" : "p-4 sm:px-6",
           )}
         >
           {queue.length > 0 ? (

@@ -151,10 +151,15 @@ export function App() {
               </Field>
             }
           >
-            {placement === "inline" ? (
+            {placement === "panel" ? (
               <div className="h-[32rem]">
                 <VexaChat />
               </div>
+            ) : null}
+            {placement === "inline" ? (
+              <aside className="-mx-5 h-[32rem] border-y border-border">
+                <VexaChat layout="inline" />
+              </aside>
             ) : null}
           </GuideCard>
         </main>

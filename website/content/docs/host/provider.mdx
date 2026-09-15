@@ -31,7 +31,8 @@ description: Every prop of VexaProvider, the client component that holds chat de
 | Component | Placement | Notes |
 |---|---|---|
 | `VexaChatOverlay` | floating launcher plus a panel in a corner | `position`, `launcherLabel`, `backdrop`, `defaultOpen`, or controlled `open` / `onOpenChange` |
-| `VexaChat` | inline: fills the box you give it as a bordered panel | give the parent a height; `layout="panel"` is the default |
+| `VexaChat` | fills the box you give it as a framed card | give the parent a height; `layout="panel"` is the default |
+| `VexaChat layout="inline"` | fills the box flush: no radius, border, or shadow | for a sidebar, a drawer, or a split view where your own container draws the edges |
 | `VexaChat layout="page"` | a dedicated full-viewport route | `h-dvh` on the page background, no border |
 
 All three read the provider's `chat` defaults and host tools, and only one chat should be mounted at a time: `useVexaHost().sendToChat` targets the last one mounted. The [embedded widget](/docs/examples/embedded-widget) example switches between the overlay and the inline panel on one page.

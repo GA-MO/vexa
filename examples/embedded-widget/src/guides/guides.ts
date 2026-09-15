@@ -45,23 +45,26 @@ export const GUIDES: Guide[] = [
   },
   {
     id: "placement",
-    title: "Overlay, inline panel, or full page",
+    title: "Overlay, framed panel, flush inline, or full page",
     what: [
-      "`VexaChatOverlay` is the floating launcher plus panel. The same chat also renders inline: `<VexaChat />` fills whatever box you give it as a bordered panel, and `<VexaChat layout=\"page\" />` takes the whole viewport for a dedicated assistant route.",
-      "All three read the provider's `chat` defaults, so switching placement changes one line; the prompt below goes to whichever chat is mounted.",
+      "`VexaChatOverlay` is the floating launcher plus panel. The same chat also renders in your layout: `<VexaChat />` fills whatever box you give it as a framed card, `<VexaChat layout=\"inline\" />` fills it flush with no radius, border, or shadow so your sidebar or drawer draws the edges, and `<VexaChat layout=\"page\" />` takes the whole viewport for a dedicated route.",
+      "All of them read the provider's `chat` defaults, so switching placement changes one line; the prompt below goes to whichever chat is mounted.",
     ],
     docs: "host/provider",
     prompts: [PROMPTS.usage],
   },
 ];
 
-export type Placement = "overlay" | "inline";
+export type Placement = "overlay" | "panel" | "inline";
 
-export const PLACEMENTS: Placement[] = ["overlay", "inline"];
+export const PLACEMENTS: Placement[] = ["overlay", "panel", "inline"];
+
+const PAGE_HINT = "\n\n// a dedicated route instead:\n<VexaChat layout=\"page\" />";
 
 export function placementSnippet(placement: Placement): string {
+  if (placement === "panel") return `<VexaProvider chat={chatDefaults}>\n  {children}\n  <div className="h-[32rem]">\n    <VexaChat />\n  </div>\n</VexaProvider>${PAGE_HINT}`;
   if (placement === "inline") {
-    return `<VexaProvider chat={chatDefaults}>\n  {children}\n  <div className="h-[32rem]">\n    <VexaChat />\n  </div>\n</VexaProvider>\n\n// a dedicated route instead:\n<VexaChat layout="page" />`;
+    return `<VexaProvider chat={chatDefaults}>\n  {children}\n  <aside className="h-[32rem] border-y border-border">\n    <VexaChat layout="inline" />\n  </aside>\n</VexaProvider>${PAGE_HINT}`;
   }
   return `<VexaProvider chat={chatDefaults}>\n  {children}\n  <VexaChatOverlay />\n</VexaProvider>`;
 }
