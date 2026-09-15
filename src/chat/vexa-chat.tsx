@@ -340,11 +340,11 @@ export function VexaChat({
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -left-16 top-8 size-40 rounded-full bg-primary/15 blur-3xl"
+        className="vexa-glow pointer-events-none absolute -left-16 top-8 size-40 rounded-full bg-primary/15 blur-3xl"
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-10 top-20 size-44 rounded-full bg-brand-violet/15 blur-3xl"
+        className="vexa-glow pointer-events-none absolute -right-10 top-20 size-44 rounded-full bg-brand-violet/15 blur-3xl"
       />
 
       <header className="relative z-10 flex items-center gap-3 border-b border-border/60 px-4 py-3 backdrop-blur-md">

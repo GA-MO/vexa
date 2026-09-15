@@ -159,13 +159,17 @@ type ContextProps<S extends ContextSchema> =
 
 export type VexaProviderProps<S extends ContextSchema = ContextSchema> = VexaProviderBaseProps & ContextProps<S>;
 
+const NO_CHAT_DEFAULTS: VexaChatDefaults = {};
+const NO_FUNCTIONS: Record<string, ComputedFunction> = {};
+const NO_TOOLS: Record<string, HostTool> = {};
+
 export function VexaProvider<S extends ContextSchema>({
   api = "/api/chat",
-  chat = {},
+  chat = NO_CHAT_DEFAULTS,
   format,
-  functions = {},
+  functions = NO_FUNCTIONS,
   theme,
-  tools = {},
+  tools = NO_TOOLS,
   context,
   contextSchema,
   onToolResult,
@@ -271,6 +275,7 @@ export function VexaProvider<S extends ContextSchema>({
       <div
         data-vexa-theme=""
         data-vexa-mode={mode}
+        data-vexa-glow={theme?.glow === false ? "off" : undefined}
         className={mode === "dark" ? "dark" : undefined}
         style={{ display: "contents", ...themeStyle(theme) }}
       >

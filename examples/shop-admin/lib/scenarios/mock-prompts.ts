@@ -1,4 +1,5 @@
 import type { Spec } from "vexa/protocol";
+import { matchesMockTurn, mockTurnSteps } from "../../../shared/mock-model";
 import { parseForwardedAction } from "./action-message";
 import { isUserStep, type MockContinuation, type MockStep, type MockTurn, type Scenario, type ScenarioFixture } from "./types";
 
@@ -34,13 +35,7 @@ export function mockTurnsOf(scenario: Scenario): MockTurn[] {
   return [...(scenario.mock ?? []), ...openerTurn(scenario)];
 }
 
-export function matchesMockTurn(turn: MockTurn, text: string): boolean {
-  return typeof turn.match === "function" ? turn.match(text) : turn.match.test(text);
-}
-
-export function mockTurnSteps(turn: MockTurn, prompt: string): MockStep[] {
-  return typeof turn.steps === "function" ? turn.steps(prompt) : turn.steps;
-}
+export { matchesMockTurn, mockTurnSteps };
 
 /** The opener (when the scenario has one) followed by the script prompts the mock model has a reply for. */
 export function mockPrompts(scenario: Scenario): MockPrompt[] {

@@ -26,6 +26,16 @@ description: Every prop of VexaProvider, the client component that holds chat de
 
 `context` and `contextSchema` are typed together: the provider infers `S` from the schema, `context` must return that shape, and `context` without a schema is a TypeScript error and a thrown error on mount. Schemas can be zod, valibot, arktype, or an AI SDK `jsonSchema()`; the provider validates the value on every request and sends `{}` with a warning when validation fails.
 
+## Where the chat lives
+
+| Component | Placement | Notes |
+|---|---|---|
+| `VexaChatOverlay` | floating launcher plus a panel in a corner | `position`, `launcherLabel`, `backdrop`, `defaultOpen`, or controlled `open` / `onOpenChange` |
+| `VexaChat` | inline: fills the box you give it as a bordered panel | give the parent a height; `layout="panel"` is the default |
+| `VexaChat layout="page"` | a dedicated full-viewport route | `h-dvh` on the page background, no border |
+
+All three read the provider's `chat` defaults and host tools, and only one chat should be mounted at a time: `useVexaHost().sendToChat` targets the last one mounted. The [embedded widget](/docs/examples/embedded-widget) example switches between the overlay and the inline panel on one page.
+
 ## Chat defaults
 
 `chat` accepts the same fields as `VexaChatOverlay` props. Resolution order for every field: component props, then provider `chat`, then built-in defaults.

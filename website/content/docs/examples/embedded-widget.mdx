@@ -1,0 +1,42 @@
+---
+title: Embedded widget
+description: "The smallest Vexa integration: one Vite page, one VexaProvider, one overlay, no host tools, a scripted mock model served by the dev server. Four guides on theme, labels, launcher placement, and overlay versus inline."
+---
+
+## What it is
+
+`examples/embedded-widget/` is a single-page Vite app for a fictional product, Acme Notes. It has no host tools, no page context, and no API key: `vite/chat-api.ts` mounts `createVexaHandler` on the dev server at `/api/chat` with one model, the scripted mock from `examples/shared/mock-model.ts`. Everything the reader changes on the page is a `VexaProvider` prop.
+
+| File | What it holds |
+|---|---|
+| `src/app.tsx` | the page: `VexaProvider`, the four guide cards, `VexaChatOverlay` or an inline `VexaChat` |
+| `src/guides/presets.ts` | three theme presets, two language presets (English and Thai labels plus locale and currency), the launcher positions |
+| `src/guides/guides.ts` | the guide texts and the snippet builders that print the config currently applied |
+| `src/guides/mock-script.ts` | the mock model's replies: a plan-usage card in English and Thai, and a help list |
+| `vite/chat-api.ts` | the Vite plugin that serves the chat route from the dev server |
+| `src/app.css` | `@import "tailwindcss"`, `@source` for the library, `@import "vexa/styles.css"`; nothing else, the stylesheet's light defaults do the rest |
+
+## Run it
+
+```bash title="terminal"
+bun run dev:widget       # http://localhost:3003
+```
+
+Every guide card has a control (a select, a checkbox, an input), a prompt button that sends a scripted prompt to the chat, and the code block that reflects the current control values.
+
+## Guides
+
+- **Match the widget to your brand**: `theme` presets (indigo, emerald and rounder, rose on dark) and the `glow` switch that removes the tinted shadows. [Theme](/docs/host/theme)
+- **Translate the chat chrome**: `chat.labels` in Thai plus `format` with `th-TH` / `THB`; the mock replies in Thai to the Thai prompt. [Labels and i18n](/docs/host/labels-and-i18n)
+- **Place the launcher**: `chat.position`, `chat.launcherLabel`, `backdrop: false`. [Provider](/docs/host/provider)
+- **Overlay, inline panel, or full page**: swap `VexaChatOverlay` for an inline `VexaChat` in a fixed-height box; the snippet also shows `layout="page"`. [Provider](/docs/host/provider#where-the-chat-lives)
+
+## What it proved
+
+Building it fixed two library gaps: `vexa/styles.css` now maps every color and radius utility with a light default, so a host with no design tokens renders correctly, and `VexaProvider` keeps stable defaults for `chat`, `functions` and `tools` so a re-rendering host never loops.
+
+## Related
+
+- [Examples](/docs/examples): the other example apps
+- [Shop admin](/docs/examples/shop-admin): host tools, server tools, approval and MCP on the same library
+- [Config reference](/docs/config-reference): every provider option

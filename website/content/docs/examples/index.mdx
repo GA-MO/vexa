@@ -14,10 +14,10 @@ The mock model plays a script that lives next to the scenario, so a guide costs 
 | Example | Shape | Status |
 |---|---|---|
 | [Shop admin](/docs/examples/shop-admin) | An internal admin app: pages, a data table, a details page, settings. The chat navigates, filters, selects, confirms mutations, reads server tools and a local MCP server. | 24 guides, runs today |
-| Embedded widget | The smallest integration: one page, the overlay, a theme and labels. | planned |
+| [Embedded widget](/docs/examples/embedded-widget) | The smallest integration: one Vite page, the overlay or an inline panel, a theme and labels, no host tools. | 4 guides, runs today |
 | Docs assistant | A docs site whose assistant navigates and highlights sections and reads an MCP docs source. | planned |
 
-Open **Shop admin** first. Its guides cover every control path in [Best practices](/docs/host/best-practices), and the two planned examples reuse the same guide pages with fewer tools.
+Open **Embedded widget** to see the least you have to write, and **Shop admin** for every control path in [Best practices](/docs/host/best-practices).
 
 ## Run one
 
@@ -25,7 +25,8 @@ The examples live in the Vexa repository and share the library source, so they n
 
 ```bash title="terminal"
 bun install
-bun run dev        # shop admin at http://localhost:3001, guides at /guides
+bun run dev          # shop admin at http://localhost:3001, guides at /guides
+bun run dev:widget   # embedded widget at http://localhost:3003
 ```
 
 The docs you are reading run on port 3002; each guide links back to its docs page, and the [Shop admin](/docs/examples/shop-admin) page links to every guide.

@@ -14,6 +14,8 @@ export type VexaTheme = {
   danger?: string;
   info?: string;
   mode?: VexaThemeMode;
+  /** `false` removes the tinted glow: the panel and launcher shadows, the launcher halo, and the blurred blobs behind the chat. */
+  glow?: boolean;
 };
 
 type CssVars = Record<`--${string}`, string>;

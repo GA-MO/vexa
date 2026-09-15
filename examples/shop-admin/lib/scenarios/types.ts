@@ -1,4 +1,7 @@
 import type { Spec, SpecPatch } from "vexa/protocol";
+import type { MockContinuation, MockStep, MockToolStep, MockTurn } from "../../../shared/mock-model";
+
+export type { MockContinuation, MockStep, MockToolStep, MockTurn };
 import type { HostToolDescriptor, HostToolResult } from "vexa/react";
 import type { ShopFilters } from "@/lib/shop/data";
 
@@ -63,17 +66,6 @@ export type HeadlessToolFn = (input: Record<string, unknown>) => HostToolResult 
 
 export type HeadlessTool = HeadlessToolFn | { confirm: true; run: HeadlessToolFn };
 
-export type MockContinuation = MockStep[] | ((output: unknown) => MockStep[]);
-
-export type MockToolStep = { tool: string; input: Record<string, unknown>; then: MockContinuation; onError?: MockContinuation };
-
-export type MockStep = { reasoning: string } | { text: string } | { spec: Spec } | { patch: SpecPatch[] } | MockToolStep;
-
-/** One scripted reply of the mock model: `match` runs against the last user message, `steps` may derive from it, a `tool` step must close its array and continue through `then` / `onError`. */
-export type MockTurn = {
-  match: RegExp | ((prompt: string) => boolean);
-  steps: MockStep[] | ((prompt: string) => MockStep[]);
-};
 
 export type ScenarioKind = "guide" | "check";
 

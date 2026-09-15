@@ -1,1 +1,1 @@
-export const MOCK_MODEL_ID = "mock";
+export { MOCK_MODEL_ID } from "../../shared/mock-model-id";

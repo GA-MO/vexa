@@ -9,6 +9,7 @@ One bun workspace, three packages:
 ```
 package.json                        # vexa (library)
 examples/shop-admin/package.json    # vexa-shop-admin (Next.js reference host, playable /guides)
+examples/embedded-widget/package.json   # vexa-embedded-widget (smallest Vite integration, 4 guides)
 website/package.json                # vexa-website (docs site)
 ```
 
@@ -44,6 +45,7 @@ OPENROUTER_APP_TITLE=Vexa
 ```bash
 bun install
 bun run dev          # http://localhost:3001, guides at /guides
+bun run dev:widget   # http://localhost:3003, the embedded widget example
 bun run dev:site     # docs at http://localhost:3002
 ```
 

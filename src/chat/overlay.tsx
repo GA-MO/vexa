@@ -119,7 +119,7 @@ export function VexaChatOverlay({
         >
           <span
             aria-hidden
-            className="absolute inset-0 rounded-full bg-gradient-to-br from-primary to-brand-violet opacity-60 blur-md transition group-hover:opacity-80"
+            className="vexa-glow absolute inset-0 rounded-full bg-gradient-to-br from-primary to-brand-violet opacity-60 blur-md transition group-hover:opacity-80"
           />
           <span className="relative">
             {open ? <XIcon className="size-5" /> : launcherIcon}

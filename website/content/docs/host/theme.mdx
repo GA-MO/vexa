@@ -22,6 +22,7 @@ type VexaTheme = {
   danger?: string;
   info?: string;
   mode?: "light" | "dark" | "system";
+  glow?: boolean;        // false removes the tinted glow around the panel and launcher
 };
 ```
 
@@ -38,7 +39,7 @@ type VexaTheme = {
 >
 ```
 
-Colors are plain CSS strings and are not validated; a typo shows up as the browser ignoring the variable.
+Colors are plain CSS strings and are not validated; a typo shows up as the browser ignoring the variable. `glow: false` sets `data-vexa-glow="off"` on the wrapper, which turns the `--vexa-glow*` shadows transparent and hides every `.vexa-glow` element (the launcher halo and the blurred blobs behind the chat); the flat card shadows stay.
 
 ## Modes
 
@@ -61,7 +62,7 @@ Import it once in your global stylesheet. It declares the `success` / `warning` 
 @import "vexa/styles.css";
 ```
 
-Tailwind v4 is expected in the host, because the library's components are styled with utility classes and rely on `@theme` variables for `--color-primary` and friends. The base surface tokens (`--background`, `--card`, `--border`, `--primary`) follow the shadcn convention; if your app does not already define them, copy the light values from `examples/shop-admin/app/globals.css`.
+Tailwind v4 is expected in the host, because the library's components are styled with utility classes. The stylesheet maps every color and radius utility the library uses (`--color-primary: var(--primary, …)` and so on) with a light default as the fallback, and declares the `dark` variant as `.dark` ancestors, so a host with no design tokens of its own gets the indigo light palette out of the box (the [embedded widget](/docs/examples/embedded-widget) example runs on exactly that). A host that already follows the shadcn convention (`--background`, `--card`, `--primary`, `--radius` on `:root`) keeps its own values, because a defined variable wins over the fallback; the shop admin example does this in `examples/shop-admin/app/globals.css`.
 
 ## Related
 
