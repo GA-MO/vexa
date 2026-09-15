@@ -1,5 +1,5 @@
 import type { Spec } from "vexa/protocol";
-import { matchesMockTurn, mockTurnSteps } from "../../../shared/mock-model";
+import { matchesMockTurn, mockTurnSteps } from "vexa/mock";
 import { parseForwardedAction } from "./action-message";
 import { isUserStep, type MockContinuation, type MockStep, type MockTurn, type Scenario, type ScenarioFixture } from "./types";
 

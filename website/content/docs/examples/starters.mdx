@@ -1,0 +1,52 @@
+---
+title: Starters
+description: Two copyable starting points, one for Next.js and one for Vite, each a provider, an overlay and a chat route that runs against a free mock model until you add an API key.
+---
+
+## Pick your framework
+
+Both starters are the [Get started](/docs/get-started) page as a folder: the same five files, nothing else. They run with no API key against a scripted mock model, and switch to Claude the moment `ANTHROPIC_API_KEY` is set. Swap the provider in `models.ts` for the one you use; Vexa takes any AI SDK `LanguageModel`.
+
+| Starter | Source | Run |
+|---|---|---|
+| Next.js App Router | [examples/starter-next](https://github.com/GA-MO/vexa/tree/main/examples/starter-next) | `bun run dev:starter-next` → http://localhost:3004 |
+| Vite + a fetch handler | [examples/starter-vite](https://github.com/GA-MO/vexa/tree/main/examples/starter-vite) | `bun run dev:starter-vite` → http://localhost:3005 |
+
+## Next.js
+
+| File | What it does |
+|---|---|
+| `app/providers.tsx` | `VexaProvider` with the chat defaults (title, suggestions, format) and `VexaChatOverlay` |
+| `app/layout.tsx` | wraps every page in the provider |
+| `app/api/chat/route.ts` | `createVexaHandler({ models, persona })`: `GET` lists the models, `POST` streams the reply |
+| `lib/models.ts` | the model registry: Claude when the key is set, the free mock always; the first entry is the default |
+| `lib/mock.ts` | the two prompts the mock answers, as text plus a spec |
+| `app/globals.css` | Tailwind plus the Vexa token stylesheet |
+
+## Vite
+
+The chat route is a plain fetch handler, so it runs on `Bun.serve`, Hono, Cloudflare Workers, or a Vercel function unchanged. The starter serves it from `server.ts` on port 3006 and Vite proxies `/api` to it in development; after `vite build` the same server also serves `dist/`.
+
+| File | What it does |
+|---|---|
+| `src/app.tsx` | `VexaProvider` with the chat defaults, the page, and `VexaChatOverlay` |
+| `server.ts` | `createVexaHandler` on `Bun.serve`: `GET` lists the models, `POST` streams the reply |
+| `src/models.ts` | the model registry: Claude when the key is set, the free mock always |
+| `src/mock.ts` | what the mock answers |
+| `vite.config.ts` | proxies `/api` to the server in development |
+| `dev.ts` | starts the server and Vite together |
+
+## Use one outside the repository
+
+Vexa is not on npm yet. Copy the folder, then point it at a checkout of the library:
+
+1. `package.json`: add `"vexa": "file:../vexa"` (Next needs `transpilePackages: ["vexa"]`, already set).
+2. `tsconfig.json`: delete the `vexa/*` entries under `paths`, and in the Vite starter the `alias` list in `vite.config.ts`; the package `exports` resolve them.
+3. The stylesheet: `@import "vexa/styles.css";` instead of the relative path.
+
+## Where to go next
+
+- [Host tools](/docs/host/host-tools): let the model navigate, read page state, and run actions
+- [Handler](/docs/server/handler): server tools, MCP, approvals, and limits
+- [Config reference](/docs/config-reference): every option of the route and the provider
+- [Shop admin](/docs/examples/shop-admin) and [Embedded widget](/docs/examples/embedded-widget): every control path, playable in the browser

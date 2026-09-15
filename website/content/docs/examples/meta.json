@@ -1,4 +1,8 @@
 {
   "title": "Examples",
-  "pages": ["shop-admin", "embedded-widget"]
+  "pages": [
+    "starters",
+    "shop-admin",
+    "embedded-widget"
+  ]
 }

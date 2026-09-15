@@ -1,8 +1,7 @@
 import type { ChatSuggestion } from "vexa/chat";
 import { COMPOSED_EXAMPLES } from "vexa/examples";
 import { createVexaHandler } from "vexa/server";
-import { serveChatInBrowser } from "../../../examples/shared/browser-chat";
-import { createScriptedModel, MOCK_MODEL_ID, type MockTurn } from "../../../examples/shared/mock-model";
+import { createScriptedModel, MOCK_MODEL_ID, serveChatInBrowser, type MockTurn } from "vexa/mock";
 
 const SPECIAL_CHARACTERS = /[.*+?^${}()|[\]\\]/g;
 

@@ -1,5 +1,5 @@
 import type { Spec } from "vexa/protocol";
-import type { MockScript, MockTurn } from "../../../shared/mock-model";
+import type { MockScript, MockTurn } from "vexa/mock";
 
 export const PROMPTS = {
   usage: "Show my plan usage",

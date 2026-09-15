@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { VexaChat, VexaChatOverlay } from "vexa/chat";
 import { VexaProvider } from "vexa/react";
-import { MOCK_MODEL_ID } from "../../shared/mock-model-id";
+import { MOCK_MODEL_ID } from "vexa/mock";
 import { GuideCard } from "./guide-card";
 import { composerSnippet, GUIDES, labelsSnippet, PLACEMENTS, placementSnippet, positionSnippet, themeSnippet, type Placement } from "./guides/guides";
 import {

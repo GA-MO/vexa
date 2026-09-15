@@ -16,6 +16,15 @@ Both apps are hosted with the docs as static, mock-only builds: every guide play
 <ExampleAppLink app="shop-admin" path="/guides" label="Shop admin guides" note="An internal admin app: 24 guides on navigation, page state, approval, server tools, MCP, and generated UI that acts" />
 <ExampleAppLink app="widget" label="Embedded widget" note="The smallest integration: theme, labels, launcher placement, overlay or inline" />
 
+## Start from here
+
+The two [starters](/docs/examples/starters) are the Get started page as a folder: a provider, an overlay, a chat route, a model registry that falls back to the free mock, and nothing else. Copy one and build on it.
+
+| Starter | Source | Run |
+|---|---|---|
+| Next.js App Router | [examples/starter-next](https://github.com/GA-MO/vexa/tree/main/examples/starter-next) | `bun run dev:starter-next` |
+| Vite + a fetch handler | [examples/starter-vite](https://github.com/GA-MO/vexa/tree/main/examples/starter-vite) | `bun run dev:starter-vite` |
+
 ## Which one looks like yours
 
 | Example | Shape | Status |
@@ -34,8 +43,10 @@ The examples live in the Vexa repository and share the library source, so they n
 
 ```bash title="terminal"
 bun install
-bun run dev          # shop admin at http://localhost:3001, guides at /guides
-bun run dev:widget   # embedded widget at http://localhost:3003
+bun run dev                # shop admin at http://localhost:3001, guides at /guides
+bun run dev:widget         # embedded widget at http://localhost:3003
+bun run dev:starter-next   # Next.js starter at http://localhost:3004
+bun run dev:starter-vite   # Vite starter at http://localhost:3005
 ```
 
 Each guide links back to its docs page, and the [Shop admin](/docs/examples/shop-admin) and [Embedded widget](/docs/examples/embedded-widget) pages link to every guide; on the published site the links go to the hosted, mock-only builds of both apps.

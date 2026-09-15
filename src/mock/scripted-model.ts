@@ -1,9 +1,9 @@
 import type { LanguageModel } from "ai";
 import { MockLanguageModelV3, simulateReadableStream } from "ai/test";
 import type { Spec, SpecPatch } from "vexa/protocol";
-import { MOCK_MODEL_ID } from "./mock-model-id";
 
-export { MOCK_MODEL_ID };
+/** Registry id the example apps give the scripted model; the picker shows it next to real models. */
+export const MOCK_MODEL_ID = "mock";
 
 type LanguageModelV3 = Extract<LanguageModel, { specificationVersion: "v3" }>;
 type LanguageModelV3CallOptions = Parameters<LanguageModelV3["doStream"]>[0];

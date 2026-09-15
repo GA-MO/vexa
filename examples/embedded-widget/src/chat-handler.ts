@@ -1,5 +1,5 @@
 import { createVexaHandler } from "vexa/server";
-import { createScriptedModel, MOCK_MODEL_ID } from "../../shared/mock-model";
+import { createScriptedModel, MOCK_MODEL_ID } from "vexa/mock";
 import { WIDGET_MOCK_SCRIPT } from "./guides/mock-script";
 
 const PERSONA = "You are the help assistant of Acme Notes, a note-taking app.";

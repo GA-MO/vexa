@@ -1,5 +1,5 @@
 import type { ModelRegistry } from "vexa/server";
-import { createScriptedModel, MOCK_MODEL_ID } from "../../shared/mock-model";
+import { createScriptedModel, MOCK_MODEL_ID } from "vexa/mock";
 import { SCENARIOS } from "@/lib/scenarios";
 import { allMockPrompts, mockTurnsOf } from "@/lib/scenarios/mock-prompts";
 

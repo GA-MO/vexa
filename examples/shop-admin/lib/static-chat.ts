@@ -1,4 +1,4 @@
-import { serveChatInBrowser } from "../../shared/browser-chat";
+import { serveChatInBrowser } from "vexa/mock";
 import { MOCK_MODEL_ENTRY } from "@/lib/mock-model";
 import { createShopChatHandler } from "@/lib/shop/chat-handler";
 

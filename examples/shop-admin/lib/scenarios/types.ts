@@ -1,5 +1,5 @@
 import type { Spec, SpecPatch } from "vexa/protocol";
-import type { MockContinuation, MockStep, MockToolStep, MockTurn } from "../../../shared/mock-model";
+import type { MockContinuation, MockStep, MockToolStep, MockTurn } from "vexa/mock";
 
 export type { MockContinuation, MockStep, MockToolStep, MockTurn };
 import type { HostToolDescriptor, HostToolResult } from "vexa/react";

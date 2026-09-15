@@ -10,6 +10,8 @@ One bun workspace, three packages:
 package.json                        # vexa (library)
 examples/shop-admin/package.json    # vexa-shop-admin (Next.js reference host, playable /guides)
 examples/embedded-widget/package.json   # vexa-embedded-widget (smallest Vite integration, 4 guides)
+examples/starter-next/package.json  # vexa-starter-next (copyable Next.js starter)
+examples/starter-vite/package.json  # vexa-starter-vite (copyable Vite starter with a Bun.serve chat route)
 website/package.json                # vexa-website (docs site)
 ```
 
@@ -46,6 +48,8 @@ OPENROUTER_APP_TITLE=Vexa
 bun install
 bun run dev          # http://localhost:3001, guides at /guides
 bun run dev:widget   # http://localhost:3003, the embedded widget example
+bun run dev:starter-next   # http://localhost:3004, the Next.js starter (mock model until ANTHROPIC_API_KEY is set)
+bun run dev:starter-vite   # http://localhost:3005, the Vite starter
 bun run dev:site     # docs at http://localhost:3002
 ```
 
