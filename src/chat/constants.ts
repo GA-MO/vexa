@@ -30,7 +30,14 @@ export type ChatLabels = {
   attachment: string;
   securityTitle: string;
   securityBody: (tool: string) => string;
+  buttonPressed: (tool: string) => string;
 };
+
+/** `book_room` → `Book room`, `fixtures__write_file` → `Fixtures write file`. */
+export function humanizeToolName(tool: string): string {
+  const words = tool.replace(/__/g, " ").replace(/[_-]+/g, " ").trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}
 
 export const DEFAULT_LABELS: ChatLabels = {
   emptyTitle: "Ask anything. Get UI back.",
@@ -59,6 +66,7 @@ export const DEFAULT_LABELS: ChatLabels = {
   attachment: "Attachment",
   securityTitle: "Suspicious text in tool data",
   securityBody: (tool) => `Data returned by ${tool} contained instructions aimed at the assistant. They were ignored and tools that change data were disabled for this reply.`,
+  buttonPressed: (tool) => humanizeToolName(tool),
 };
 
 export type ChatModel = {

@@ -779,6 +779,15 @@ type FieldProps = {
   validateOn?: "change" | "blur" | "submit" | null;
 };
 
+type FieldValue = string | number;
+
+/** A number input binds a number so a tool schema with `z.number()` accepts the typed value; an empty or partial entry stays a string. */
+function fieldValueFrom(inputType: FieldProps["inputType"], raw: string): FieldValue {
+  if (inputType !== "number" || raw.trim() === "") return raw;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : raw;
+}
+
 function FieldControl({
   props,
   bindings,
@@ -788,7 +797,7 @@ function FieldControl({
 }) {
   const inputType = props.inputType ?? "text";
   const path = bindings?.value;
-  const [value, setValue] = useBoundProp<string>(
+  const [value, setValue] = useBoundProp<FieldValue>(
     props.value ?? undefined,
     path,
   );
@@ -800,7 +809,7 @@ function FieldControl({
     "mt-1 w-full rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/25";
 
   const onChange = (next: string) => {
-    setValue(next);
+    setValue(fieldValueFrom(inputType, next));
     if ((props.validateOn ?? "blur") === "change") validate();
   };
 
@@ -850,7 +859,7 @@ function FieldControl({
 function BoundFormField({ props }: { props: FieldProps }) {
   const inputType = props.inputType ?? "text";
   const path = `/form/${props.name}`;
-  const [value, setValue] = useStateBinding<string>(path);
+  const [value, setValue] = useStateBinding<FieldValue>(path);
   const { errors, validate, touch } = useFieldValidation(path, {
     checks: (props.checks ?? undefined) as never,
     validateOn: props.validateOn ?? "blur",
@@ -859,7 +868,7 @@ function BoundFormField({ props }: { props: FieldProps }) {
     "mt-1 w-full rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/25";
 
   const onChange = (next: string) => {
-    setValue(next);
+    setValue(fieldValueFrom(inputType, next));
     if ((props.validateOn ?? "blur") === "change") validate();
   };
 

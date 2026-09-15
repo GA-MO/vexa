@@ -13,6 +13,7 @@ import {
 } from "ai";
 import {
   CheckIcon,
+  MousePointerClickIcon,
   PaperclipIcon,
   ShieldAlertIcon,
   XIcon,
@@ -23,7 +24,8 @@ import {
   type VexaMessage,
 } from "vexa/protocol";
 import { DEFAULT_LABELS, type ChatLabels, type ChatStepsDisplay } from "./constants";
-import { SpecView } from "vexa/react";
+import { SpecView, parseActionMessage } from "vexa/react";
+import { specPartsFor } from "./spec-continuation";
 import {
   Attachment,
   AttachmentPreview,
@@ -348,7 +350,7 @@ export function AssistantMessage({
   labels?: ChatLabels;
   steps?: ChatStepsDisplay;
 }) {
-  const { spec, hasSpec } = useJsonRenderMessage(message.parts);
+  const { spec, hasSpec } = useJsonRenderMessage(specPartsFor(message, messages));
   const sourceParts = message.parts.filter(
     (part) => part.type === "source-url" || part.type === "source-document",
   );
@@ -517,9 +519,51 @@ export function AssistantMessage({
   );
 }
 
-export function UserMessage({ message }: { message: VexaMessage }) {
+function actionValueText(value: unknown): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  return JSON.stringify(value);
+}
+
+function ActionMessage({ action, labels }: { action: { name: string; input: Record<string, unknown> }; labels: ChatLabels }) {
+  const fields = Object.entries(action.input).flatMap(([key, value]) => {
+    const text = actionValueText(value);
+    return text === null ? [] : [{ key, text }];
+  });
+  return (
+    <Message from="user">
+      <MessageContent className="gap-1.5">
+        <span className="flex items-center gap-2 text-sm font-medium">
+          <MousePointerClickIcon className="size-4 shrink-0 opacity-80" aria-hidden />
+          <span>{labels.buttonPressed(action.name)}</span>
+        </span>
+        {fields.length > 0 ? (
+          <dl className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+            {fields.map((field) => (
+              <div key={field.key} className="flex min-w-0 gap-1 wrap-anywhere">
+                <dt className="shrink-0 opacity-70">{field.key}</dt>
+                <dd className="font-medium">{field.text}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+      </MessageContent>
+    </Message>
+  );
+}
+
+function forwardedAction(message: VexaMessage) {
+  const textParts = message.parts.filter((part) => part.type === "text");
+  if (message.parts.length !== 1 || textParts.length !== 1) return null;
+  return parseActionMessage(textParts[0].text);
+}
+
+export function UserMessage({ message, labels = DEFAULT_LABELS }: { message: VexaMessage; labels?: ChatLabels }) {
   const files = message.parts.filter(isFileUIPart) as FileUIPart[];
   const textParts = message.parts.filter((part) => part.type === "text");
+  const action = forwardedAction(message);
+  if (action) return <ActionMessage action={action} labels={labels} />;
 
   return (
     <Message from="user">

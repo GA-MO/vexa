@@ -166,6 +166,18 @@ export const CHAT_ELEMENT_EXAMPLES: ChatElementExample[] = [
     ],
   },
   {
+    id: "button-press",
+    title: "Button press forwarded to the chat",
+    note: "A spec button whose `runTool` names a tool the client does not implement sends `⟦action⟧ runTool <name> <json>` as a user message. The chat renders it as a button press: `buttonPressed(tool)` (default: the tool name as words, `Book room`) with the input as key/value pairs, never as raw text or JSON.",
+    messages: [
+      user("u", "⟦action⟧ runTool book_room " + JSON.stringify({ room: "A", headcount: 4 })),
+      assistant("a", [
+        toolPart("book_room", "output-available", { input: { room: "A", headcount: 4 }, output: { ok: true, summary: "Room A booked for 4" } }),
+        { type: "text", text: "Room A is booked for 4." },
+      ]),
+    ],
+  },
+  {
     id: "security-notice",
     title: "Security notice",
     note: "A `data-notice` part streams when the injection guard flags a tool result. The card shows `securityTitle` and `securityBody(tool)` with the excerpt; tools that change data are off for the rest of the reply.",
@@ -221,5 +233,10 @@ export const CHAT_ELEMENT_MESSAGES: VexaMessage[] = [
   assistant("a2", [
     reasoning("A short answer with no tools: this reasoning renders as a single Reasoning block, not a step list. It contains `inline code` and a long word " + LONG_UNBROKEN, 2),
     { type: "text", text: "ได้ครับ นี่คือคำตอบสั้น ๆ ที่ไม่มี UI" },
+  ]),
+  user("u3", "⟦action⟧ runTool book_room " + JSON.stringify({ room: "A", headcount: 4, note: "a very long note " + LONG_UNBROKEN })),
+  assistant("a3", [
+    toolPart("book_room", "output-available", { input: { room: "A", headcount: 4 }, output: { ok: true, summary: "Room A booked for 4" } }),
+    { type: "text", text: "Room A is booked for 4." },
   ]),
 ];

@@ -9,6 +9,7 @@ export {
   createVexaHandlers,
   createGuardedStore,
   formatActionMessage,
+  parseActionMessage,
   ACTION_MESSAGE_PREFIX,
   RUNTIME_NAMESPACES,
 } from "./runtime";

@@ -64,8 +64,23 @@ export function createGuardedStore(store: StateStore): StateStore {
   };
 }
 
+const ACTION_MESSAGE_SHAPE = /^⟦action⟧\s+runTool\s+([A-Za-z0-9_]+)\s+(\{[\s\S]*\})\s*$/;
+
 export function formatActionMessage(name: string, input: unknown) {
   return `${ACTION_MESSAGE_PREFIX} runTool ${name} ${JSON.stringify(input ?? {})}`;
+}
+
+/** Reads a button-originated `⟦action⟧ runTool <name> <json>` user message back into its tool name and input. */
+export function parseActionMessage(text: string): { name: string; input: Record<string, unknown> } | null {
+  const match = ACTION_MESSAGE_SHAPE.exec(text);
+  if (!match) return null;
+  try {
+    const input = JSON.parse(match[2]) as unknown;
+    if (typeof input !== "object" || input === null || Array.isArray(input)) return null;
+    return { name: match[1], input: input as Record<string, unknown> };
+  } catch {
+    return null;
+  }
 }
 
 function readToolParams(params: Record<string, unknown>) {

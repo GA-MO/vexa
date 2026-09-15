@@ -144,9 +144,16 @@ export function VexaChat({
   const initialModel = defaultModel ?? host?.chat.defaultModel ?? remote.defaultModel ?? models[0].id;
   const [text, setText] = useState("");
   const [model, setModel] = useState<string>(initialModel);
+  const userPickedModel = useRef(false);
+  const pickModel = useCallback((id: string) => {
+    userPickedModel.current = true;
+    setModel(id);
+  }, []);
 
   useEffect(() => {
-    if (models.some((item) => item.id === model)) return;
+    const known = models.some((item) => item.id === model);
+    if (known && userPickedModel.current) return;
+    if (known && model === initialModel) return;
     setModel(initialModel);
   }, [initialModel, model, models]);
   const [checkpoints, setCheckpoints] = useState<CheckpointRecord[]>([]);
@@ -404,7 +411,7 @@ export function VexaChat({
                 return (
                   <Fragment key={message.id}>
                     {message.role === "user" ? (
-                      <UserMessage message={message} />
+                      <UserMessage labels={labels} message={message} />
                     ) : (
                       <AssistantMessage
                         isLast={index === messages.length - 1}
@@ -524,7 +531,7 @@ export function VexaChat({
               maxTokens={selected.maxTokens}
               models={models}
               model={model}
-              setModel={setModel}
+              setModel={pickModel}
               setText={setText}
               status={status}
               text={text}

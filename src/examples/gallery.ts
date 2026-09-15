@@ -697,7 +697,7 @@ export function App() {
           props: {
             eyebrow: "Note",
             title: "OpenRouter required for live chat",
-            body: "Set OPENROUTER_API_KEY in demo/.env.local, then restart.",
+            body: "Set OPENROUTER_API_KEY in examples/shop-admin/.env.local, then restart.",
             tone: "info",
           },
         },
@@ -730,7 +730,7 @@ export function App() {
           {
             title: "Do I need OpenRouter?",
             content:
-              "Yes for live answers. Set OPENROUTER_API_KEY in demo/.env.local, then restart the demo.",
+              "Yes for live answers. Set OPENROUTER_API_KEY in examples/shop-admin/.env.local, then restart the demo.",
           },
           {
             title: "Can I nest Card inside Card?",

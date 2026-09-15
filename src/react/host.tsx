@@ -58,6 +58,7 @@ export type VexaChatDefaults = {
   launcherLabel?: string;
   position?: "bottom-right" | "bottom-left";
   defaultOpen?: boolean;
+  backdrop?: boolean;
 };
 
 export type VexaHostValue = {

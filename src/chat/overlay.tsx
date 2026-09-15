@@ -16,6 +16,8 @@ export type VexaChatOverlayProps = Omit<VexaChatProps, "layout" | "onClose"> &
     launcherIcon?: React.ReactNode;
     launcherLabel?: string;
     position?: "bottom-right" | "bottom-left";
+    /** `true` (default) dims the page and closes the panel on an outside click; `false` leaves the page usable while the chat is open. */
+    backdrop?: boolean;
   };
 
 export function VexaChatOverlay({
@@ -25,6 +27,7 @@ export function VexaChatOverlay({
   launcherLabel: launcherLabelProp,
   launcherIcon: launcherIconProp,
   position: positionProp,
+  backdrop: backdropProp,
   className,
   ...chatProps
 }: VexaChatOverlayProps) {
@@ -33,6 +36,7 @@ export function VexaChatOverlay({
   const labels = { ...DEFAULT_LABELS, ...host?.chat.labels, ...chatProps.labels };
   const launcherLabel = launcherLabelProp ?? host?.chat.launcherLabel ?? labels.openAssistant;
   const position = positionProp ?? host?.chat.position ?? "bottom-right";
+  const backdrop = backdropProp ?? host?.chat.backdrop ?? true;
   const launcherIcon = launcherIconProp ?? host?.chat.launcherIcon ?? <MessageCircleIcon className="size-5" />;
   const titleId = useId();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
@@ -59,16 +63,18 @@ export function VexaChatOverlay({
 
   return (
     <div className="pointer-events-none fixed inset-0 z-50">
-      <button
-        type="button"
-        aria-hidden={!open}
-        tabIndex={open ? 0 : -1}
-        onClick={() => setOpen(false)}
-        className={cn(
-          "pointer-events-auto absolute inset-0 bg-foreground/20 backdrop-blur-[2px] transition-opacity duration-300",
-          open ? "opacity-100" : "pointer-events-none opacity-0",
-        )}
-      />
+      {backdrop ? (
+        <button
+          type="button"
+          aria-hidden={!open}
+          tabIndex={open ? 0 : -1}
+          onClick={() => setOpen(false)}
+          className={cn(
+            "pointer-events-auto absolute inset-0 bg-foreground/20 backdrop-blur-[2px] transition-opacity duration-300",
+            open ? "opacity-100" : "pointer-events-none opacity-0",
+          )}
+        />
+      ) : null}
 
       <div
         className={cn(
