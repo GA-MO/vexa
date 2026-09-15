@@ -1,6 +1,6 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
-export const GITHUB_URL = "https://github.com/sbpds/vexa";
+export const GITHUB_URL = "https://github.com/GA-MO/vexa";
 export const DOCS_CONTENT_GITHUB_URL = `${GITHUB_URL}/blob/main/website/content/docs`;
 
 function Wordmark() {
