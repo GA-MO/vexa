@@ -39,11 +39,12 @@ description: Every prop of VexaProvider, the client component that holds chat de
 | `launcherLabel` | `string` | `labels.openAssistant` |
 | `position` | `"bottom-right" \| "bottom-left"` | `"bottom-right"` |
 | `defaultOpen` | `boolean` | `false` |
+| `backdrop` | `boolean` | `true`: dims the page and an outside click closes the panel. `false` keeps the page usable while the chat is open, which suits an assistant that drives the page |
 | `labels` | `Partial<ChatLabels>` | English strings |
 | `steps` | `"collapsible" \| "hidden"` | `"collapsible"`: reasoning and tool calls in one collapsed block the user can expand ("Thinking…" while streaming, "N steps" after; opens by itself only while a tool awaits approval). `"hidden"`: only the thinking indicator; approval cards still show |
 | `suggestions` | `ChatSuggestion[]` | four built-in prompts |
 | `models` | `ChatModel[]` | fetched from `GET api` |
-| `defaultModel` | `string` | first model in the list |
+| `defaultModel` | `string` | first model in the list. A later change re-applies until the user picks a model in the composer |
 
 ## Rules enforced on mount
 

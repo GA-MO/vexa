@@ -57,6 +57,12 @@ function HeroCopy() {
         >
           Open the playground
         </Link>
+        <Link
+          to="/docs/examples"
+          className="inline-flex min-h-11 items-center rounded-xl border border-border bg-card px-5 text-sm font-medium text-foreground shadow-md shadow-primary/10 transition hover:border-primary/50 hover:text-primary"
+        >
+          See the examples
+        </Link>
       </div>
       <dl className="flex flex-wrap gap-x-8 gap-y-3">
         {HERO_FACTS.map((fact) => (

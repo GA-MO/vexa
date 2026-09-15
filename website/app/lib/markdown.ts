@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { frontmatter } from "fumadocs-core/content/md/frontmatter";
 import { absoluteUrl } from "./site";
 import type { source } from "./source";
@@ -7,6 +9,8 @@ const GENERATED_MARKER = /^\s*\{\/\*\s*generated:(?:start|end)\s*\*\/\}\s*$/;
 const MDX_ESM_STATEMENT = /^(?:import|export)\s/;
 const EXAMPLE_TAG = /^\s*<Example\s+id="([^"]+)"\s*\/>\s*$/;
 const CATALOG_GALLERY_TAG = /^\s*<CatalogGallery\s*\/>\s*$/;
+const INCLUDE_TAG = /^\s*<include(?:\s+meta='title="([^"]*)"')?>([^<]+)<\/include>\s*$/;
+const DOCS_CONTENT_DIR = path.join(process.cwd(), "content/docs");
 const REPEATED_BLANK_LINES = /\n{3,}/g;
 const LIVE_EXAMPLE_ANCHOR = "#live-example";
 
@@ -18,6 +22,7 @@ export interface DocsPageSummary {
   slugs: string[];
   path: string;
   markdownPath: string;
+  file: string;
 }
 
 function liveExampleNote(exampleId: string, htmlUrl: string) {
@@ -28,17 +33,26 @@ function liveGalleryNote(htmlUrl: string) {
   return `_The live gallery of every example is rendered on the HTML page: ${htmlUrl}#live-gallery. The specs are \`GALLERY_SECTIONS\` in \`vexa/examples\`._`;
 }
 
-function transformContentLine(line: string, htmlUrl: string) {
+function includedCodeFence(includeDir: string, relativePath: string, title: string | undefined) {
+  const file = path.join(includeDir, relativePath);
+  const lang = path.extname(file).slice(1);
+  const meta = title ? ` title="${title}"` : "";
+  return `\`\`\`${lang}${meta}\n${readFileSync(file, "utf8").trimEnd()}\n\`\`\``;
+}
+
+function transformContentLine(line: string, htmlUrl: string, includeDir: string) {
   if (GENERATED_MARKER.test(line)) return undefined;
   if (MDX_ESM_STATEMENT.test(line)) return undefined;
   const example = EXAMPLE_TAG.exec(line);
   if (example) return liveExampleNote(example[1], htmlUrl);
   if (CATALOG_GALLERY_TAG.test(line)) return liveGalleryNote(htmlUrl);
+  const include = INCLUDE_TAG.exec(line);
+  if (include) return includedCodeFence(includeDir, include[2], include[1]);
   return line;
 }
 
-/** Turns an MDX body into plain Markdown: no generated markers, no ESM, no JSX tag an agent cannot render. */
-export function mdxBodyToMarkdown(body: string, htmlUrl: string) {
+/** Turns an MDX body into plain Markdown: no generated markers, no ESM, no JSX tag an agent cannot render; `<include>` files become code fences. */
+export function mdxBodyToMarkdown(body: string, htmlUrl: string, includeDir = DOCS_CONTENT_DIR) {
   const output: string[] = [];
   let insideCodeFence = false;
 
@@ -52,7 +66,7 @@ export function mdxBodyToMarkdown(body: string, htmlUrl: string) {
       output.push(line);
       continue;
     }
-    const transformed = transformContentLine(line, htmlUrl);
+    const transformed = transformContentLine(line, htmlUrl, includeDir);
     if (transformed !== undefined) output.push(transformed);
   }
 
@@ -66,6 +80,7 @@ export function docsPageSummary(page: DocsPage): DocsPageSummary {
     slugs: [...page.slugs],
     path: page.url,
     markdownPath: `${page.url}.md`,
+    file: page.path,
   };
 }
 
@@ -75,5 +90,6 @@ export function docsPageMarkdown(summary: DocsPageSummary, raw: string) {
   const { content } = frontmatter(raw);
   const description = summary.description ? `${summary.description}\n\n` : "";
 
-  return `# ${summary.title}\n\nSource: ${htmlUrl}\n\n${description}${mdxBodyToMarkdown(content, htmlUrl)}\n`;
+  const includeDir = path.join(DOCS_CONTENT_DIR, path.dirname(summary.file));
+  return `# ${summary.title}\n\nSource: ${htmlUrl}\n\n${description}${mdxBodyToMarkdown(content, htmlUrl, includeDir)}\n`;
 }

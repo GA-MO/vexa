@@ -1,7 +1,18 @@
 ---
 title: Host tools
-description: Declare browser capabilities with defineTool using zod, valibot, arktype, or jsonSchema, get typed run input, gate side effects with confirm, and read results under /tools.
+description: A host tool is one browser capability that both the model (by tool call) and buttons in generated UI (by runTool) can invoke. Declare it with defineTool using zod, valibot, arktype, or jsonSchema, gate side effects with confirm, and read results under /tools.
 ---
+
+## One concept, two callers
+
+A host tool is a function that runs in the browser: navigate, scroll to a section, switch the theme, read the cart. You register it once on `VexaProvider` with a description and an input schema. From then on it can be called two ways:
+
+| Caller | Path | Example |
+|---|---|---|
+| the model, as a tool call | "Take me to the catalog" becomes a call to `navigate` | model decides when |
+| a button or `watch` in a spec | `{ "action": "runTool", "params": { "name": "navigate", "input": { "to": "/catalog" } } }` | the user decides when |
+
+There is no separate concept for "page actions" or "events". An event is a tool that returns `{ ok: true }` and nothing else.
 
 ## Declare a tool
 
@@ -74,18 +85,31 @@ A tool with no `input` uses the second overload of `defineTool` and receives an 
 
 `defineTool` infers the type of `run`'s first argument from `input`. A raw object literal in `tools={{ … }}` also works but leaves the input as `unknown`. The same idea applies to `contextSchema` and `context` on the provider.
 
+## How a model call reaches the browser
+
+1. On every request the client sends the JSON schema of its host tools in the body: `hostTools: [{ name, description, inputSchema }]`.
+2. The server builds an AI SDK `tool()` for each one without an `execute` function, so the model can call it but the server never runs it. The description is fenced before it enters the prompt.
+3. When the model calls one, the AI SDK ends the step and the tool call flows back to the client. `onToolCall` in `VexaChat` finds the tool in the provider registry, validates the input against its schema, runs it, and returns the result with `addToolOutput`.
+4. `sendAutomaticallyWhen` resubmits the conversation so the model sees the result and finishes its answer. `stopWhen` on the server bounds the loop.
+
+The whole round trip needs no shared file between client and server. The route stays generic.
+
+## Host tools are read-tier by construction
+
+`HostTool` has no `tier` field and the request body has none either. The server treats every host tool as read-tier: it never gates it with an approval card and it keeps host tools available even when the injection guard downgrades a turn. The reasoning: the code already runs in the user's browser, so a server gate would protect nothing. Anything that mutates data belongs in a server tool or an MCP tool, where the tier is decided on the server.
+
 ## Confirmation
 
-`confirm: true` shows a Run / Cancel card before the tool executes, whether the caller is the model or a button. A cancel resolves to `{ ok: false, error: "The user declined to run this tool" }`, which the model reports as "nothing changed". Use it for anything the user would notice: navigation, theme, opening windows, scrolling away from a form.
+`confirm: true` shows a card that names the tool and its description with Run and Cancel before the tool executes, whether the caller is the model or a button. When a chat is mounted the card appears above the composer; when a tool is triggered from a page button with no chat open, the provider shows its own tray in the bottom-right corner. A cancel resolves to `{ ok: false, error: "The user declined to run this tool" }`, which the model reports as "nothing changed". Use it for anything the user would notice: navigation, theme, opening windows, scrolling away from a form.
 
 ## Results under /tools
 
-Every result is written to `/tools/<name>` in the state store of the spec that triggered it. The shape depends on the caller:
+A host tool returns `{ ok: true, summary?, data? }` or `{ ok: false, error }`. The `summary` is one sentence the model can repeat to the user; `data` is structured output that specs can bind to. Every result is written to `/tools/<name>` in the state store of the spec that triggered it. The shape depends on the caller:
 
 - From a button or `watch`: `data` when present, otherwise `{ ok: true, summary }`; on failure the whole `{ ok: false, error }`. `summary` or `error` is also copied to `/toast`.
 - From a model tool call: the whole result object as returned by `run`, so `data` sits at `/tools/<name>/data`.
 
-Bind with `{ "$state": "/tools/load_cities/cities" }` for the button path. The provider's `onToolResult` callback receives every result regardless of caller.
+Bind with `{ "$state": "/tools/load_cities/cities" }` for the button path. The provider's `onToolResult(name, result)` callback receives every result regardless of caller, for logging.
 
 ## useVexaHost
 
@@ -106,7 +130,7 @@ await runTool("set_theme", { theme: "dark" });
 
 ## Related
 
-- [Host tools concept](/docs/concepts/host-tools): the model call round trip
 - [runTool](/docs/host/runtool): calling tools from specs
 - [Provider](/docs/host/provider): registering tools and context
+- [Security](/docs/security): why tiers live on the server
 - [Best practices](/docs/host/best-practices): tool description wording that made a small model call these reliably

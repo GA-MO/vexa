@@ -8,9 +8,10 @@ import {
   EditOnGitHub,
   MarkdownCopyButton,
 } from "fumadocs-ui/layouts/docs/page";
-import { data } from "react-router";
+import { data, redirect } from "react-router";
 import { DocsHome, DocsSectionPlaceholder } from "@/components/docs-placeholders";
 import { useMDXComponents } from "@/components/mdx";
+import { movedDocsUrl } from "@/lib/docs-redirects";
 import { findDocsSection, type DocsSection } from "@/lib/docs-sections";
 import { baseOptions, DOCS_CONTENT_GITHUB_URL } from "@/lib/layout.shared";
 import { DOCS_BASE_URL, docs, source } from "@/lib/source";
@@ -47,7 +48,10 @@ function markdownAlternateHeaders(view: DocsView) {
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const view = resolveView(toSlugs(params["*"]));
+  const slugs = toSlugs(params["*"]);
+  const moved = movedDocsUrl(slugs);
+  if (moved !== undefined) throw redirect(moved, 301);
+  const view = resolveView(slugs);
   const pageTree = await source.serializePageTree(source.getPageTree());
 
   return data({ view, pageTree }, { headers: markdownAlternateHeaders(view) });

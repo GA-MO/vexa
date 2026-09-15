@@ -20,6 +20,7 @@ export function baseOptions(): BaseLayoutProps {
     githubUrl: GITHUB_URL,
     links: [
       { text: "Docs", url: "/docs", active: "nested-url" },
+      { text: "Examples", url: "/docs/examples", active: "nested-url" },
       { text: "Playground", url: "/playground" },
       { text: "Changelog", url: "/changelog" },
     ],

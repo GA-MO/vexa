@@ -1,0 +1,31 @@
+---
+title: Examples
+description: Example apps that run against a mock model with no API key. Each ships a set of guides, one per control path, that you play inside the chat and then read the code behind.
+---
+
+## Guides, not screenshots
+
+Every example app has a `/guides` page. A guide is one mechanism (the model navigates, a button runs a host tool, an approval is rejected) shown end to end: a **Try it** column with the prompts to send, the chat opening on the right page with the mock model picked, and below it what happens step by step, what the mock replies, the exact tool definitions sliced from the app, and the link to the docs page that explains the mechanism.
+
+The mock model plays a script that lives next to the scenario, so a guide costs nothing and behaves the same every time. Switch the model picker to a real model to see how a prompt steers it; the mock exists to show the chat UI and the runtime, never to judge prompts.
+
+## Which one looks like yours
+
+| Example | Shape | Status |
+|---|---|---|
+| [Shop admin](/docs/examples/shop-admin) | An internal admin app: pages, a data table, a details page, settings. The chat navigates, filters, selects, confirms mutations, reads server tools and a local MCP server. | 24 guides, runs today |
+| Embedded widget | The smallest integration: one page, the overlay, a theme and labels. | planned |
+| Docs assistant | A docs site whose assistant navigates and highlights sections and reads an MCP docs source. | planned |
+
+Open **Shop admin** first. Its guides cover every control path in [Best practices](/docs/host/best-practices), and the two planned examples reuse the same guide pages with fewer tools.
+
+## Run one
+
+The examples live in the Vexa repository and share the library source, so they need no build step.
+
+```bash title="terminal"
+bun install
+bun run dev        # shop admin at http://localhost:3001, guides at /guides
+```
+
+The docs you are reading run on port 3002; each guide links back to its docs page, and the [Shop admin](/docs/examples/shop-admin) page links to every guide.

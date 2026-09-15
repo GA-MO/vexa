@@ -1,4 +1,32 @@
 {
   "title": "Docs",
-  "pages": ["get-started", "concepts", "host", "server", "security", "catalog", "actions", "recipes", "agents", "reference", "..."]
+  "pages": [
+    "---Start---",
+    "get-started",
+    "examples",
+    "---Integrate---",
+    "host/provider",
+    "server/handler",
+    "server/models",
+    "host/host-tools",
+    "host/runtool",
+    "server/persona-and-rules",
+    "server/mcp",
+    "server/guard",
+    "host/theme",
+    "host/labels-and-i18n",
+    "host/format-and-functions",
+    "host/models-and-picker",
+    "host/chat-elements",
+    "host/best-practices",
+    "config-reference",
+    "---Reference---",
+    "catalog",
+    "actions",
+    "state",
+    "spec-stream",
+    "recipes",
+    "security",
+    "agents"
+  ]
 }

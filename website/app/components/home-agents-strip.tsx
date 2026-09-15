@@ -34,7 +34,7 @@ const AGENT_SURFACES: AgentSurface[] = [
 ];
 
 const CURL_LINES = [
-  "curl -s <site>/docs/concepts/host-tools.md",
+  "curl -s <site>/docs/host/host-tools.md",
   "# Host tools",
   "",
   "A host tool is a function that runs in the browser: navigate, scroll",

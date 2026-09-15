@@ -1,7 +1,7 @@
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/docs/page";
 import { Link } from "react-router";
 import { ComingSoon } from "@/components/coming-soon";
-import { DOCS_DOORS, DOCS_SECTIONS, type DocsSection } from "@/lib/docs-sections";
+import { DOCS_DOORS, DOCS_GROUPS, type DocsGroup, type DocsSection } from "@/lib/docs-sections";
 
 const PLACEHOLDER_PAGE_OPTIONS = {
   tableOfContent: { enabled: false },
@@ -39,16 +39,27 @@ export function DocsHome() {
             <Door key={door.slug} {...door} />
           ))}
         </div>
-        <h2>All sections</h2>
-        <ul>
-          {DOCS_SECTIONS.map((section) => (
-            <li key={section.slug}>
-              <Link to={`/docs/${section.slug}`}>{section.title}</Link>: {section.description}
-            </li>
-          ))}
-        </ul>
+        {DOCS_GROUPS.map((group) => (
+          <GroupList key={group.id} group={group} />
+        ))}
       </DocsBody>
     </DocsPage>
+  );
+}
+
+function GroupList({ group }: { group: DocsGroup }) {
+  return (
+    <>
+      <h2>{group.title}</h2>
+      <p>{group.description}</p>
+      <ul>
+        {group.sections.map((section) => (
+          <li key={section.slug}>
+            <Link to={`/docs/${section.slug}`}>{section.title}</Link>: {section.description}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 

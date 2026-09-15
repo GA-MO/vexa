@@ -34,7 +34,7 @@ export const models: ModelRegistry = {
 
 Pass a function so provider construction and env reads happen on the first request, not at import or build time. The function is called once and memoized. Per-entry `model: () => …` is lazy as well, so an unused model never instantiates.
 
-```ts title="demo/lib/models.ts"
+```ts title="examples/shop-admin/lib/models.ts"
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { ModelRegistry } from "vexa/server";
 
@@ -45,7 +45,7 @@ const DEMO_MODELS = [
 
 export function demoModels(): ModelRegistry {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY is missing in demo/.env.local");
+  if (!apiKey) throw new Error("OPENROUTER_API_KEY is missing in examples/shop-admin/.env.local");
   const provider = createOpenRouter({ apiKey, compatibility: "strict" });
   return Object.fromEntries(DEMO_MODELS.map(({ id, name, maxTokens }) => [id, { model: () => provider(id), name, maxTokens }]));
 }

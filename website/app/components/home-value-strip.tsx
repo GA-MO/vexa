@@ -15,14 +15,14 @@ const VALUE_POINTS: ValuePoint[] = [
     icon: Layers,
     title: "Constrained, not free-form",
     body: "The model never writes HTML, CSS, or JSX. It composes components from a catalog defined once; the same object generates the prompt and maps to the renderer, so the prompt cannot drift from what renders.",
-    href: "/docs/concepts/catalog",
+    href: "/docs/catalog#how-the-catalog-works",
     linkLabel: "Read about the catalog",
   },
   {
     icon: Wrench,
     title: "Host tools and MCP",
     body: "Register a browser capability once on VexaProvider and both the model (by tool call) and buttons in generated UI (by runTool) can invoke it. Server tools and allow-listed MCP servers carry tiers and approval gates.",
-    href: "/docs/concepts/host-tools",
+    href: "/docs/host/host-tools",
     linkLabel: "Read about host tools",
   },
   {

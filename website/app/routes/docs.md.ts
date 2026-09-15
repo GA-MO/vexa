@@ -1,3 +1,5 @@
+import { redirect } from "react-router";
+import { movedDocsMarkdownUrl } from "@/lib/docs-redirects";
 import { docsPageMarkdown, docsPageSummary } from "@/lib/markdown";
 import { source } from "@/lib/source";
 import type { Route } from "./+types/docs.md";
@@ -11,7 +13,10 @@ function slugsFromParams(params: Route.LoaderArgs["params"]) {
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const page = source.getPage(slugsFromParams(params));
+  const slugs = slugsFromParams(params);
+  const moved = movedDocsMarkdownUrl(slugs);
+  if (moved !== undefined) throw redirect(moved, 301);
+  const page = source.getPage(slugs);
   if (!page) throw new Response("Not found", { status: 404 });
 
   const markdown = docsPageMarkdown(docsPageSummary(page), await page.data.getText("raw"));

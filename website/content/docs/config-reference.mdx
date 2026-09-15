@@ -1,0 +1,38 @@
+---
+title: Config reference
+description: Every option of createVexaHandler and VexaProvider on one page, each with a one-line note, as two real files that typecheck against the library. Detail per option lives on the Integrate pages.
+---
+
+Vexa is configured in two places and nowhere else. The **server** owns everything that costs money, grants capability, or is prompt text; the **client** owns presentation, formatting, host tools, and page context. The two files below are copy-pasteable and are typechecked with the docs build, so an option that disappears from the library breaks this page first.
+
+## Server: the chat route
+
+`createVexaHandler` returns `GET` (publishes the model list) and `POST` (the chat). Export both from your route.
+
+<include meta='title="app/api/chat/route.ts"'>./config-reference/route.ts</include>
+
+| Option | Detail |
+|---|---|
+| `models`, `model`, `providerOptions` | [Models](/docs/server/models), [Models and picker](/docs/host/models-and-picker) |
+| `persona`, `rules`, `instructions` | [Persona and rules](/docs/server/persona-and-rules) |
+| `tools`, `toolTiers`, `toolApprovalSecret`, `stopWhen` | [Handler](/docs/server/handler) |
+| `mcp` | [MCP](/docs/server/mcp) |
+| `guard` | [Guard](/docs/server/guard) |
+
+## Client: the provider
+
+`VexaProvider` wraps the app once; `VexaChatOverlay` (or `VexaChat` inline) reads it. Every `chat` field can also be passed as a prop on the overlay, which wins over the provider.
+
+<include meta='title="app/app-shell.tsx"'>./config-reference/provider.tsx</include>
+
+| Option | Detail |
+|---|---|
+| `api`, `chat`, `onToolResult`, `contextSchema`, `context` | [Provider](/docs/host/provider) |
+| `chat.labels`, `chat.steps` | [Labels and i18n](/docs/host/labels-and-i18n), [Chat elements](/docs/host/chat-elements) |
+| `theme` | [Theme](/docs/host/theme) |
+| `format`, `functions` | [Format and functions](/docs/host/format-and-functions) |
+| `tools`, `defineTool`, `confirm` | [Host tools](/docs/host/host-tools), [runTool](/docs/host/runtool) |
+
+## What never goes on the client
+
+A tool tier, an approval, a system prompt, a provider key, or a model id the server does not list. The request body is strict and size-capped; anything else is a 400. See [Security](/docs/security).

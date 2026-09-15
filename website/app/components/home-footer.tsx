@@ -9,6 +9,7 @@ const FOOTER_COLUMNS: { heading: string; links: FooterLink[] }[] = [
     links: [
       { label: "Docs", href: "/docs" },
       { label: "Get started", href: "/docs/get-started" },
+      { label: "Examples", href: "/docs/examples" },
       { label: "Catalog", href: "/docs/catalog" },
       { label: "Playground", href: "/playground" },
     ],
