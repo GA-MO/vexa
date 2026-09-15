@@ -12,7 +12,15 @@ import {
 } from "react";
 import { asSchema, type FlexibleSchema, type InferSchema } from "ai";
 import type { ComputedFunction } from "@json-render/core";
-import type { ChatLabels, ChatModel, ChatStepsDisplay, ChatSuggestion } from "../chat/constants";
+import {
+  DEFAULT_LABELS,
+  type ChatComposerOptions,
+  type ChatLabels,
+  type ChatModel,
+  type ChatStepsDisplay,
+  type ChatSuggestion,
+} from "../chat/constants";
+import { PortalContainerContext } from "../lib/portal";
 import { createFormatter, DEFAULT_FORMAT, type Formatter, type VexaFormat } from "./format";
 import { themeStyle, type VexaTheme } from "./theme";
 
@@ -48,6 +56,7 @@ export type PendingConfirmation = {
 export type VexaChatDefaults = {
   labels?: Partial<ChatLabels>;
   steps?: ChatStepsDisplay;
+  composer?: ChatComposerOptions;
   logo?: ReactNode;
   launcherIcon?: ReactNode;
   title?: string;
@@ -182,6 +191,7 @@ export function VexaProvider<S extends ContextSchema>({
 
   const [pending, setPending] = useState<PendingConfirmation[]>([]);
   const [chatMounted, setChatMounted] = useState(false);
+  const themeElement = useRef<HTMLDivElement>(null);
   const resolvers = useRef(new Map<string, (approved: boolean) => void>());
   const chatSender = useRef<((text: string) => void) | null>(null);
   const toolsRef = useRef(tools);
@@ -272,27 +282,32 @@ export function VexaProvider<S extends ContextSchema>({
   const mode = theme?.mode ?? "light";
   return (
     <VexaHostContext.Provider value={value}>
-      <div
-        data-vexa-theme=""
-        data-vexa-mode={mode}
-        data-vexa-glow={theme?.glow === false ? "off" : undefined}
-        className={mode === "dark" ? "dark" : undefined}
-        style={{ display: "contents", ...themeStyle(theme) }}
-      >
-        {children}
-        {!chatMounted && pending.length > 0 ? (
-          <ConfirmationTray pending={pending} onDecide={resolveConfirmation} />
-        ) : null}
-      </div>
+      <PortalContainerContext.Provider value={themeElement}>
+        <div
+          ref={themeElement}
+          data-vexa-theme=""
+          data-vexa-mode={mode}
+          data-vexa-glow={theme?.glow === false ? "off" : undefined}
+          className={mode === "dark" ? "dark" : undefined}
+          style={{ display: "contents", ...themeStyle(theme) }}
+        >
+          {children}
+          {!chatMounted && pending.length > 0 ? (
+            <ConfirmationTray labels={{ ...DEFAULT_LABELS, ...chat.labels }} pending={pending} onDecide={resolveConfirmation} />
+          ) : null}
+        </div>
+      </PortalContainerContext.Provider>
     </VexaHostContext.Provider>
   );
 }
 
 function ConfirmationTray({
   pending,
+  labels,
   onDecide,
 }: {
   pending: PendingConfirmation[];
+  labels: ChatLabels;
   onDecide: (id: string, approved: boolean) => void;
 }) {
   return (
@@ -301,12 +316,10 @@ function ConfirmationTray({
         <div
           key={item.id}
           role="alertdialog"
-          aria-label={`Run ${item.name}?`}
+          aria-label={labels.runOnPage(item.name)}
           className="rounded-xl border border-border bg-card p-3 text-sm text-foreground shadow-[0_18px_40px_-16px_var(--vexa-glow)]"
         >
-          <p className="font-medium">
-            Run <code className="rounded bg-muted px-1 py-0.5 text-xs">{item.name}</code> on this page?
-          </p>
+          <p className="font-medium">{labels.runOnPage(item.name)}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">{item.description}</p>
           <div className="mt-2.5 flex justify-end gap-2">
             <button
@@ -314,14 +327,14 @@ function ConfirmationTray({
               onClick={() => onDecide(item.id, false)}
               className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-xs font-medium text-foreground hover:bg-muted"
             >
-              Cancel
+              {labels.cancel}
             </button>
             <button
               type="button"
               onClick={() => onDecide(item.id, true)}
               className="inline-flex h-8 items-center rounded-lg bg-gradient-to-r from-primary to-brand-violet px-3 text-xs font-medium text-primary-foreground"
             >
-              Run
+              {labels.run}
             </button>
           </div>
         </div>

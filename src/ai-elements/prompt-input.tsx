@@ -1136,6 +1136,8 @@ export const PromptInputActionMenuItem = ({
 export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
   status?: ChatStatus;
   onStop?: () => void;
+  submitLabel?: string;
+  stopLabel?: string;
 };
 
 export const PromptInputSubmit = ({
@@ -1146,6 +1148,8 @@ export const PromptInputSubmit = ({
   onStop,
   onClick,
   children,
+  submitLabel = "Submit",
+  stopLabel = "Stop",
   ...props
 }: PromptInputSubmitProps) => {
   const isGenerating = status === "submitted" || status === "streaming";
@@ -1174,7 +1178,7 @@ export const PromptInputSubmit = ({
 
   return (
     <InputGroupButton
-      aria-label={isGenerating ? "Stop" : "Submit"}
+      aria-label={isGenerating ? stopLabel : submitLabel}
       className={cn(className)}
       onClick={handleClick}
       size={size}

@@ -123,7 +123,8 @@ export type HostToolContext = {
 };
 
 export type VexaChatDefaults = {
-  labels?: Partial<ChatLabels>;        // every chat chrome string (empty state, thinking, approve, restore, …) for i18n
+  labels?: Partial<ChatLabels>;        // every chat chrome string (empty state, thinking, approve, restore, composer, tool states, …) for i18n
+  composer?: ChatComposerOptions;      // attachments / modelPicker / tokenUsage switches; modelPicker defaults to "more than one model"
   steps?: "collapsible" | "hidden";    // reasoning + tool calls block: collapsible = collapsed by default, user expands ("Thinking…" while streaming, "N steps" after, opens only for pending approval); hidden = thinking shimmer and approval cards only
   logo?: ReactNode;                    // header badge content (default Sparkles icon)
   launcherIcon?: ReactNode;            // floating launcher icon (default MessageCircle)

@@ -5,7 +5,7 @@ description: Override any string of the chat chrome with chat.labels on the prov
 
 ## Two layers of language
 
-Text in the chat has two sources. Strings the library renders (empty state, thinking indicator, approval buttons, security notice) come from `ChatLabels` and are English by default. Text the model writes follows the catalog rule "Respond in the user's language", so a Thai question gets a Thai answer without configuration.
+Text in the chat has two sources. Strings the library renders (empty state, thinking indicator, composer placeholder and menus, tool states, approval buttons, security notice) come from `ChatLabels` and are English by default. Text the model writes follows the catalog rule "Respond in the user's language", so a Thai question gets a Thai answer without configuration.
 
 ## Overriding labels
 
@@ -20,7 +20,8 @@ Pass a partial object. Missing keys keep the built-in string. Provider `chat.lab
       thinking: "กำลังคิด…",
       approve: "อนุมัติ",
       reject: "ปฏิเสธ",
-      tasks: (count) => `${count} งาน`,
+      placeholder: "ถามคำถาม หรือขอให้สร้าง UI...",
+      steps: (count) => `${count} ขั้นตอน`,
     },
   }}
 >
@@ -56,8 +57,33 @@ Pass a partial object. Missing keys keep the built-in string. Provider `chat.lab
 | `attachment` | Attachment | queued item without text |
 | `securityTitle` | Suspicious text in tool data | injection notice card |
 | `securityBody(tool)` | Data returned by `${tool}` contained instructions aimed at the assistant… | injection notice card |
+| `buttonPressed(tool)` | the tool name as words (`book_room` → Book room) | a forwarded button press shown as a user message |
+| `placeholder` | Ask for an answer or a UI... | composer textarea |
+| `send` | Send | send button aria-label |
+| `stop` | Stop | send button aria-label while streaming |
+| `attach` | Attach | attachment menu button aria-label |
+| `addAttachment` | Add photos or files | attachment menu item |
+| `takeScreenshot` | Take screenshot | attachment menu item |
+| `removeAttachment` | Remove attachment | button on an attached file |
+| `selectModel` | Select a model | model picker dialog title |
+| `searchModels` | Search models... | model picker search input |
+| `noModels` | No models found. | model picker empty state |
+| `tokenUsage` | Context usage | token meter aria-label |
+| `usageInput` | Input | token meter popover row |
+| `usageOutput` | Output | token meter popover row |
+| `usageReasoning` | Reasoning | token meter popover row |
+| `usageCache` | Cache | token meter popover row |
+| `usageTotalCost` | Total cost | token meter popover footer |
+| `toolInput` | Parameters | tool call card |
+| `toolOutput` | Result | tool call card |
+| `toolState(state)` | Pending, Running, Awaiting approval, Responded, Completed, Denied, Error | tool call badge; `state` is the AI SDK `ToolUIPart["state"]` (`ChatToolState`) |
+| `usedSources(count)` | Used `${count}` sources | sources block header |
 
-Function-valued keys receive the count or the tool name so the sentence can be built in any word order.
+Function-valued keys receive the count, the tool name, or the tool state so the sentence can be built in any word order. `toolState` is the one place a translation needs a map: `toolState: (state) => THAI_STATES[state]` with one entry per `ChatToolState`.
+
+## Hiding composer controls
+
+Strings are not the only thing a host owns in the composer. `chat.composer` (or the `composer` prop on `VexaChat` / `VexaChatOverlay`) switches controls off: `{ attachments: false }` removes the attach menu and ignores dropped or pasted files, `{ tokenUsage: false }` removes the context meter, `{ modelPicker: false }` removes the model button. The model picker already hides itself when only one model is available. See [Provider](/docs/host/provider#chat-defaults).
 
 ## Other presentation strings
 

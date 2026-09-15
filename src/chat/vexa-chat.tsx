@@ -56,6 +56,7 @@ import {
   DEFAULT_LABELS,
   MODELS,
   SUGGESTIONS,
+  type ChatComposerOptions,
   type ChatLabels,
   type ChatModel,
   type ChatStepsDisplay,
@@ -86,6 +87,8 @@ export type VexaChatProps = {
   suggestions?: readonly ChatSuggestion[];
   labels?: Partial<ChatLabels>;
   steps?: ChatStepsDisplay;
+  /** Hide composer controls: `attachments`, `modelPicker` (shown by default only with more than one model), `tokenUsage`. */
+  composer?: ChatComposerOptions;
   logo?: React.ReactNode;
   onClose?: () => void;
   /** Called with the full message list whenever it changes, so hosts can inspect streamed specs. */
@@ -116,6 +119,7 @@ function useRemoteModels(endpoint: string, enabled: boolean): RemoteModels {
 }
 
 const STREAM_THROTTLE_MS = 50;
+const FILE_ACCEPT = "image/*,application/pdf,text/*";
 
 type CheckpointRecord = {
   id: string;
@@ -133,6 +137,7 @@ export function VexaChat({
   suggestions: suggestionsProp,
   labels: labelsProp,
   steps: stepsProp,
+  composer: composerProp,
   logo: logoProp,
   onClose,
   onMessagesChange,
@@ -147,6 +152,11 @@ export function VexaChat({
     () => ({ ...DEFAULT_LABELS, ...host?.chat.labels, ...labelsProp }),
     [host?.chat.labels, labelsProp],
   );
+  const composer = useMemo<ChatComposerOptions>(
+    () => ({ ...host?.chat.composer, ...composerProp }),
+    [host?.chat.composer, composerProp],
+  );
+  const acceptsFiles = composer.attachments ?? true;
   const remote = useRemoteModels(endpoint, !modelsProp && !host?.chat.models);
   const models = firstNonEmpty(modelsProp, host?.chat.models, remote.models, MODELS);
   const suggestions = firstNonEmpty(suggestionsProp, host?.chat.suggestions, SUGGESTIONS);
@@ -532,16 +542,19 @@ export function VexaChat({
             ) : null}
 
             <PromptInput
-              accept="image/*,application/pdf,text/*"
+              accept={FILE_ACCEPT}
               className="rounded-2xl border border-border/80 bg-background shadow-[0_10px_30px_-18px] shadow-primary/45"
-              globalDrop
+              globalDrop={acceptsFiles}
+              maxFiles={acceptsFiles ? undefined : 0}
               multiple
               onSubmit={(message) => void submitPrompt(message)}
             >
               <ChatComposer
+                labels={labels}
                 maxTokens={selected.maxTokens}
                 models={models}
                 model={model}
+                options={composer}
                 setModel={pickModel}
                 setText={setText}
                 status={status}

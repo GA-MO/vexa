@@ -13,6 +13,7 @@ import {
 } from "ai";
 import {
   CheckIcon,
+  ChevronDownIcon,
   MousePointerClickIcon,
   PaperclipIcon,
   ShieldAlertIcon,
@@ -146,20 +147,22 @@ function ToolPartView({
         {part.type === "dynamic-tool" ? (
           <ToolHeader
             state={part.state}
+            statusLabel={labels.toolState(part.state)}
             title={toolName}
             toolName={toolName}
             type="dynamic-tool"
           />
         ) : (
-          <ToolHeader state={part.state} title={toolName} type={part.type} />
+          <ToolHeader state={part.state} statusLabel={labels.toolState(part.state)} title={toolName} type={part.type} />
         )}
         <ToolContent>
           {"input" in part && part.input != null ? (
-            <ToolInput input={part.input} />
+            <ToolInput input={part.input} title={labels.toolInput} />
           ) : null}
           <ToolOutput
             errorText={"errorText" in part ? part.errorText : undefined}
             output={"output" in part ? part.output : undefined}
+            title={labels.toolOutput}
           />
         </ToolContent>
       </Tool>
@@ -452,7 +455,10 @@ export function AssistantMessage({
       <MessageContent className="w-full max-w-none gap-3 bg-transparent px-0 py-0">
         {sourceParts.length > 0 ? (
           <Sources>
-            <SourcesTrigger count={sourceParts.length} />
+            <SourcesTrigger count={sourceParts.length}>
+              <p className="font-medium">{labels.usedSources(sourceParts.length)}</p>
+              <ChevronDownIcon className="size-4" />
+            </SourcesTrigger>
             <SourcesContent>
               {sourceParts.map((part, index) => {
                 if (part.type === "source-url") {

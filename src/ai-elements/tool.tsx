@@ -34,6 +34,7 @@ export type ToolPart = ToolUIPart | DynamicToolUIPart;
 
 export type ToolHeaderProps = {
   title?: string;
+  statusLabel?: string;
   className?: string;
 } & (
   | { type: ToolUIPart["type"]; state: ToolUIPart["state"]; toolName?: never }
@@ -64,16 +65,17 @@ const statusIcons: Record<ToolPart["state"], ReactNode> = {
   "output-error": <XCircleIcon className="size-4 text-danger" />,
 };
 
-export const getStatusBadge = (status: ToolPart["state"]) => (
+export const getStatusBadge = (status: ToolPart["state"], label = statusLabels[status]) => (
   <Badge className="gap-1.5 rounded-full text-xs" variant="secondary">
     {statusIcons[status]}
-    {statusLabels[status]}
+    {label}
   </Badge>
 );
 
 export const ToolHeader = ({
   className,
   title,
+  statusLabel,
   type,
   state,
   toolName,
@@ -93,7 +95,7 @@ export const ToolHeader = ({
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
         <WrenchIcon className="size-4 shrink-0 text-muted-foreground" />
         <span className="min-w-0 truncate font-medium text-sm">{title ?? derivedName}</span>
-        {getStatusBadge(state)}
+        {getStatusBadge(state, statusLabel)}
       </div>
       <ChevronDownIcon className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
     </CollapsibleTrigger>
@@ -125,9 +127,9 @@ export type ToolInputProps = ComponentProps<"div"> & {
   input: ToolPart["input"];
 };
 
-export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
+export const ToolInput = ({ className, input, title = "Parameters", ...props }: ToolInputProps) => (
   <div className={cn("min-w-0", className)} {...props}>
-    <CodeBlock code={JSON.stringify(input, null, 2)} language="json" title="Parameters" />
+    <CodeBlock code={JSON.stringify(input, null, 2)} language="json" title={title} />
   </div>
 );
 
@@ -140,6 +142,7 @@ export const ToolOutput = ({
   className,
   output,
   errorText,
+  title = "Result",
   ...props
 }: ToolOutputProps) => {
   if (!(output || errorText)) {
@@ -149,9 +152,9 @@ export const ToolOutput = ({
   let Output = <div>{output as ReactNode}</div>;
 
   if (typeof output === "object" && !isValidElement(output)) {
-    Output = <CodeBlock code={JSON.stringify(output, null, 2)} language="json" title="Result" />;
+    Output = <CodeBlock code={JSON.stringify(output, null, 2)} language="json" title={title} />;
   } else if (typeof output === "string") {
-    Output = <CodeBlock code={output} language={isJsonText(output) ? "json" : "text"} title="Result" />;
+    Output = <CodeBlock code={output} language={isJsonText(output) ? "json" : "text"} title={title} />;
   }
 
   return (

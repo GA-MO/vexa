@@ -46,6 +46,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         labels: { emptyTitle: "Ask anything about orders", buttonPressed: (toolName) => `Pressed: ${toolName}` },
         // "collapsible" (default) shows reasoning and tool calls in one steps block; "hidden" keeps only approval cards.
         steps: "collapsible",
+        // Composer controls; each defaults to shown, the model picker only when more than one model exists.
+        composer: { attachments: true, tokenUsage: true, modelPicker: undefined },
         launcherLabel: "Open assistant",
         position: "bottom-right",
         defaultOpen: false,

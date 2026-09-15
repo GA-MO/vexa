@@ -133,7 +133,7 @@ export const ContextContent = ({
   ...props
 }: ContextContentProps) => (
   <HoverCardContent
-    className={cn("min-w-60 divide-y overflow-hidden p-0", className)}
+    className={cn("min-w-60 divide-y divide-border overflow-hidden p-0", className)}
     {...props}
   />
 );
@@ -189,11 +189,12 @@ export const ContextContentBody = ({
   </div>
 );
 
-export type ContextContentFooterProps = ComponentProps<"div">;
+export type ContextContentFooterProps = ComponentProps<"div"> & { label?: string };
 
 export const ContextContentFooter = ({
   children,
   className,
+  label = "Total cost",
   ...props
 }: ContextContentFooterProps) => {
   const { modelId, usage } = useContextValue();
@@ -214,14 +215,14 @@ export const ContextContentFooter = ({
   return (
     <div
       className={cn(
-        "flex w-full items-center justify-between gap-3 bg-secondary p-3 text-xs",
+        "flex w-full items-center justify-between gap-3 bg-muted/60 p-3 text-xs",
         className
       )}
       {...props}
     >
       {children ?? (
         <>
-          <span className="text-muted-foreground">Total cost</span>
+          <span className="text-muted-foreground">{label}</span>
           <span>{totalCost}</span>
         </>
       )}
@@ -248,11 +249,12 @@ const TokensWithCost = ({
   </span>
 );
 
-export type ContextInputUsageProps = ComponentProps<"div">;
+export type ContextInputUsageProps = ComponentProps<"div"> & { label?: string };
 
 export const ContextInputUsage = ({
   className,
   children,
+  label = "Input",
   ...props
 }: ContextInputUsageProps) => {
   const { usage, modelId } = useContextValue();
@@ -282,17 +284,18 @@ export const ContextInputUsage = ({
       className={cn("flex items-center justify-between text-xs", className)}
       {...props}
     >
-      <span className="text-muted-foreground">Input</span>
+      <span className="text-muted-foreground">{label}</span>
       <TokensWithCost costText={inputCostText} tokens={inputTokens} />
     </div>
   );
 };
 
-export type ContextOutputUsageProps = ComponentProps<"div">;
+export type ContextOutputUsageProps = ComponentProps<"div"> & { label?: string };
 
 export const ContextOutputUsage = ({
   className,
   children,
+  label = "Output",
   ...props
 }: ContextOutputUsageProps) => {
   const { usage, modelId } = useContextValue();
@@ -322,17 +325,18 @@ export const ContextOutputUsage = ({
       className={cn("flex items-center justify-between text-xs", className)}
       {...props}
     >
-      <span className="text-muted-foreground">Output</span>
+      <span className="text-muted-foreground">{label}</span>
       <TokensWithCost costText={outputCostText} tokens={outputTokens} />
     </div>
   );
 };
 
-export type ContextReasoningUsageProps = ComponentProps<"div">;
+export type ContextReasoningUsageProps = ComponentProps<"div"> & { label?: string };
 
 export const ContextReasoningUsage = ({
   className,
   children,
+  label = "Reasoning",
   ...props
 }: ContextReasoningUsageProps) => {
   const { usage, modelId } = useContextValue();
@@ -362,17 +366,18 @@ export const ContextReasoningUsage = ({
       className={cn("flex items-center justify-between text-xs", className)}
       {...props}
     >
-      <span className="text-muted-foreground">Reasoning</span>
+      <span className="text-muted-foreground">{label}</span>
       <TokensWithCost costText={reasoningCostText} tokens={reasoningTokens} />
     </div>
   );
 };
 
-export type ContextCacheUsageProps = ComponentProps<"div">;
+export type ContextCacheUsageProps = ComponentProps<"div"> & { label?: string };
 
 export const ContextCacheUsage = ({
   className,
   children,
+  label = "Cache",
   ...props
 }: ContextCacheUsageProps) => {
   const { usage, modelId } = useContextValue();
@@ -402,7 +407,7 @@ export const ContextCacheUsage = ({
       className={cn("flex items-center justify-between text-xs", className)}
       {...props}
     >
-      <span className="text-muted-foreground">Cache</span>
+      <span className="text-muted-foreground">{label}</span>
       <TokensWithCost costText={cacheCostText} tokens={cacheTokens} />
     </div>
   );

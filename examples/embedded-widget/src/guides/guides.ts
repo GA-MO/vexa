@@ -1,8 +1,9 @@
 import { PROMPTS } from "./mock-script";
 import type { VexaTheme } from "vexa/react";
+import type { ChatComposerOptions } from "vexa/chat";
 import type { LanguagePreset, Position } from "./presets";
 
-export type GuideId = "theme" | "labels" | "position" | "placement";
+export type GuideId = "theme" | "labels" | "composer" | "position" | "placement";
 
 export type Guide = {
   id: GuideId;
@@ -33,6 +34,16 @@ export const GUIDES: Guide[] = [
     ],
     docs: "host/labels-and-i18n",
     prompts: [PROMPTS.usageThai],
+  },
+  {
+    id: "composer",
+    title: "Trim the composer",
+    what: [
+      "`chat.composer` switches off the controls a small widget does not need: `attachments: false` removes the attach menu and ignores dropped or pasted files, `tokenUsage: false` removes the context meter next to the send button, `modelPicker: false` removes the model button. Every control is on by default except the model picker, which shows itself only when the server publishes more than one model; this page has one, so it is hidden until you force it.",
+      "The textarea and the send button always stay. The same object works as the `composer` prop on `VexaChat` or `VexaChatOverlay` for one instance.",
+    ],
+    docs: "host/provider",
+    prompts: [PROMPTS.help],
   },
   {
     id: "position",
@@ -109,6 +120,11 @@ export function labelsSnippet(preset: LanguagePreset): string {
     `  format={{ locale: ${JSON.stringify(preset.locale)}, currency: ${JSON.stringify(preset.currency)} }}`,
     ">",
   ].join("\n");
+}
+
+export function composerSnippet(composer: ChatComposerOptions): string {
+  const lines = Object.entries(composer).flatMap(([key, value]) => (value === undefined ? [] : [`    ${key}: ${String(value)},`]));
+  return `<VexaProvider\n  chat={{\n    composer: {\n${lines.map((line) => `  ${line}`).join("\n")}\n    },\n  }}\n>\n  {children}\n  <VexaChatOverlay />\n</VexaProvider>`;
 }
 
 export function positionSnippet(position: Position, launcherLabel: string): string {

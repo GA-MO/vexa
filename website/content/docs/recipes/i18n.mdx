@@ -54,7 +54,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           closeChat: "ปิดแชท",
           openAssistant: "เปิดผู้ช่วย",
           closeAssistant: "ปิดผู้ช่วย",
-          tasks: (count) => `${count} งาน`,
+          placeholder: "ถามคำถาม หรือขอให้สร้าง UI...",
+          send: "ส่ง",
+          selectModel: "เลือกโมเดล",
+          steps: (count) => `${count} ขั้นตอน`,
           approveTool: (tool) => `อนุญาตให้เรียก ${tool} หรือไม่`,
           runOnPage: (tool) => `เรียก ${tool} บนหน้านี้หรือไม่`,
           securityTitle: "พบข้อความน่าสงสัยในข้อมูลจากเครื่องมือ",
@@ -68,7 +71,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 ```
 
-`labels` is a `Partial<ChatLabels>`: any key you leave out keeps its English default. Function-valued keys (`tasks`, `approveTool`, `runOnPage`, `securityBody`) receive the count or tool name, so word order is yours. An invalid locale or currency falls back to `en-US` / `THB` with a console warning rather than throwing.
+`labels` is a `Partial<ChatLabels>`: any key you leave out keeps its English default. Function-valued keys (`steps`, `approveTool`, `runOnPage`, `securityBody`, `toolState`) receive the count, tool name, or tool state, so word order is yours. An invalid locale or currency falls back to `en-US` / `THB` with a console warning rather than throwing.
 
 ### The assistant's language
 

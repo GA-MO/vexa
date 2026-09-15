@@ -3,8 +3,17 @@ import { VexaChat, VexaChatOverlay } from "vexa/chat";
 import { VexaProvider } from "vexa/react";
 import { MOCK_MODEL_ID } from "../../shared/mock-model-id";
 import { GuideCard } from "./guide-card";
-import { GUIDES, labelsSnippet, PLACEMENTS, placementSnippet, positionSnippet, themeSnippet, type Placement } from "./guides/guides";
-import { DEFAULT_LAUNCHER_LABEL, LANGUAGE_PRESETS, POSITIONS, THEME_PRESETS, type Language, type Position } from "./guides/presets";
+import { composerSnippet, GUIDES, labelsSnippet, PLACEMENTS, placementSnippet, positionSnippet, themeSnippet, type Placement } from "./guides/guides";
+import {
+  DEFAULT_LAUNCHER_LABEL,
+  LANGUAGE_PRESETS,
+  MODEL_PICKER_CHOICES,
+  POSITIONS,
+  THEME_PRESETS,
+  type Language,
+  type ModelPickerChoice,
+  type Position,
+} from "./guides/presets";
 import { PromptSender } from "./prompt-sender";
 
 const SELECT_CLASS = "rounded-lg border border-input bg-background px-2.5 py-1.5 text-sm text-foreground";
@@ -51,13 +60,20 @@ export function App() {
   const [launcherLabel, setLauncherLabel] = useState(DEFAULT_LAUNCHER_LABEL);
   const [glow, setGlow] = useState(true);
   const [placement, setPlacement] = useState<Placement>("overlay");
+  const [attachments, setAttachments] = useState(true);
+  const [tokenUsage, setTokenUsage] = useState(true);
+  const [modelPicker, setModelPicker] = useState<ModelPickerChoice>("auto");
   const [chatOpen, setChatOpen] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
 
   const themePreset = presetById(THEME_PRESETS, themeId);
   const theme = useMemo(() => (glow ? themePreset.theme : { ...themePreset.theme, glow: false }), [themePreset, glow]);
   const languagePreset = presetById(LANGUAGE_PRESETS, language);
-  const [themeGuide, labelsGuide, positionGuide, placementGuide] = GUIDES;
+  const [themeGuide, labelsGuide, composerGuide, positionGuide, placementGuide] = GUIDES;
+  const composer = useMemo(
+    () => ({ attachments, tokenUsage, modelPicker: MODEL_PICKER_CHOICES[modelPicker].value }),
+    [attachments, tokenUsage, modelPicker],
+  );
 
   const hash = useHash();
   const chat = useMemo(
@@ -65,12 +81,13 @@ export function App() {
       title: languagePreset.title,
       subtitle: languagePreset.subtitle,
       labels: languagePreset.labels,
+      composer,
       position,
       launcherLabel,
       backdrop: false,
       defaultModel: MOCK_MODEL_ID,
     }),
-    [languagePreset, position, launcherLabel],
+    [languagePreset, composer, position, launcherLabel],
   );
   const format = useMemo(() => ({ locale: languagePreset.locale, currency: languagePreset.currency }), [languagePreset]);
 
@@ -99,8 +116,8 @@ export function App() {
             <div className="flex flex-col gap-3">
               <h1 className="text-3xl font-semibold tracking-tight">The smallest Vexa integration</h1>
               <p className="max-w-xl text-muted-foreground">
-                One page, one <code className="rounded bg-muted px-1 text-[0.9em]">VexaProvider</code>, one overlay, no host tools. The three guides below
-                change a config value, show the code that does it, and send a prompt to the free mock model so you can see the result in the chat.
+                One page, one <code className="rounded bg-muted px-1 text-[0.9em]">VexaProvider</code>, one overlay, no host tools. Every guide below
+                changes a config value, shows the code that does it, and sends a prompt to the free mock model so you can see the result in the chat.
               </p>
             </div>
             <GuideCard
@@ -138,6 +155,30 @@ export function App() {
                     ))}
                   </select>
                 </Field>
+              }
+            />
+            <GuideCard
+              guide={composerGuide}
+              code={composerSnippet(composer)}
+              onPrompt={tryPrompt}
+              controls={
+                <>
+                  <Field label="Attachments">
+                    <input type="checkbox" checked={attachments} onChange={(event) => setAttachments(event.target.checked)} className="size-4 accent-primary" />
+                  </Field>
+                  <Field label="Token usage">
+                    <input type="checkbox" checked={tokenUsage} onChange={(event) => setTokenUsage(event.target.checked)} className="size-4 accent-primary" />
+                  </Field>
+                  <Field label="Model picker">
+                    <select value={modelPicker} onChange={(event) => setModelPicker(event.target.value as ModelPickerChoice)} className={SELECT_CLASS}>
+                      {Object.entries(MODEL_PICKER_CHOICES).map(([id, choice]) => (
+                        <option key={id} value={id}>
+                          {choice.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </>
               }
             />
             <GuideCard

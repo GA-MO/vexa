@@ -5,6 +5,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "cn"
 
 import { Button } from "vexa/ui/button"
+import { usePortalContainer } from "vexa/lib/portal"
 import { XIcon } from "lucide-react"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -15,8 +16,9 @@ function DialogTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
-function DialogPortal({ ...props }: DialogPrimitive.Portal.Props) {
-  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
+function DialogPortal({ container, ...props }: DialogPrimitive.Portal.Props) {
+  const themeContainer = usePortalContainer()
+  return <DialogPrimitive.Portal data-slot="dialog-portal" container={container ?? themeContainer} {...props} />
 }
 
 function DialogClose({ ...props }: DialogPrimitive.Close.Props) {

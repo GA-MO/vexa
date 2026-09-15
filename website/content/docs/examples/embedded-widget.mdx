@@ -1,6 +1,6 @@
 ---
 title: Embedded widget
-description: "The smallest Vexa integration: one Vite page, one VexaProvider, one overlay, no host tools, a scripted mock model served by the dev server. Four guides on theme, labels, launcher placement, and overlay versus inline."
+description: "The smallest Vexa integration: one Vite page, one VexaProvider, one overlay, no host tools, a scripted mock model served by the dev server. Five guides on theme, labels, the composer, launcher placement, and overlay versus inline."
 ---
 
 <ExampleAppLink app="widget" label="Open the embedded widget" note="Hosted with these docs; the four guides play against the mock model" />
@@ -11,7 +11,7 @@ description: "The smallest Vexa integration: one Vite page, one VexaProvider, on
 
 | File | What it holds |
 |---|---|
-| `src/app.tsx` | the page: `VexaProvider`, the four guide cards, `VexaChatOverlay` or an inline `VexaChat` |
+| `src/app.tsx` | the page: `VexaProvider`, the five guide cards, `VexaChatOverlay` or an inline `VexaChat` |
 | `src/guides/presets.ts` | three theme presets, two language presets (English and Thai labels plus locale and currency), the launcher positions |
 | `src/guides/guides.ts` | the guide texts and the snippet builders that print the config currently applied |
 | `src/guides/mock-script.ts` | the mock model's replies: a plan-usage card in English and Thai, and a help list |
@@ -29,7 +29,8 @@ Every guide card has a control (a select, a checkbox, an input), a prompt button
 ## Guides
 
 - **Match the widget to your brand**: `theme` presets (indigo, emerald and rounder, rose on dark) and the `glow` switch that removes the tinted shadows. [Theme](/docs/host/theme)
-- **Translate the chat chrome**: `chat.labels` in Thai plus `format` with `th-TH` / `THB`; the mock replies in Thai to the Thai prompt. [Labels and i18n](/docs/host/labels-and-i18n)
+- **Translate the chat chrome**: `chat.labels` in Thai for every string down to the composer placeholder, the attach menu, the model picker and the token meter, plus `format` with `th-TH` / `THB`; the mock replies in Thai to the Thai prompt. [Labels and i18n](/docs/host/labels-and-i18n)
+- **Trim the composer**: `chat.composer` with `attachments`, `tokenUsage` and `modelPicker` switches; the picker is hidden by itself because the page publishes one model. [Provider](/docs/host/provider#chat-defaults)
 - **Place the launcher**: `chat.position`, `chat.launcherLabel`, `backdrop: false`. [Provider](/docs/host/provider)
 - **Overlay, framed panel, flush inline, or full page**: swap `VexaChatOverlay` for a `VexaChat` in a fixed-height box, framed or `layout="inline"` (no radius, border, or shadow); `#fullpage` opens `layout="page"` with its centered column. [Provider](/docs/host/provider#where-the-chat-lives)
 

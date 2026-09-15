@@ -39,13 +39,13 @@
   --color-warning: var(--vexa-warning);
   --color-danger: var(--vexa-danger);
   --color-info: var(--vexa-info);
-  --color-popover: var(--popover, var(--card));
-  --color-popover-foreground: var(--popover-foreground, var(--card-foreground));
+  --color-popover: var(--popover, var(--card, #ffffff));
+  --color-popover-foreground: var(--popover-foreground, var(--card-foreground, var(--foreground, #0f172a)));
   --color-destructive: var(--destructive, var(--vexa-danger));
   --color-destructive-foreground: var(--destructive-foreground, #ffffff);
-  --color-sidebar: var(--sidebar, var(--muted));
-  --color-sidebar-foreground: var(--sidebar-foreground, var(--foreground));
-  --color-sidebar-border: var(--sidebar-border, var(--border));
+  --color-sidebar: var(--sidebar, var(--muted, #f1f5f9));
+  --color-sidebar-foreground: var(--sidebar-foreground, var(--foreground, #0f172a));
+  --color-sidebar-border: var(--sidebar-border, var(--border, #e2e8f0));
   --color-media: var(--vexa-media-bg);
   --color-brand-violet: var(--brand-violet, #7c3aed);
 }
