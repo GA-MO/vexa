@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { appPath } from "@/lib/app-path";
 import { cn } from "vexa/react";
 
 const NAV_ITEMS = [
@@ -16,7 +17,7 @@ function isActive(pathname: string, href: string) {
 }
 
 export function TopNav() {
-  const pathname = usePathname();
+  const pathname = appPath(usePathname());
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
       <nav className="mx-auto flex h-12 max-w-5xl items-center gap-1 px-4 sm:px-6" aria-label="Main">

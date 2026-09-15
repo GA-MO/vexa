@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { z } from "zod";
 import { VexaChatOverlay } from "vexa/chat";
 import { defineTool, useVexaHost, VexaProvider, type HostTool, type HostToolResult } from "vexa/react";
+import { appPath, samePath } from "@/lib/app-path";
 import { MOCK_MODEL_ID } from "@/lib/mock-model-id";
 import type { ScenarioSetup } from "@/lib/scenarios/types";
 import { LOCALES, THEMES, filterOrders, findOrder, totals, type Order } from "@/lib/shop/data";
@@ -81,7 +82,7 @@ function createShopTools(
       ...HOST_TOOL_DEFINITIONS.set_filter,
       run: ({ status, search }) => {
         const filters = actions.setFilter({ ...(status ? { status } : {}), ...(search !== undefined ? { search } : {}) });
-        if (window.location.pathname !== "/orders") router.push("/orders");
+        if (!samePath(window.location.pathname, "/orders")) router.push("/orders");
         const matches = filterOrders(snapshot().orders, filters);
         return {
           ok: true,
@@ -160,7 +161,7 @@ function GuidePromptSender({ pending, onSent }: { pending: GuidePromptRequest | 
   useEffect(() => {
     if (!pending) return;
     const targetIsGuide = isGuidePage(pending.page);
-    if (!targetIsGuide && pathname !== pending.page) return;
+    if (!targetIsGuide && !samePath(pathname, pending.page)) return;
     if (sendToChat(pending.prompt)) onSent();
   }, [pending, pathname, sendToChat, onSent]);
   return null;
@@ -200,7 +201,7 @@ function ShopHost({ children }: { children: ReactNode }) {
       openChat: () => setChatOpen(true),
       tryPrompt: (request) => {
         applySetup(request.setup, actions);
-        if (!isGuidePage(request.page) && window.location.pathname !== request.page) router.push(request.page);
+        if (!isGuidePage(request.page) && !samePath(window.location.pathname, request.page)) router.push(request.page);
         setChatOpen(true);
         setPendingPrompt(request);
       },
@@ -212,7 +213,7 @@ function ShopHost({ children }: { children: ReactNode }) {
   const context = useCallback(() => {
     const state = snapshot();
     return {
-      path: pathname,
+      path: appPath(pathname),
       filters: state.filters,
       selectedOrderId: state.selectedOrderId,
       theme: state.theme,
