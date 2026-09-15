@@ -6,6 +6,9 @@
   ],
   "version": "0.1.0",
   "private": true,
+  "files": [
+    "src"
+  ],
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
@@ -38,7 +41,8 @@
     "mcp:build": "bunx --bun vite build --config mcp/vite.config.ts",
     "mcp:stdio": "bun run mcp/server.ts --stdio",
     "mcp:http": "bun run mcp/server.ts",
-    "build:pages": "bun run scripts/build-pages.ts"
+    "build:pages": "bun run scripts/build-pages.ts",
+    "release": "bun run scripts/release.ts"
   },
   "peerDependencies": {
     "react": "^19.0.0",

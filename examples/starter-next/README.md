@@ -18,9 +18,9 @@ bun run dev:starter-next     # from the repository root, http://localhost:3004
 
 ## Use it outside this repository
 
-Vexa is not on npm yet. Copy the folder, then point the app at a checkout of the library:
+Vexa is not on npm. Copy the folder, then depend on a tagged release:
 
-1. `package.json`: add `"vexa": "file:../vexa"` (Next needs `transpilePackages: ["vexa"]`, already set in `next.config.ts`).
+1. `package.json`: add `"vexa": "github:GA-MO/vexa#v0.1.0"` (Next needs `transpilePackages: ["vexa"]`, already set in `next.config.ts`).
 2. `tsconfig.json`: delete the `vexa/*` entries under `paths`; the package `exports` resolve them.
 3. `app/globals.css`: `@import "vexa/styles.css";` instead of the relative path.
 

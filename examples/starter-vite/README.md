@@ -22,9 +22,9 @@ bun run build && bun run start   # inside this folder: the server also serves di
 
 ## Use it outside this repository
 
-Vexa is not on npm yet. Copy the folder, then point the app at a checkout of the library:
+Vexa is not on npm. Copy the folder, then depend on a tagged release:
 
-1. `package.json`: add `"vexa": "file:../vexa"`.
+1. `package.json`: add `"vexa": "github:GA-MO/vexa#v0.1.0"`.
 2. `tsconfig.json`: delete the `vexa/*` entries under `paths`; `vite.config.ts`: delete the `alias` list. The package `exports` resolve them.
 3. `src/app.css`: `@import "vexa/styles.css";` instead of the relative path.
 

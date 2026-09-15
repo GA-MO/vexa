@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: bun install --frozen-lockfile
+      - name: Check that package.json matches the tag
+        run: |
+          VERSION=$(bun -e 'console.log(JSON.parse(await Bun.file("package.json").text()).version)')
+          test "v$VERSION" = "$GITHUB_REF_NAME" || { echo "package.json is $VERSION but the tag is $GITHUB_REF_NAME"; exit 1; }
+      - run: bun run typecheck
+      - run: bun pm pack --destination release
+      - run: gh release create "$GITHUB_REF_NAME" release/*.tgz --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}

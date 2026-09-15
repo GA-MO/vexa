@@ -116,6 +116,7 @@ Components that take user input (Input, Select, Checkbox, ...) use `useBoundProp
 ## Working in this repo
 
 - Never commit unless asked
+- Releases: `bun run release X.Y.Z` on a clean, synced `main` (bumps `package.json`, rewrites the `github:GA-MO/vexa#vX.Y.Z` install snippets, commits, tags, pushes; `release.yml` packs `src/` and publishes the GitHub Release). Read `docs/release.md` before cutting one; only `src/` ships (`files` in package.json), so a new entry point needs `exports` plus tsconfig `paths` everywhere
 - End every task with `bun run typecheck` and a curl of the page you changed
 - The Chrome extension usually does not connect. Rely on SSR HTML and data evaluation instead of screenshots
 - The reference project at `/Users/sbpdigital/Development/harness` runs on `ai` ^7. Borrow patterns, never copy API names. This repo is on `ai` 6

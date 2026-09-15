@@ -55,15 +55,17 @@ bun run dev:site     # docs at http://localhost:3002
 
 ## Use in another project
 
-Link or depend on this library (local example):
+Depend on a tagged release from GitHub (the package is not on npm; the lockfile pins the commit, change the tag to upgrade). Next.js needs `transpilePackages: ["vexa"]` because the package ships TypeScript source:
 
 ```json
 {
   "dependencies": {
-    "vexa": "file:../vexa"
+    "vexa": "github:GA-MO/vexa#v0.1.0"
   }
 }
 ```
+
+Or the tarball attached to every [release](https://github.com/GA-MO/vexa/releases): `"vexa": "https://github.com/GA-MO/vexa/releases/download/v0.1.0/vexa-0.1.0.tgz"`. See [docs/release.md](docs/release.md) for how a release is cut.
 
 ```tsx
 // app/layout.tsx (client component around your app)

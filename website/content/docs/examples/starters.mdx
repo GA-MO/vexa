@@ -38,9 +38,9 @@ The chat route is a plain fetch handler, so it runs on `Bun.serve`, Hono, Cloudf
 
 ## Use one outside the repository
 
-Vexa is not on npm yet. Copy the folder, then point it at a checkout of the library:
+Vexa is not on npm. Copy the folder, then depend on a tagged release:
 
-1. `package.json`: add `"vexa": "file:../vexa"` (Next needs `transpilePackages: ["vexa"]`, already set).
+1. `package.json`: add `"vexa": "github:GA-MO/vexa#v0.1.0"` (Next needs `transpilePackages: ["vexa"]`, already set).
 2. `tsconfig.json`: delete the `vexa/*` entries under `paths`, and in the Vite starter the `alias` list in `vite.config.ts`; the package `exports` resolve them.
 3. The stylesheet: `@import "vexa/styles.css";` instead of the relative path.
 
