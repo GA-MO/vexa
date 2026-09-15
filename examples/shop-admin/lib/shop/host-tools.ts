@@ -38,7 +38,7 @@ export const HOST_TOOL_DEFINITIONS = {
     input: z.object({ theme: z.enum(THEMES) }),
   },
   set_locale: {
-    description: "Set the display locale (en-US or th-TH) and currency (USD or THB) used for every number on screen.",
+    description: "Set the display locale (en-US or de-DE) and currency (USD or EUR) used for every number on screen.",
     input: z.object({ locale: z.enum(LOCALES), currency: z.enum(CURRENCIES) }),
   },
 } as const;

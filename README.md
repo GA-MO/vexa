@@ -70,10 +70,10 @@ import { VexaChatOverlay } from "vexa/chat";
 <VexaProvider
   api="/api/chat"
   theme={{ primary: "#0F766E", secondary: "#0891B2", radius: "0.5rem", mode: "system" }}
-  format={{ locale: "th-TH", currency: "THB" }}
+  format={{ locale: "de-DE", currency: "EUR" }}
   chat={{
     suggestions: [{ label: "Open settings", prompt: "Take me to the settings page." }],   // the model list comes from GET /api/chat
-    labels: { emptyTitle: "ถามได้เลย", thinking: "กำลังคิด…" },                          // partial i18n override
+    labels: { emptyTitle: "Frag einfach", thinking: "Denkt nach…" },                        // partial i18n override
     logo: <MyLogo className="size-4" />,
   }}
   context={() => ({ path: window.location.pathname })}

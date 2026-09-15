@@ -33,7 +33,7 @@ export const GUIDES: Guide[] = [
       "The model answers in whatever language the user writes; the labels are what the host owns.",
     ],
     docs: "host/labels-and-i18n",
-    prompts: [PROMPTS.usageThai],
+    prompts: [PROMPTS.usageGerman],
   },
   {
     id: "composer",
@@ -103,7 +103,7 @@ const LABELS_SHOWN = ["emptyTitle", "thinking", "startOver", "openAssistant"] as
 function labelLines(preset: LanguagePreset): string[] {
   const shown = LABELS_SHOWN.flatMap((key) => (preset.labels[key] ? [`      ${key}: ${JSON.stringify(preset.labels[key])},`] : []));
   const hidden = Object.keys(preset.labels).length - shown.length;
-  if (hidden > 0) shown.push(`      thoughtFor: (seconds) => \`คิดอยู่ \${seconds} วินาที\`,`, `      // ${hidden - 1} more`);
+  if (hidden > 0) shown.push(`      thoughtFor: (seconds) => \`\${seconds} Sekunden nachgedacht\`,`, `      // ${hidden - 1} more`);
   return shown;
 }
 

@@ -122,7 +122,7 @@ export const GALLERY_SECTIONS: GallerySection[] = [
           type: "Metric",
           props: {
             label: "Revenue",
-            value: "฿2.4M",
+            value: "$2.4M",
             detail: "+12% QoQ",
             trend: "up",
           },
@@ -242,13 +242,13 @@ export const GALLERY_SECTIONS: GallerySection[] = [
         rows: [
           {
             plan: "Free",
-            price: "฿0",
+            price: "$0",
             seats: "1",
             support: "Community",
           },
           {
             plan: "Pro",
-            price: "฿990",
+            price: "$990",
             seats: "10",
             support: "Email",
           },
@@ -821,7 +821,7 @@ export function App() {
         name: "plan",
         options: [
           { value: "free", label: "Free — 1 workspace" },
-          { value: "pro", label: "Pro — ฿990 / month" },
+          { value: "pro", label: "Pro — $990 / month" },
           { value: "enterprise", label: "Enterprise — custom" },
         ],
         value: "pro",
@@ -1151,7 +1151,7 @@ export function App() {
           { label: "VAT 7%", amount: 20.65, emphasis: null },
           { label: "Total", amount: 315.65, emphasis: "total" },
         ],
-        currency: "฿",
+        currency: "$",
       },
     }),
   },
@@ -1183,7 +1183,7 @@ export function App() {
           { label: "Customer", value: "Alex Kim" },
           { label: "Status", value: "Shipped" },
           { label: "Payment", value: "PromptPay" },
-          { label: "Total", value: "฿315.65" },
+          { label: "Total", value: "$315.65" },
         ],
         size: "sm",
       },

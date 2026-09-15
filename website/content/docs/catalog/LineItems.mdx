@@ -1,6 +1,6 @@
 ---
 title: "LineItems"
-description: "Receipt/order lines with qty x name and amount, plus summary lines (subtotal, tax, total). currency is a prefix symbol, default ฿."
+description: "Receipt/order lines with qty x name and amount, plus summary lines (subtotal, tax, total). currency is a prefix symbol, default $."
 ---
 
 ## Use it when
@@ -13,7 +13,7 @@ A receipt shape: priced rows plus the subtotal, tax, and total that follow from 
 - "Break down this invoice"
 - "What did I order yesterday and what did it cost?"
 
-`amount` is a number and LineItems renders it. With `currency` set, that string is used verbatim as a prefix and the number is grouped to two decimals; with `currency: null` the amount falls back to the host formatter from `VexaProvider format`, which defaults to `en-US` / `THB` and prints `฿`. `qty` renders as `2×` before the name, `detail` as a small italic line under it, and a summary line with `emphasis: "total"` is the only one set in the primary colour at a larger size.
+`amount` is a number and LineItems renders it. With `currency` set, that string is used verbatim as a prefix and the number is grouped to two decimals; with `currency: null` the amount falls back to the host formatter from `VexaProvider format`, which defaults to `en-US` / `USD` and prints `$`. `qty` renders as `2×` before the name, `detail` as a small italic line under it, and a summary line with `emphasis: "total"` is the only one set in the primary colour at a larger size.
 
 ## Related
 
@@ -32,7 +32,7 @@ A receipt shape: priced rows plus the subtotal, tax, and total that follow from 
 | --- | --- | --- | --- |
 | `items` | `({ name: string; detail: string \| null; qty: number \| null; amount: number })[]` | Yes | Example: `[{"name":"Latte","detail":"Oat milk","qty":2,"amount":180},{"name":"Croissant","detail":null,"qty":1,"amount":85}]` |
 | `summary` | `({ label: string; amount: number; emphasis: "total" \| null })[] \| null` | No | Example: `[{"label":"Subtotal","amount":265,"emphasis":null},{"label":"VAT 7%","amount":18.55,"emphasis":null},{"label":"Total","amount":283.55,"emphasis":"total"}]` |
-| `currency` | `string \| null` | No | Example: `"฿"` |
+| `currency` | `string \| null` | No | Example: `"$"` |
 
 ## Example spec
 
@@ -71,7 +71,7 @@ A receipt shape: priced rows plus the subtotal, tax, and total that follow from 
         "emphasis": "total"
       }
     ],
-    "currency": "฿"
+    "currency": "$"
   }
 }
 ```

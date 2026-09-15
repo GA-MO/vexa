@@ -16,7 +16,7 @@ description: Every prop of VexaProvider, the client component that holds chat de
 | `api` | `string` | `"/api/chat"` | endpoint used for `POST` (chat) and `GET` (model list) |
 | `chat` | `VexaChatDefaults` | `{}` | app-wide defaults for the chat chrome, see below |
 | `theme` | `VexaTheme` | none | token overrides and `mode`; see [Theme](/docs/host/theme) |
-| `format` | `Partial<VexaFormat>` | `en-US` / `THB` | locale and currency for every catalog component |
+| `format` | `Partial<VexaFormat>` | `en-US` / `USD` | locale and currency for every catalog component |
 | `functions` | `Record<string, ComputedFunction>` | `{}` | extra `$computed` functions merged with the built-ins |
 | `tools` | `Record<string, HostTool>` | `{}` | host tools; names must match `^[a-z][a-z0-9_]{0,63}$` |
 | `contextSchema` | `FlexibleSchema` | none | schema for `context()`; required when `context` is set |
@@ -79,11 +79,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <VexaProvider
       api="/api/chat"
       theme={{ primary: "#0F766E", secondary: "#0891B2", radius: "0.5rem", mode: "system" }}
-      format={{ locale: "th-TH", currency: "THB" }}
+      format={{ locale: "de-DE", currency: "EUR" }}
       chat={{
         title: "Acme assistant",
         suggestions: [{ label: "Open settings", prompt: "Take me to the settings page." }],
-        labels: { emptyTitle: "ถามได้เลย", thinking: "กำลังคิด…" },
+        labels: { emptyTitle: "Frag einfach", thinking: "Denkt nach…" },
       }}
       context={() => ({ path: window.location.pathname })}
       contextSchema={z.object({ path: z.string() })}

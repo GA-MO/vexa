@@ -141,19 +141,19 @@ export type ChatModel = {
 export const SUGGESTIONS: readonly ChatSuggestion[] = [
   {
     label: "KPI dashboard",
-    prompt: "สร้าง dashboard สรุปยอดขายรายไตรมาส พร้อม metric 3 ตัว",
+    prompt: "Build a quarterly sales dashboard with three metrics",
   },
   {
     label: "Compare plans",
-    prompt: "เปรียบเทียบแผน Free / Pro / Enterprise เป็นตาราง",
+    prompt: "Compare the Free, Pro and Enterprise plans in a table",
   },
   {
     label: "Onboarding steps",
-    prompt: "สรุปขั้นตอน onboard พนักงานใหม่เป็น list และ card",
+    prompt: "Summarize the new-hire onboarding steps as a list and a card",
   },
   {
     label: "Plain answer",
-    prompt: "อธิบาย Generative UI สั้น ๆ โดยไม่ต้องสร้าง UI",
+    prompt: "Explain generative UI in a few sentences, without building any UI",
   },
 ];
 

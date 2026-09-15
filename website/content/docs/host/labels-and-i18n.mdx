@@ -5,7 +5,7 @@ description: Override any string of the chat chrome with chat.labels on the prov
 
 ## Two layers of language
 
-Text in the chat has two sources. Strings the library renders (empty state, thinking indicator, composer placeholder and menus, tool states, approval buttons, security notice) come from `ChatLabels` and are English by default. Text the model writes follows the catalog rule "Respond in the user's language", so a Thai question gets a Thai answer without configuration.
+Text in the chat has two sources. Strings the library renders (empty state, thinking indicator, composer placeholder and menus, tool states, approval buttons, security notice) come from `ChatLabels` and are English by default. Text the model writes follows the catalog rule "Respond in the user's language", so a German question gets a German answer without configuration.
 
 ## Overriding labels
 
@@ -15,13 +15,13 @@ Pass a partial object. Missing keys keep the built-in string. Provider `chat.lab
 <VexaProvider
   chat={{
     labels: {
-      emptyTitle: "ถามได้เลย",
-      emptyDescription: "พิมพ์คำถาม แล้วรับคำตอบพร้อม UI",
-      thinking: "กำลังคิด…",
-      approve: "อนุมัติ",
-      reject: "ปฏิเสธ",
-      placeholder: "ถามคำถาม หรือขอให้สร้าง UI...",
-      steps: (count) => `${count} ขั้นตอน`,
+      emptyTitle: "Frag einfach",
+      emptyDescription: "Stell eine Frage und bekomm die Antwort als UI",
+      thinking: "Denkt nach…",
+      approve: "Erlauben",
+      reject: "Ablehnen",
+      placeholder: "Stell eine Frage oder lass dir eine UI bauen...",
+      steps: (count) => `${count} Schritte`,
     },
   }}
 >
@@ -91,7 +91,7 @@ Strings are not the only thing a host owns in the composer. `chat.composer` (or 
 
 ## Model output
 
-Persona text on the server can fix a language for the assistant ("Always answer in Thai") when the app is single-language. Otherwise leave the catalog rule to follow the user. Currency and number formatting come from `format`, not from labels.
+Persona text on the server can fix a language for the assistant ("Always answer in German") when the app is single-language. Otherwise leave the catalog rule to follow the user. Currency and number formatting come from `format`, not from labels.
 
 ## Related
 

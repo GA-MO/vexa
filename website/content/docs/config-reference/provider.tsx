@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       // Token overrides; the stylesheet declares the defaults and the dark palette.
       theme={{ primary: "#4f46e5", primaryDark: "#818cf8", radius: "0.75rem", mode: "system" }}
       // Locale and currency used by every catalog component (Metric, LineItems, charts).
-      format={{ locale: "th-TH", currency: "THB" }}
+      format={{ locale: "de-DE", currency: "EUR" }}
       // Extra $computed functions merged with the built-ins.
       functions={{ upper: (args) => String(args.value ?? "").toUpperCase() }}
       // Host tools: run in the browser, callable by the model and by runTool buttons; names match ^[a-z][a-z0-9_]{0,63}$.

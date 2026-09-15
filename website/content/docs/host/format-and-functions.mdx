@@ -5,10 +5,10 @@ description: Set the locale and currency every catalog component uses for number
 
 ## format
 
-`VexaProvider format` takes a partial `{ locale, currency }`. The default is `en-US` and `THB`. Every catalog component that prints a number (Metric, LineItems, BarChart and LineChart axes, KeyValue, and others) reads the formatter from context, so one prop changes the whole catalog.
+`VexaProvider format` takes a partial `{ locale, currency }`. The default is `en-US` and `USD`. Every catalog component that prints a number (Metric, LineItems, BarChart and LineChart axes, KeyValue, and others) reads the formatter from context, so one prop changes the whole catalog.
 
 ```tsx title="app/providers.tsx"
-<VexaProvider format={{ locale: "th-TH", currency: "THB" }}>
+<VexaProvider format={{ locale: "de-DE", currency: "EUR" }}>
 ```
 
 The value is validated on creation with `Intl.NumberFormat`. An invalid locale or currency code falls back to the default with a `console.warn` instead of throwing during render.
@@ -33,7 +33,7 @@ Specs derive display values with `$computed`. Two functions ship with the librar
 | Function | Args | Result |
 |---|---|---|
 | `fullName` | `{ first, last }` | `"Ada Lovelace"` |
-| `formatCurrency` | `{ value, currency? }` | `"฿1,200"` using the provider locale and currency, zero fraction digits |
+| `formatCurrency` | `{ value, currency? }` | `"$1,200"` using the provider locale and currency, zero fraction digits |
 
 ```json title="in a spec"
 { "type": "Text", "props": { "content": { "$computed": "formatCurrency", "args": { "value": { "$state": "/ui/total" } } } } }

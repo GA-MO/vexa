@@ -3,7 +3,7 @@ export type VexaFormat = {
   currency: string;
 };
 
-export const DEFAULT_FORMAT: VexaFormat = { locale: "en-US", currency: "THB" };
+export const DEFAULT_FORMAT: VexaFormat = { locale: "en-US", currency: "USD" };
 
 export type Formatter = {
   format: VexaFormat;

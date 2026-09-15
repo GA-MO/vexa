@@ -4,8 +4,8 @@ export const CITIES = ["Bangkok", "Chiang Mai", "Phuket", "Khon Kaen"] as const;
 export type Status = (typeof STATUSES)[number];
 export type City = (typeof CITIES)[number];
 
-export const LOCALES = ["en-US", "th-TH"] as const;
-export const CURRENCIES = ["USD", "THB"] as const;
+export const LOCALES = ["en-US", "de-DE"] as const;
+export const CURRENCIES = ["USD", "EUR"] as const;
 export const THEMES = ["light", "dark"] as const;
 export const STEPS_MODES = ["collapsible", "hidden"] as const;
 

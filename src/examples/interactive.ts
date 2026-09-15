@@ -224,8 +224,8 @@ export const INTERACTIVE_SECTIONS: InteractiveSection[] = [
                   name: "milk",
                   options: [
                     { value: "Whole", label: "Whole" },
-                    { value: "Oat", label: "Oat (+฿20)" },
-                    { value: "Almond", label: "Almond (+฿20)" },
+                    { value: "Oat", label: "Oat (+$20)" },
+                    { value: "Almond", label: "Almond (+$20)" },
                   ],
                   value: { $bindState: "/order/milk" },
                   disabled: false,
@@ -242,7 +242,7 @@ export const INTERACTIVE_SECTIONS: InteractiveSection[] = [
                 props: {
                   label: "Extra shot",
                   name: "extraShot",
-                  hint: "+฿25",
+                  hint: "+$25",
                   checked: { $bindState: "/order/extraShot" },
                   disabled: false,
                 },
@@ -252,7 +252,7 @@ export const INTERACTIVE_SECTIONS: InteractiveSection[] = [
                 props: {
                   label: "Whipped cream",
                   name: "whip",
-                  hint: "+฿15",
+                  hint: "+$15",
                   checked: { $bindState: "/order/whip" },
                   disabled: false,
                 },
@@ -613,7 +613,7 @@ export const INTERACTIVE_SECTIONS: InteractiveSection[] = [
                 $computed: "formatCurrency",
                 args: {
                   value: { $state: "/invoice/total" },
-                  currency: "THB",
+                  currency: "USD",
                 },
               },
               detail: {
@@ -628,7 +628,7 @@ export const INTERACTIVE_SECTIONS: InteractiveSection[] = [
               content: {
                 $format: "currency",
                 value: { $state: "/invoice/total" },
-                currency: "THB",
+                currency: "USD",
               },
               muted: true,
             },

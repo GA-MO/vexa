@@ -33,7 +33,7 @@ curl -s http://localhost:3001/orders | grep -c "C-1042"
 - No `any`. Use `as never` only where the json-render registry forces it
 - Do not add a dependency when a native element or an existing one works (`lucide-react`, `embla-carousel-react`, `zod`, `@base-ui/react`, `@ai-sdk/mcp`)
 - `vexa/core` must stay client-safe. Server-only code goes behind `vexa/server`
-- Code, identifiers, and UI strings are English. Gallery example content may be Thai
+- Code, identifiers, UI strings, docs and example content are English. No Thai anywhere in docs or examples; i18n examples use German (de-DE / EUR)
 
 ## Layout
 

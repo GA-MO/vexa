@@ -6,7 +6,7 @@ import { STATIC_BUILD } from "@/lib/static-build";
 import { useAssistantTools } from "@/lib/assistant-tools";
 
 const ASSISTANT_API = "/api/assistant";
-const EXAMPLE_FORMAT = { locale: "en-US", currency: "THB" } as const;
+const EXAMPLE_FORMAT = { locale: "en-US", currency: "USD" } as const;
 
 const ASSISTANT_CHAT: VexaChatDefaults = {
   title: "Vexa docs guide",

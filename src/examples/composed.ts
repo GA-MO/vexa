@@ -15,9 +15,9 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
     id: "dashboard",
     title: "Sales dashboard",
     note: "Metric grid → horizontal BarChart → table in a Card → CTA row.",
-    prompt: "สรุปยอดขายไตรมาสนี้ให้หน่อย เทียบกับปีที่แล้ว",
+    prompt: "How did we do this quarter compared to last year?",
     prose:
-      "ยอดขาย Q3 อยู่ที่ ฿2.4M โต 12% จากปีก่อน กรุงเทพยังเป็นภูมิภาคหลัก ส่วนภูเก็ตโตเร็วสุด",
+      "Q3 revenue is $2.4M, up 12% year over year. Bangkok is still the largest region and Phuket is growing fastest.",
     spec: specFromTree({
       type: "Stack",
       props: { direction: "vertical", gap: "md" },
@@ -34,9 +34,9 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
           type: "Grid",
           props: { columns: "3", gap: "md" },
           children: [
-            { type: "Metric", props: { label: "Revenue", value: "฿2.4M", detail: "+12% YoY", trend: "up" } },
+            { type: "Metric", props: { label: "Revenue", value: "$2.4M", detail: "+12% YoY", trend: "up" } },
             { type: "Metric", props: { label: "Orders", value: "8,120", detail: "+6% YoY", trend: "up" } },
-            { type: "Metric", props: { label: "Avg. order", value: "฿296", detail: "-2% YoY", trend: "down" } },
+            { type: "Metric", props: { label: "Avg. order", value: "$296", detail: "-2% YoY", trend: "down" } },
           ],
         },
         {
@@ -68,9 +68,9 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
                   { key: "revenue", label: "Revenue" },
                 ],
                 rows: [
-                  { product: "Pro plan", units: 1240, revenue: "฿1.23M" },
-                  { product: "Team plan", units: 610, revenue: "฿0.72M" },
-                  { product: "Add-ons", units: 2980, revenue: "฿0.45M" },
+                  { product: "Pro plan", units: 1240, revenue: "$1.23M" },
+                  { product: "Team plan", units: 610, revenue: "$0.72M" },
+                  { product: "Add-ons", units: 2980, revenue: "$0.45M" },
                 ],
               },
             },
@@ -91,8 +91,8 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
     id: "order-status",
     title: "Order status",
     note: "FromTo → KeyValue → Timeline → actions. The everyday support answer.",
-    prompt: "ออเดอร์ #A-1042 ถึงไหนแล้ว",
-    prose: "ออเดอร์ #A-1042 ออกจากคลังแล้วและกำลังจัดส่ง คาดว่าถึงวันนี้ก่อน 15:30 น.",
+    prompt: "Where is order #A-1042?",
+    prose: "Order #A-1042 has left the warehouse and is out for delivery. It should arrive today before 15:30.",
     spec: specFromTree({
       type: "Card",
       props: { title: "Order #A-1042", description: "Kerry Express · KEX-77193-TH" },
@@ -105,7 +105,7 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
               { label: "Status", value: "Out for delivery" },
               { label: "ETA", value: "Today, before 15:30" },
               { label: "Items", value: "3" },
-              { label: "Total", value: "฿315.65 · paid" },
+              { label: "Total", value: "$315.65 · paid" },
             ],
             size: "sm",
           },
@@ -136,8 +136,8 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
     id: "receipt",
     title: "Receipt",
     note: "LineItems with totals plus IconText pickup details.",
-    prompt: "ขอสรุปบิลออเดอร์เมื่อกี้",
-    prose: "นี่คือใบเสร็จของออเดอร์ #C-3381 รวม 3 รายการ ยอดสุทธิ ฿315.65",
+    prompt: "Show me the receipt for that order",
+    prose: "Here is the receipt for order #C-3381: 3 items, $315.65 in total.",
     spec: specFromTree({
       type: "Stack",
       props: { direction: "vertical", gap: "md" },
@@ -163,7 +163,7 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
               { label: "VAT 7%", amount: 20.65, emphasis: null },
               { label: "Total", amount: 315.65, emphasis: "total" },
             ],
-            currency: "฿",
+            currency: "$",
           },
         },
         {
@@ -190,8 +190,8 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
     id: "plan-compare",
     title: "Plan comparison",
     note: "Carousel of plan cards, a feature table, and a Callout recommendation.",
-    prompt: "แพลนไหนเหมาะกับทีม 8 คน",
-    prose: "ทีม 8 คนที่ต้องการ generative UI แนะนำ Pro เพราะ Team ยังไม่มี SSO และ Enterprise เกินความจำเป็น",
+    prompt: "Which plan fits a team of 8?",
+    prose: "For a team of 8 that needs generative UI, Pro is the fit: Team has no SSO yet and Enterprise is more than you need.",
     spec: specFromTree({
       type: "Stack",
       props: { direction: "vertical", gap: "md" },
@@ -202,7 +202,7 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
             variant: "card",
             items: [
               { src: null, alt: null, caption: null, title: "Free", description: "1 workspace · 3 seats · community support", badge: null },
-              { src: null, alt: null, caption: null, title: "Pro · ฿990/mo", description: "Unlimited workspaces · generative UI · SSO", badge: "Recommended" },
+              { src: null, alt: null, caption: null, title: "Pro · $990/mo", description: "Unlimited workspaces · generative UI · SSO", badge: "Recommended" },
               { src: null, alt: null, caption: null, title: "Enterprise", description: "SLA · audit log · dedicated support", badge: null },
             ],
           },
@@ -248,8 +248,8 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
     id: "booking",
     title: "Booking form",
     note: "Collect values with Select / RadioGroup / Input / Switch, then validate + submit. Fully interactive.",
-    prompt: "จองห้องประชุมพรุ่งนี้บ่ายให้หน่อย",
-    prose: "ได้เลย กรอกรายละเอียดด้านล่างแล้วกดยืนยัน ระบบจะจองและส่งคำเชิญให้ทันที",
+    prompt: "Book a meeting room tomorrow afternoon",
+    prose: "Sure. Fill in the details below and press Confirm; the room is booked and the invites go out right away.",
     spec: interactiveSpec(
       {
         type: "Card",
@@ -364,8 +364,8 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
     id: "recommendation",
     title: "Place recommendation",
     note: "Image, Rating, IconText contact rows, and tags in one Card.",
-    prompt: "หาคาเฟ่ใกล้อโศกที่นั่งทำงานได้",
-    prose: "แนะนำ Vexa Café ห่างจาก BTS อโศก 3 นาที มีปลั๊กทุกโต๊ะและ Wi-Fi เร็ว รีวิว 4.6 จาก 1,280 คน",
+    prompt: "Find a café near Asok where I can work",
+    prose: "Try Vexa Café, 3 minutes from BTS Asok: a power outlet at every table, fast Wi-Fi, rated 4.6 by 1,280 people.",
     spec: specFromTree({
       type: "Card",
       props: { title: null, description: null },
@@ -421,8 +421,8 @@ export const COMPOSED_EXAMPLES: ComposedExample[] = [
     id: "trend-report",
     title: "Trend report",
     note: "LineChart with two series, supporting Metrics, and an Alert with the insight.",
-    prompt: "conversion rate เดือนนี้เป็นยังไง",
-    prose: "Conversion ฝั่ง app แซง web ตั้งแต่กลางเดือน เฉลี่ยทั้งเดือนอยู่ที่ 3.3% เทียบกับ web 2.7%",
+    prompt: "How is conversion rate doing this month?",
+    prose: "App conversion overtook web mid-month and averaged 3.3% for the month against 2.7% on web.",
     spec: specFromTree({
       type: "Stack",
       props: { direction: "vertical", gap: "md" },

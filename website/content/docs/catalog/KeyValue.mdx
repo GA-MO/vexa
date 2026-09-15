@@ -30,7 +30,7 @@ The attributes of exactly one record: an order, a profile, a booking, a config. 
 
 | Prop | Type | Required | Description |
 | --- | --- | --- | --- |
-| `pairs` | `{ label: string; value: string }[]` | Yes | Example: `[{"label":"Order","value":"#A-1042"},{"label":"Status","value":"Shipped"},{"label":"Total","value":"฿283.55"}]` |
+| `pairs` | `{ label: string; value: string }[]` | Yes | Example: `[{"label":"Order","value":"#A-1042"},{"label":"Status","value":"Shipped"},{"label":"Total","value":"$283.55"}]` |
 | `size` | `"sm" \| "md" \| null` | No | Example: `"sm"` |
 
 ## Example spec
@@ -50,7 +50,7 @@ The attributes of exactly one record: an order, a profile, a booking, a config. 
       },
       {
         "label": "Total",
-        "value": "฿283.55"
+        "value": "$283.55"
       }
     ],
     "size": "sm"

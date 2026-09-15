@@ -24,8 +24,8 @@ const spec: Spec = {
     },
     "set-locale-button": {
       type: "Button",
-      props: { label: "Switch to th-TH / THB", variant: "primary" },
-      on: { press: [{ action: "runTool", params: { name: "set_locale", input: { locale: "th-TH", currency: "THB" } } }] },
+      props: { label: "Switch to de-DE / EUR", variant: "primary" },
+      on: { press: [{ action: "runTool", params: { name: "set_locale", input: { locale: "de-DE", currency: "EUR" } } }] },
     },
   },
 };
@@ -53,7 +53,7 @@ export const scenario: Scenario = {
   script: [
     {
       press: "set-locale-button",
-      expectState: { "/tools/set_locale": { locale: "th-TH", currency: "THB" } },
+      expectState: { "/tools/set_locale": { locale: "de-DE", currency: "EUR" } },
       expectNoModelTurn: true,
     },
     { user: "Switch to dark theme", expectTools: ["set_theme"] },

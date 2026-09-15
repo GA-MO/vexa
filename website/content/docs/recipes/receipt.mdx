@@ -9,7 +9,7 @@ Turn an order record into something the user can read like a paper receipt: a he
 
 ## What the user asks
 
-- "ขอสรุปบิลออเดอร์เมื่อกี้"
+- "Show me the receipt for that order"
 - "Show me the receipt for order C-3381"
 - "How much was the coffee order, with tax?"
 
@@ -46,10 +46,10 @@ export const { GET, POST } = createVexaHandler({
 });
 ```
 
-The live example sets `currency: "฿"` explicitly, which makes `LineItems` print the symbol followed by `formatter.number(value, 2)`. With `currency: null` it uses `formatter.money`, so the provider's locale and currency apply to every amount:
+The live example sets `currency: "$"` explicitly, which makes `LineItems` print the symbol followed by `formatter.number(value, 2)`. With `currency: null` it uses `formatter.money`, so the provider's locale and currency apply to every amount:
 
 ```tsx title="app/providers.tsx"
-<VexaProvider format={{ locale: "th-TH", currency: "THB" }}>
+<VexaProvider format={{ locale: "de-DE", currency: "EUR" }}>
 ```
 
 The Reorder button is the natural place for a host tool with confirmation, since it changes the cart:

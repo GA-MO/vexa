@@ -46,8 +46,8 @@ const MARKDOWN_ANSWER = [
   "",
   "| Column | Value | A much longer header that forces the table to scroll |",
   "| --- | --- | --- |",
-  "| Latte | ฿180 | Oat milk, extra shot, no foam, extra hot |",
-  "| Croissant | ฿85 | Butter |",
+  "| Latte | $180 | Oat milk, extra shot, no foam, extra hot |",
+  "| Croissant | $85 | Butter |",
   "",
   "```ts",
   'export const { GET, POST } = createVexaHandler({ persona: "You are a very verbose assistant whose persona string is intentionally long so that this single line never fits into a 340px chat column", models });',
@@ -95,7 +95,7 @@ export const CHAT_ELEMENT_EXAMPLES: ChatElementExample[] = [
       user("u", "Why is the Bangkok total lower this week?"),
       assistant("a", [
         reasoning("The user compares two weeks. There is no tool for weekly totals, so I answer from the orders already shown and say so. Includes `inline code` and a long word " + LONG_UNBROKEN, 4),
-        { type: "text", text: "Two large orders shipped on Monday, so this week's Bangkok total is lower by ฿4,200." },
+        { type: "text", text: "Two large orders shipped on Monday, so this week's Bangkok total is lower by $4,200." },
       ]),
     ],
   },
@@ -229,10 +229,10 @@ export const CHAT_ELEMENT_MESSAGES: VexaMessage[] = [
     { type: "text", text: MARKDOWN_ANSWER },
     ...SPEC_PART,
   ]),
-  user("u2", "และตอบสั้น ๆ ได้ไหม"),
+  user("u2", "And can you keep it short?"),
   assistant("a2", [
     reasoning("A short answer with no tools: this reasoning renders as a single Reasoning block, not a step list. It contains `inline code` and a long word " + LONG_UNBROKEN, 2),
-    { type: "text", text: "ได้ครับ นี่คือคำตอบสั้น ๆ ที่ไม่มี UI" },
+    { type: "text", text: "Sure, here is a short answer with no UI." },
   ]),
   user("u3", "⟦action⟧ runTool book_room " + JSON.stringify({ room: "A", headcount: 4, note: "a very long note " + LONG_UNBROKEN })),
   assistant("a3", [

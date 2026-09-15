@@ -9,7 +9,7 @@ A question about performance should come back as a compact dashboard, not a para
 
 ## What the user asks
 
-- "สรุปยอดขายไตรมาสนี้ให้หน่อย เทียบกับปีที่แล้ว"
+- "How did we do this quarter compared to last year?"
 - "How did we do this quarter compared to last year?"
 - "Show revenue by region and the top three products"
 
@@ -48,10 +48,10 @@ export const { GET, POST } = createVexaHandler({
 
 A tool without `needsApproval` is a read tool: it runs without an approval card and its output is fenced as data before the model sees it, so a region name that contains instructions cannot steer the reply.
 
-On the client, `format` decides how the axis labels and Metric values print. The example uses baht; switch the whole dashboard to dollars with one prop:
+On the client, `format` decides how the axis labels and Metric values print. The example uses dollars; switch the whole dashboard to euros with one prop:
 
 ```tsx title="app/providers.tsx"
-<VexaProvider format={{ locale: "en-US", currency: "USD" }}>
+<VexaProvider format={{ locale: "de-DE", currency: "EUR" }}>
 ```
 
 The Buttons at the bottom are plain `Button` elements here. Wire them to your app with a host tool and `runTool`:
@@ -68,7 +68,7 @@ The Buttons at the bottom are plain `Button` elements here. Wire them to your ap
 
 - Name the tool's vocabulary in `persona`: "'this quarter' means the current calendar quarter; 'last year' means the same quarter one year earlier."
 - Keep the model on `BarChart` for four or fewer regions; `Chart` with `kind: "pie"` only when the user asks for share of total.
-- `Metric.value` is a string the model writes, while chart axes are formatted by the host. Say "write Metric values compact, for example ฿2.4M, and use format currency on charts" so the two agree.
+- `Metric.value` is a string the model writes, while chart axes are formatted by the host. Say "write Metric values compact, for example $2.4M, and use format currency on charts" so the two agree.
 
 ## Related
 

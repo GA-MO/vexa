@@ -1,23 +1,23 @@
 ---
 title: i18n
-description: Ship the chat in Thai with format for baht amounts, chat.labels for the panel chrome, and a persona or instruction that fixes the answer language.
+description: Ship the chat in German with format for euro amounts, chat.labels for the panel chrome, and a persona or instruction that fixes the answer language.
 ---
 
 ## Goal
 
-A Thai user should see Thai everywhere: the empty state and buttons of the panel, the assistant's sentences, and amounts written the way Thai apps write them. Three settings cover it, each on the layer that owns the text: `format` and `chat.labels` on the provider, the answer language on the server.
+A German user should see German everywhere: the empty state and buttons of the panel, the assistant's sentences, and amounts written the way German apps write them (`1.234,56 €`). Three settings cover it, each on the layer that owns the text: `format` and `chat.labels` on the provider, the answer language on the server.
 
 ## What the user asks
 
-- "ขอสรุปบิลออเดอร์เมื่อกี้"
-- "สรุปยอดขายไตรมาสนี้ให้หน่อย เทียบกับปีที่แล้ว"
-- "ออเดอร์ #A-1042 ถึงไหนแล้ว"
+- "Zeig mir die Rechnung für die letzte Bestellung"
+- "Wie lief das Quartal im Vergleich zum Vorjahr?"
+- "Wo ist Bestellung #A-1042?"
 
 ## Live example
 
 <Example id="receipt" />
 
-The example shows a Thai prompt and a Thai answer around English component text. With the configuration below the labels of the panel around it are Thai as well, and `LineItems` with `currency: null` prints amounts through the provider's formatter instead of the `฿` prefix the example hardcodes.
+The example shows an English prompt and answer. With the configuration below the labels of the panel around it are German, the model answers in German, and `LineItems` with `currency: null` prints amounts through the provider's formatter instead of the `$` prefix the example hardcodes.
 
 ## How it works
 
@@ -34,33 +34,33 @@ import { VexaChatOverlay } from "vexa/chat";
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <VexaProvider
-      format={{ locale: "th-TH", currency: "THB" }}
+      format={{ locale: "de-DE", currency: "EUR" }}
       chat={{
-        title: "ผู้ช่วย Acme",
-        subtitle: "ถาม · ตอบ · แสดงผลเป็น UI",
+        title: "Acme Assistent",
+        subtitle: "Fragen · Antworten · als UI",
         suggestions: [
-          { label: "สรุปยอดขาย", prompt: "สรุปยอดขายไตรมาสนี้ให้หน่อย เทียบกับปีที่แล้ว" },
-          { label: "สถานะออเดอร์", prompt: "ออเดอร์ล่าสุดของฉันถึงไหนแล้ว" },
+          { label: "Quartalsumsatz", prompt: "Wie lief das Quartal im Vergleich zum Vorjahr?" },
+          { label: "Bestellstatus", prompt: "Wo ist meine letzte Bestellung?" },
         ],
         labels: {
-          emptyTitle: "ถามได้เลย",
-          emptyDescription: "พิมพ์คำถาม แล้วรับคำตอบพร้อม UI",
-          thinking: "กำลังคิด…",
-          approve: "อนุมัติ",
-          reject: "ปฏิเสธ",
-          run: "เรียกใช้",
-          cancel: "ยกเลิก",
-          startOver: "เริ่มใหม่",
-          closeChat: "ปิดแชท",
-          openAssistant: "เปิดผู้ช่วย",
-          closeAssistant: "ปิดผู้ช่วย",
-          placeholder: "ถามคำถาม หรือขอให้สร้าง UI...",
-          send: "ส่ง",
-          selectModel: "เลือกโมเดล",
-          steps: (count) => `${count} ขั้นตอน`,
-          approveTool: (tool) => `อนุญาตให้เรียก ${tool} หรือไม่`,
-          runOnPage: (tool) => `เรียก ${tool} บนหน้านี้หรือไม่`,
-          securityTitle: "พบข้อความน่าสงสัยในข้อมูลจากเครื่องมือ",
+          emptyTitle: "Frag einfach",
+          emptyDescription: "Stell eine Frage und bekomm die Antwort als UI",
+          thinking: "Denkt nach…",
+          approve: "Erlauben",
+          reject: "Ablehnen",
+          run: "Ausführen",
+          cancel: "Abbrechen",
+          startOver: "Neu beginnen",
+          closeChat: "Chat schließen",
+          openAssistant: "Assistent öffnen",
+          closeAssistant: "Assistent schließen",
+          placeholder: "Stell eine Frage oder lass dir eine UI bauen...",
+          send: "Senden",
+          selectModel: "Modell wählen",
+          steps: (count) => `${count} Schritte`,
+          approveTool: (tool) => `${tool} ausführen erlauben?`,
+          runOnPage: (tool) => `${tool} auf dieser Seite ausführen?`,
+          securityTitle: "Verdächtiger Text in Tool-Daten gefunden",
         },
       }}
     >
@@ -71,17 +71,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 ```
 
-`labels` is a `Partial<ChatLabels>`: any key you leave out keeps its English default. Function-valued keys (`steps`, `approveTool`, `runOnPage`, `securityBody`, `toolState`) receive the count, tool name, or tool state, so word order is yours. An invalid locale or currency falls back to `en-US` / `THB` with a console warning rather than throwing.
+`labels` is a `Partial<ChatLabels>`: any key you leave out keeps its English default. Function-valued keys (`steps`, `approveTool`, `runOnPage`, `securityBody`, `toolState`) receive the count, tool name, or tool state, so word order is yours. An invalid locale or currency falls back to `en-US` / `USD` with a console warning rather than throwing.
 
 ### The assistant's language
 
-The catalog rules already say "respond in the user's language", so a Thai question gets a Thai answer without configuration. For a single-language app, fix it on the server so an English question from a Thai user still gets Thai:
+The catalog rules already say "respond in the user's language", so a German question gets a German answer without configuration. For a single-language app, fix it on the server so an English question from a German user still gets German:
 
 ```ts title="app/api/chat/route.ts"
 export const { GET, POST } = createVexaHandler({
   models,
-  persona: "คุณคือผู้ช่วยของ Acme ตอบเป็นภาษาไทยเสมอ ใช้คำสุภาพและกระชับ",
-  instructions: ["Component labels, table headers, and button text must be Thai. Keep product names and order ids as they are."],
+  persona: "Du bist der Assistent von Acme. Antworte immer auf Deutsch, höflich und knapp.",
+  instructions: ["Component labels, table headers, and button text must be German. Keep product names and order ids as they are."],
 });
 ```
 
@@ -89,12 +89,12 @@ export const { GET, POST } = createVexaHandler({
 
 ### Component text
 
-Component strings such as Table headers and Button labels are written by the model, so the instruction above is what makes them Thai. The only text the library prints inside a spec is formatted numbers, which `format` handles. Thai script needs a font with Thai glyphs on the host page; the components inherit `font-family` from the page.
+Component strings such as Table headers and Button labels are written by the model, so the instruction above is what makes them German. The only text the library prints inside a spec is formatted numbers, which `format` handles; the components inherit `font-family` from the page, so a script that needs its own glyphs needs a font on the host page.
 
 ## Prompt hints
 
-- Numbers stay Arabic: "write digits as 0-9, not Thai numerals" avoids ๑๒๓ in Metric values.
-- Dates and times: "write times as HH:MM and dates as d MMM in Thai (14 ก.ย.)".
+- Decimal separators: "write Metric values with a comma as the decimal separator (2,4 Mio. €)" keeps the model's strings consistent with the axes the formatter prints.
+- Dates and times: "write times as HH:MM and dates as d. MMM (14. Sept.)".
 - Mixed audiences: leave `persona` language-neutral and let the catalog rule follow each user.
 
 ## Related

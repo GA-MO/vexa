@@ -652,7 +652,7 @@ export const catalog = defineCatalog(schema, {
         currency: z.string().nullable(),
       }),
       description:
-        "Receipt/order lines with qty x name and amount, plus summary lines (subtotal, tax, total). currency is a prefix symbol, default ฿.",
+        "Receipt/order lines with qty x name and amount, plus summary lines (subtotal, tax, total). currency is a prefix symbol, default $.",
       example: {
         items: [
           { name: "Latte", detail: "Oat milk", qty: 2, amount: 180 },
@@ -663,7 +663,7 @@ export const catalog = defineCatalog(schema, {
           { label: "VAT 7%", amount: 18.55, emphasis: null },
           { label: "Total", amount: 283.55, emphasis: "total" },
         ],
-        currency: "฿",
+        currency: "$",
       },
     },
     FromTo: {
@@ -693,7 +693,7 @@ export const catalog = defineCatalog(schema, {
         pairs: [
           { label: "Order", value: "#A-1042" },
           { label: "Status", value: "Shipped" },
-          { label: "Total", value: "฿283.55" },
+          { label: "Total", value: "$283.55" },
         ],
         size: "sm",
       },
