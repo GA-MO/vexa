@@ -6,6 +6,7 @@ import type { MDXComponents } from "mdx/types";
 import { CatalogGallery } from "@/components/catalog-gallery";
 import { ChatElements } from "@/components/chat-elements";
 import { Example } from "@/components/example";
+import { ExampleAppLink } from "@/components/example-app-link";
 import { resolveExampleUrl } from "@/lib/example-urls";
 
 export { Example };
@@ -23,6 +24,7 @@ export function getMDXComponents(components?: MDXComponents) {
     CatalogGallery,
     ChatElements,
     Example,
+    ExampleAppLink,
     Step,
     Steps,
     Tab,

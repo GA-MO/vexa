@@ -9,6 +9,13 @@ Every example app has a `/guides` page. A guide is one mechanism (the model navi
 
 The mock model plays a script that lives next to the scenario, so a guide costs nothing and behaves the same every time. Switch the model picker to a real model to see how a prompt steers it; the mock exists to show the chat UI and the runtime, never to judge prompts.
 
+## Open one now
+
+Both apps are hosted with the docs as static, mock-only builds: every guide plays in the browser, no server, no key.
+
+<ExampleAppLink app="shop-admin" path="/guides" label="Shop admin guides" note="An internal admin app: 24 guides on navigation, page state, approval, server tools, MCP, and generated UI that acts" />
+<ExampleAppLink app="widget" label="Embedded widget" note="The smallest integration: theme, labels, launcher placement, overlay or inline" />
+
 ## Which one looks like yours
 
 | Example | Shape | Status |
@@ -19,9 +26,9 @@ The mock model plays a script that lives next to the scenario, so a guide costs 
 
 Open **Embedded widget** to see the least you have to write, and **Shop admin** for every control path in [Best practices](/docs/host/best-practices).
 
-## Run one
+## Run one locally
 
-The published site hosts both examples as static, mock-only builds, so every guide plays in the browser with no server and no key; the real model picker needs the local dev servers below.
+The real model picker (OpenRouter models next to the mock) needs the dev servers; the hosted builds offer the mock only.
 
 The examples live in the Vexa repository and share the library source, so they need no build step.
 

@@ -6,8 +6,10 @@ import { fileURLToPath } from "node:url";
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const OUT_DIR = path.join(ROOT, "pages-site");
 
-const siteUrl = (process.env.VEXA_SITE_URL ?? "https://ga-mo.github.io/vexa").replace(/\/$/, "");
-const basePath = new URL(siteUrl).pathname.replace(/\/$/, "");
+const configuredSiteUrl = new URL(process.env.VEXA_SITE_URL ?? "https://ga-mo.github.io/vexa");
+configuredSiteUrl.hostname = configuredSiteUrl.hostname.toLowerCase();
+const siteUrl = configuredSiteUrl.toString().replace(/\/$/, "");
+const basePath = configuredSiteUrl.pathname.replace(/\/$/, "");
 
 const shopAdminUrl = `${siteUrl}/shop-admin`;
 const widgetUrl = `${siteUrl}/widget`;

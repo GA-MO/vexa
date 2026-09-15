@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { frontmatter } from "fumadocs-core/content/md/frontmatter";
-import { resolveExampleUrl } from "./example-urls";
+import { exampleAppUrl, resolveExampleUrl, type ExampleApp } from "./example-urls";
 import { absoluteUrl } from "./site";
 import type { source } from "./source";
 
@@ -10,6 +10,7 @@ const GENERATED_MARKER = /^\s*\{\/\*\s*generated:(?:start|end)\s*\*\/\}\s*$/;
 const MDX_ESM_STATEMENT = /^(?:import|export)\s/;
 const EXAMPLE_TAG = /^\s*<Example\s+id="([^"]+)"\s*\/>\s*$/;
 const CATALOG_GALLERY_TAG = /^\s*<CatalogGallery\s*\/>\s*$/;
+const EXAMPLE_APP_LINK_TAG = /^\s*<ExampleAppLink\s+app="([^"]+)"(?:\s+path="([^"]*)")?\s+label="([^"]+)"(?:\s+note="[^"]*")?\s*\/>\s*$/;
 const INCLUDE_TAG = /^\s*<include(?:\s+meta='title="([^"]*)"')?>([^<]+)<\/include>\s*$/;
 const DOCS_CONTENT_DIR = path.join(process.cwd(), "content/docs");
 const REPEATED_BLANK_LINES = /\n{3,}/g;
@@ -50,6 +51,8 @@ function transformContentLine(line: string, htmlUrl: string, includeDir: string)
   if (CATALOG_GALLERY_TAG.test(line)) return liveGalleryNote(htmlUrl);
   const include = INCLUDE_TAG.exec(line);
   if (include) return includedCodeFence(includeDir, include[2], include[1]);
+  const appLink = EXAMPLE_APP_LINK_TAG.exec(line);
+  if (appLink) return `**[${appLink[3]}](${exampleAppUrl(appLink[1] as ExampleApp, appLink[2] ?? "/")})**`;
   return line.replace(LOCAL_EXAMPLE_LINK, (link) => `(${resolveExampleUrl(link.slice(1, -1))})`);
 }
 

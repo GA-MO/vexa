@@ -3,6 +3,8 @@ title: Embedded widget
 description: "The smallest Vexa integration: one Vite page, one VexaProvider, one overlay, no host tools, a scripted mock model served by the dev server. Four guides on theme, labels, launcher placement, and overlay versus inline."
 ---
 
+<ExampleAppLink app="widget" label="Open the embedded widget" note="Hosted with these docs; the four guides play against the mock model" />
+
 ## What it is
 
 `examples/embedded-widget/` is a single-page Vite app for a fictional product, Acme Notes. It has no host tools, no page context, and no API key: `vite/chat-api.ts` mounts `createVexaHandler` on the dev server at `/api/chat` with one model, the scripted mock from `examples/shared/mock-model.ts`. Everything the reader changes on the page is a `VexaProvider` prop.
@@ -16,7 +18,7 @@ description: "The smallest Vexa integration: one Vite page, one VexaProvider, on
 | `vite/chat-api.ts` | the Vite plugin that serves the chat route from the dev server |
 | `src/app.css` | `@import "tailwindcss"`, `@source` for the library, `@import "vexa/styles.css"`; nothing else, the stylesheet's light defaults do the rest |
 
-## Run it
+## Run it locally
 
 ```bash title="terminal"
 bun run dev:widget       # http://localhost:3003

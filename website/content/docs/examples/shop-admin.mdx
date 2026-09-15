@@ -3,6 +3,8 @@ title: Shop admin
 description: An order-management admin for a small coffee shop. Four pages, seven host tools, five server tools, an optional stdio MCP server, and 24 playable guides grouped by what you want the chat to do.
 ---
 
+<ExampleAppLink app="shop-admin" path="/guides" label="Open the shop admin guides" note="Hosted with these docs; every guide plays against the mock model" />
+
 ## What it is
 
 Vexa Shop admin is the reference host app in `examples/shop-admin/`: an overview at `/`, an orders table at `/orders`, an order page at `/orders/[id]`, `/settings`, and the guides at `/guides`. The chat overlay is mounted once in `examples/shop-admin/components/demo-host.tsx`, which registers the host tools, the page context, and the chat defaults. The route in `examples/shop-admin/app/api/chat/route.ts` is one `createVexaHandler` call with the persona, the rules, the model registry, the server tools and their tiers.
@@ -15,14 +17,14 @@ Vexa Shop admin is the reference host app in `examples/shop-admin/`: an overview
 | MCP | `examples/shop-admin/scripts/fixture-mcp.ts` | `fixtures__read_file` and `fixtures__write_file` over stdio, on when `VEXA_DEMO_MCP=1` |
 | Data | `examples/shop-admin/lib/shop/data.ts` | 24 orders (`C-1019` to `C-1042`) across Bangkok, Chiang Mai, Phuket, and Khon Kaen |
 
-## Run it
+## Run it locally
 
 ```bash title="terminal"
 bun run dev                      # http://localhost:3001
 VEXA_DEMO_MCP=1 bun run dev      # also starts the fixtures MCP server for the mcp-stdio guide
 ```
 
-Open [localhost:3001/guides](http://localhost:3001/guides). Every guide page defaults the model picker to **mock**, so nothing below needs an API key. `bun run test:scenarios` runs the same scenarios headlessly against the real model; add `VEXA_SCENARIO_MODEL=mock` to run them against the script.
+Then open [the guides](http://localhost:3001/guides). Every guide page defaults the model picker to **mock**, so nothing below needs an API key; the dev server also lists the OpenRouter models when `OPENROUTER_API_KEY` is set. `bun run test:scenarios` runs the same scenarios headlessly against the real model; add `VEXA_SCENARIO_MODEL=mock` to run them against the script.
 
 ## Guides
 
