@@ -18,6 +18,7 @@ const SEARCH_LINKS: [name: string, href: string][] = [
 
 export function links(): Route.LinkDescriptors {
   return [
+    { rel: "icon", type: "image/svg+xml", href: `${import.meta.env.BASE_URL}icon.svg` },
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
     { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
     { rel: "stylesheet", href: GOOGLE_FONTS_URL },

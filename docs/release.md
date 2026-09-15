@@ -7,7 +7,7 @@ Vexa is not published to npm. A release is a git tag `vX.Y.Z` on `main` plus a G
 "vexa": "https://github.com/GA-MO/vexa/releases/download/v0.1.0/vexa-0.1.0.tgz"
 ```
 
-Both resolve to the same files: `package.json` `files` limits the package to `src/` (about 120 KB packed), `exports` point at the TypeScript source, `private: true` stays so nothing can be pushed to a registry by accident.
+Both resolve to the same entry points: `exports` point at the TypeScript source and `private: true` stays so nothing can be pushed to a registry by accident. `files` limits the tarball to `src/` (about 120 KB packed, 730 KB installed); bun's git install ignores `files` and copies the checkout without `node_modules` (about 2.5 MB), which is why both forms are documented.
 
 ## Cut a release
 
