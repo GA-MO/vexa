@@ -47,9 +47,16 @@ export function GuideCard({ guide, code, controls, onPrompt, children }: GuideCa
       </div>
       {children}
       <CodeBlock code={code} language="tsx" title="app.tsx" />
-      <a href={`${DOCS_BASE_URL}/docs/${guide.docs}`} className="text-sm text-primary underline-offset-2 hover:underline">
-        Read the docs: {guide.docs}
-      </a>
+      <div className="flex flex-wrap gap-4">
+        <a href={`${DOCS_BASE_URL}/docs/${guide.docs}`} className="text-sm text-primary underline-offset-2 hover:underline">
+          Read the docs: {guide.docs}
+        </a>
+        {guide.link ? (
+          <a href={guide.link.href} className="text-sm text-primary underline-offset-2 hover:underline">
+            {guide.link.label}
+          </a>
+        ) : null}
+      </div>
     </section>
   );
 }

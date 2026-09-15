@@ -67,6 +67,8 @@ import { estimateTokens, estimateUsage } from "./usage";
 /** `panel` is a framed card that fills its box, `inline` fills its box flush (no radius, border, or shadow) to dock into the host's own layout, `page` takes the viewport. */
 export type VexaChatLayout = "page" | "panel" | "inline";
 
+const PAGE_COLUMN = "mx-auto w-full max-w-3xl";
+
 const LAYOUT_FRAME: Record<VexaChatLayout, string> = {
   panel: "h-full rounded-[1.35rem] border border-border/70 shadow-[0_28px_80px_-24px_var(--vexa-glow),0_12px_32px_-16px_var(--vexa-glow-violet)]",
   inline: "h-full",
@@ -223,6 +225,7 @@ export function VexaChat({
   const usedTokens = useMemo(() => estimateTokens(messages), [messages]);
   const usage = useMemo(() => estimateUsage(messages), [messages]);
   const isCompact = layout !== "page";
+  const pageColumn = layout === "page" ? PAGE_COLUMN : undefined;
 
   const sendNow = useCallback(
     async (message: PromptInputMessage) => {
@@ -352,48 +355,50 @@ export function VexaChat({
         className="vexa-glow pointer-events-none absolute -right-10 top-20 size-44 rounded-full bg-brand-violet/15 blur-3xl"
       />
 
-      <header className="relative z-10 flex items-center gap-3 border-b border-border/60 px-4 py-3 backdrop-blur-md">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-brand-violet text-primary-foreground shadow-md shadow-primary/35">
-          {logo}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate text-sm font-semibold tracking-tight">
-            <span className="bg-gradient-to-r from-primary to-brand-violet bg-clip-text text-transparent">
-              {title}
-            </span>
-          </h2>
-          <p className="truncate text-[11px] text-muted-foreground">
-            {subtitle}
-          </p>
-        </div>
-        <div className="flex items-center gap-0.5">
-          {messages.length > 0 ? (
-            <button
-              type="button"
-              aria-label={labels.startOver}
-              onClick={resetChat}
-              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <RotateCcwIcon className="size-3.5" />
-            </button>
-          ) : null}
-          {onClose ? (
-            <button
-              type="button"
-              aria-label={labels.closeChat}
-              onClick={onClose}
-              className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <XIcon className="size-4" />
-            </button>
-          ) : null}
+      <header className="relative z-10 border-b border-border/60 px-4 py-3 backdrop-blur-md">
+        <div className={cn("flex items-center gap-3", pageColumn)}>
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-brand-violet text-primary-foreground shadow-md shadow-primary/35">
+            {logo}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate text-sm font-semibold tracking-tight">
+              <span className="bg-gradient-to-r from-primary to-brand-violet bg-clip-text text-transparent">
+                {title}
+              </span>
+            </h2>
+            <p className="truncate text-[11px] text-muted-foreground">
+              {subtitle}
+            </p>
+          </div>
+          <div className="flex items-center gap-0.5">
+            {messages.length > 0 ? (
+              <button
+                type="button"
+                aria-label={labels.startOver}
+                onClick={resetChat}
+                className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <RotateCcwIcon className="size-3.5" />
+              </button>
+            ) : null}
+            {onClose ? (
+              <button
+                type="button"
+                aria-label={labels.closeChat}
+                onClick={onClose}
+                className="inline-flex size-8 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <XIcon className="size-4" />
+              </button>
+            ) : null}
+          </div>
         </div>
       </header>
 
       <div className="relative z-10 flex min-h-0 flex-1 flex-col">
         <Conversation className="relative min-h-0 flex-1">
           <ConversationContent
-            className={cn("gap-5", isCompact ? "px-3 py-3" : "px-4 py-4 sm:px-6")}
+            className={cn("gap-5", isCompact ? "px-3 py-3" : "px-4 py-4 sm:px-6", pageColumn)}
           >
             {messages.length === 0 ? (
               <ConversationEmptyState
@@ -453,97 +458,99 @@ export function VexaChat({
 
         <div
           className={cn(
-            "shrink-0 space-y-2 border-t border-border/60 bg-card/80 backdrop-blur-md",
+            "shrink-0 border-t border-border/60 bg-card/80 backdrop-blur-md",
             isCompact ? "p-3" : "p-4 sm:px-6",
           )}
         >
-          {queue.length > 0 ? (
-            <Queue className="rounded-xl border border-border/70 bg-muted/40 p-1.5">
-              <QueueSection defaultOpen>
-                <QueueSectionTrigger>
-                  <QueueSectionLabel count={queue.length} label={labels.queued} />
-                </QueueSectionTrigger>
-                <QueueSectionContent>
-                  <QueueList>
-                    {queue.map((item) => {
-                      const label =
-                        item.parts.find((part) => part.type === "text")
-                          ?.text ?? labels.attachment;
-                      return (
-                        <QueueItem key={item.id}>
-                          <div className="flex items-start gap-2">
-                            <QueueItemIndicator />
-                            <QueueItemContent>{label}</QueueItemContent>
-                            <QueueItemActions>
-                              <QueueItemAction
-                                aria-label={labels.removeQueued}
-                                onClick={() =>
-                                  setQueue((current) =>
-                                    current.filter(
-                                      (entry) => entry.id !== item.id,
-                                    ),
-                                  )
-                                }
-                              >
-                                <XIcon className="size-3.5" />
-                              </QueueItemAction>
-                            </QueueItemActions>
-                          </div>
-                        </QueueItem>
-                      );
-                    })}
-                  </QueueList>
-                </QueueSectionContent>
-              </QueueSection>
-            </Queue>
-          ) : null}
+          <div className={cn("space-y-2", pageColumn)}>
+            {queue.length > 0 ? (
+              <Queue className="rounded-xl border border-border/70 bg-muted/40 p-1.5">
+                <QueueSection defaultOpen>
+                  <QueueSectionTrigger>
+                    <QueueSectionLabel count={queue.length} label={labels.queued} />
+                  </QueueSectionTrigger>
+                  <QueueSectionContent>
+                    <QueueList>
+                      {queue.map((item) => {
+                        const label =
+                          item.parts.find((part) => part.type === "text")
+                            ?.text ?? labels.attachment;
+                        return (
+                          <QueueItem key={item.id}>
+                            <div className="flex items-start gap-2">
+                              <QueueItemIndicator />
+                              <QueueItemContent>{label}</QueueItemContent>
+                              <QueueItemActions>
+                                <QueueItemAction
+                                  aria-label={labels.removeQueued}
+                                  onClick={() =>
+                                    setQueue((current) =>
+                                      current.filter(
+                                        (entry) => entry.id !== item.id,
+                                      ),
+                                    )
+                                  }
+                                >
+                                  <XIcon className="size-3.5" />
+                                </QueueItemAction>
+                              </QueueItemActions>
+                            </div>
+                          </QueueItem>
+                        );
+                      })}
+                    </QueueList>
+                  </QueueSectionContent>
+                </QueueSection>
+              </Queue>
+            ) : null}
 
-          {messages.length === 0 ? (
-            <Suggestions className="px-0.5">
-              {suggestions.map((item) => (
-                <Suggestion
-                  key={item.label}
-                  suggestion={item.prompt}
-                  onClick={(value) => void submitText(value)}
-                >
-                  {item.label}
-                </Suggestion>
-              ))}
-            </Suggestions>
-          ) : null}
+            {messages.length === 0 ? (
+              <Suggestions className="px-0.5">
+                {suggestions.map((item) => (
+                  <Suggestion
+                    key={item.label}
+                    suggestion={item.prompt}
+                    onClick={(value) => void submitText(value)}
+                  >
+                    {item.label}
+                  </Suggestion>
+                ))}
+              </Suggestions>
+            ) : null}
 
-          {host?.pending.map((item) => (
-            <HostToolConfirmation
-              key={item.id}
-              item={item}
-              labels={labels}
-              onDecide={(approved) => host.resolveConfirmation(item.id, approved)}
-            />
-          ))}
+            {host?.pending.map((item) => (
+              <HostToolConfirmation
+                key={item.id}
+                item={item}
+                labels={labels}
+                onDecide={(approved) => host.resolveConfirmation(item.id, approved)}
+              />
+            ))}
 
-          {error ? (
-            <p className="text-sm text-destructive">{error.message}</p>
-          ) : null}
+            {error ? (
+              <p className="text-sm text-destructive">{error.message}</p>
+            ) : null}
 
-          <PromptInput
-            accept="image/*,application/pdf,text/*"
-            className="rounded-2xl border border-border/80 bg-background shadow-[0_10px_30px_-18px] shadow-primary/45"
-            globalDrop
-            multiple
-            onSubmit={(message) => void submitPrompt(message)}
-          >
-            <ChatComposer
-              maxTokens={selected.maxTokens}
-              models={models}
-              model={model}
-              setModel={pickModel}
-              setText={setText}
-              status={status}
-              text={text}
-              usage={usage}
-              usedTokens={usedTokens}
-            />
-          </PromptInput>
+            <PromptInput
+              accept="image/*,application/pdf,text/*"
+              className="rounded-2xl border border-border/80 bg-background shadow-[0_10px_30px_-18px] shadow-primary/45"
+              globalDrop
+              multiple
+              onSubmit={(message) => void submitPrompt(message)}
+            >
+              <ChatComposer
+                maxTokens={selected.maxTokens}
+                models={models}
+                model={model}
+                setModel={pickModel}
+                setText={setText}
+                status={status}
+                text={text}
+                usage={usage}
+                usedTokens={usedTokens}
+              />
+            </PromptInput>
+          </div>
         </div>
       </div>
     </section>
