@@ -6,12 +6,20 @@ import type { MDXComponents } from "mdx/types";
 import { CatalogGallery } from "@/components/catalog-gallery";
 import { ChatElements } from "@/components/chat-elements";
 import { Example } from "@/components/example";
+import { resolveExampleUrl } from "@/lib/example-urls";
 
 export { Example };
+
+const DefaultAnchor = defaultMdxComponents.a;
+
+function Anchor({ href, ...props }: React.ComponentProps<typeof DefaultAnchor>) {
+  return <DefaultAnchor href={href ? resolveExampleUrl(href) : href} {...props} />;
+}
 
 export function getMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    a: Anchor,
     CatalogGallery,
     ChatElements,
     Example,

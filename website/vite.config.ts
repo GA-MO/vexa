@@ -19,6 +19,7 @@ const REACT_PACKAGES = ["react", "react-dom"];
 const libraryDependenciesWithoutReact = libraryDependencies.filter((name) => !REACT_PACKAGES.includes(name));
 
 export default defineConfig(({ command }) => ({
+  base: process.env.VITE_VEXA_BASE_PATH ?? "/",
   plugins: [
     fumadocsMdx({ globalOptions: { mdxOptions: { rehypeCodeOptions: { themes: CODE_THEMES } } } }),
     tailwindcss(),

@@ -21,6 +21,8 @@ Open **Embedded widget** to see the least you have to write, and **Shop admin** 
 
 ## Run one
 
+The published site hosts both examples as static, mock-only builds, so every guide plays in the browser with no server and no key; the real model picker needs the local dev servers below.
+
 The examples live in the Vexa repository and share the library source, so they need no build step.
 
 ```bash title="terminal"
@@ -29,4 +31,4 @@ bun run dev          # shop admin at http://localhost:3001, guides at /guides
 bun run dev:widget   # embedded widget at http://localhost:3003
 ```
 
-The docs you are reading run on port 3002; each guide links back to its docs page, and the [Shop admin](/docs/examples/shop-admin) page links to every guide.
+Each guide links back to its docs page, and the [Shop admin](/docs/examples/shop-admin) and [Embedded widget](/docs/examples/embedded-widget) pages link to every guide; on the published site the links go to the hosted, mock-only builds of both apps.

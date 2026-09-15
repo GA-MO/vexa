@@ -1,6 +1,6 @@
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { ModelRegistry } from "vexa/server";
-import { createMockModel, MOCK_MODEL_ID } from "./mock-model";
+import { MOCK_MODEL_ENTRY } from "./mock-model";
 
 const DEMO_MODELS = [
   { id: "google/gemini-3.1-flash-lite", name: "Gemini 3.1 Flash Lite", maxTokens: 1_000_000 },
@@ -29,7 +29,7 @@ export function demoModels(): ModelRegistry {
     ...Object.fromEntries(
       DEMO_MODELS.map(({ id, name, maxTokens }) => [id, { model: () => openRouter()(id), name, maxTokens }]),
     ),
-    [MOCK_MODEL_ID]: { model: createMockModel, name: "Mock (scripted, free)", provider: "vexa-mock", maxTokens: 8_000 },
+    ...MOCK_MODEL_ENTRY,
   };
 }
 

@@ -242,17 +242,17 @@ export default function VexaSearchDialog({ open, onOpenChange, links = [] }: Vex
             </>
           )}
         />
+        <SearchDialogFooter className="flex flex-wrap items-center gap-2">
+          <TagsList tag={tag} onTagChange={setTag} allowClear>
+            {SEARCH_SECTIONS.map((section) => (
+              <TagsListItem key={section.tag} value={section.tag}>
+                {section.title}
+              </TagsListItem>
+            ))}
+          </TagsList>
+          <KeyboardHints />
+        </SearchDialogFooter>
       </SearchDialogContent>
-      <SearchDialogFooter className="flex flex-wrap items-center gap-2">
-        <TagsList tag={tag} onTagChange={setTag} allowClear>
-          {SEARCH_SECTIONS.map((section) => (
-            <TagsListItem key={section.tag} value={section.tag}>
-              {section.title}
-            </TagsListItem>
-          ))}
-        </TagsList>
-        <KeyboardHints />
-      </SearchDialogFooter>
     </SearchDialog>
   );
 }

@@ -5,6 +5,8 @@ description: "How coding agents read these docs: every page as Markdown, llms.tx
 
 ## Every page is Markdown
 
+The static site on GitHub Pages serves the Markdown pages, `llms.txt`, `llms-full.txt` and the search index; the JSON search API, the `/mcp` endpoint and the site assistant need the server build (`bun run start:site`).
+
 Add `.md` to any docs URL to get the page as plain Markdown with the frontmatter folded into a heading and a `Source:` line. HTML pages advertise it with a `Link: <...md>; rel="alternate"; type="text/markdown"` header.
 
 ```bash title="terminal"

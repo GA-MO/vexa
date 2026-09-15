@@ -3,6 +3,8 @@ import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { CheckIcon, ClipboardCopyIcon, Sparkles } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { VexaChat, type ChatSuggestion } from "vexa/chat";
+import { PLAYGROUND_MOCK_SUGGESTIONS, servePlaygroundMockInBrowser } from "@/lib/playground-mock";
+import { STATIC_BUILD } from "@/lib/static-build";
 import type { VexaMessage } from "vexa/protocol";
 import { CodeSurface } from "@/components/code-surface";
 import { baseOptions } from "@/lib/layout.shared";
@@ -18,12 +20,16 @@ const CHAT_API = "/api/chat";
 const INSPECTOR_TABS = ["Spec", "JSONL", "State"];
 const COPY_FEEDBACK_MS = 2000;
 
-const PLAYGROUND_SUGGESTIONS: readonly ChatSuggestion[] = [
+if (STATIC_BUILD) servePlaygroundMockInBrowser();
+
+const LIVE_SUGGESTIONS: readonly ChatSuggestion[] = [
   { label: "KPI dashboard", prompt: "Show 3 KPI metrics for an online shop with a revenue bar chart by month" },
   { label: "Pricing table", prompt: "Compare three subscription plans in a table with a call-to-action button per plan" },
   { label: "Signup form", prompt: "Build a signup form with name, email, plan select and a submit button" },
   { label: "Order timeline", prompt: "Show the status of order #4821 as a timeline with a progress bar" },
 ];
+
+const PLAYGROUND_SUGGESTIONS = STATIC_BUILD ? PLAYGROUND_MOCK_SUGGESTIONS : LIVE_SUGGESTIONS;
 
 type CopyState = "idle" | "copied" | "failed";
 

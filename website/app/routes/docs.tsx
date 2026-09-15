@@ -42,11 +42,6 @@ function markdownPathFor(slug: string) {
   return `${DOCS_BASE_URL}/${slug}.md`;
 }
 
-function markdownAlternateHeaders(view: DocsView) {
-  if (view.kind !== "page") return undefined;
-  return { Link: `<${markdownPathFor(view.slug)}>; rel="alternate"; type="text/markdown"` };
-}
-
 export async function loader({ params }: Route.LoaderArgs) {
   const slugs = toSlugs(params["*"]);
   const moved = movedDocsUrl(slugs);
@@ -54,11 +49,7 @@ export async function loader({ params }: Route.LoaderArgs) {
   const view = resolveView(slugs);
   const pageTree = await source.serializePageTree(source.getPageTree());
 
-  return data({ view, pageTree }, { headers: markdownAlternateHeaders(view) });
-}
-
-export function headers({ loaderHeaders }: Route.HeadersArgs) {
-  return loaderHeaders;
+  return data({ view, pageTree });
 }
 
 function PageActions({ path, slug }: { path: string; slug: string }) {

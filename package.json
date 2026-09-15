@@ -34,7 +34,8 @@
     "generate:reference": "bun run scripts/generate-reference.ts",
     "mcp:build": "bunx --bun vite build --config mcp/vite.config.ts",
     "mcp:stdio": "bun run mcp/server.ts --stdio",
-    "mcp:http": "bun run mcp/server.ts"
+    "mcp:http": "bun run mcp/server.ts",
+    "build:pages": "bun run scripts/build-pages.ts"
   },
   "peerDependencies": {
     "react": "^19.0.0",

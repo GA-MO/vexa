@@ -2,6 +2,7 @@ import { jsonSchema } from "ai";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { VexaProvider, type VexaChatDefaults } from "vexa/react";
+import { STATIC_BUILD } from "@/lib/static-build";
 import { useAssistantTools } from "@/lib/assistant-tools";
 
 const ASSISTANT_API = "/api/assistant";
@@ -45,7 +46,7 @@ function useMounted() {
 
 function AssistantOverlay() {
   const mounted = useMounted();
-  if (!mounted) return null;
+  if (!mounted || STATIC_BUILD) return null;
   return (
     <Suspense fallback={null}>
       <VexaChatOverlay />

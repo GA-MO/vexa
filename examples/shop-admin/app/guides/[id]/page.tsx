@@ -15,8 +15,6 @@ import { readScenarioResult } from "@/lib/scenarios/results";
 import { toolSources, type ToolSource } from "@/lib/scenarios/tool-sources";
 import type { Scenario, ScenarioResult, StepResult } from "@/lib/scenarios/types";
 
-export const dynamic = "force-dynamic";
-
 const DOCS_BASE_URL = process.env.NEXT_PUBLIC_VEXA_DOCS_URL ?? "http://localhost:3002";
 const SHOW_RESULTS = process.env.NODE_ENV === "development";
 

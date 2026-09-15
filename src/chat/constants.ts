@@ -1,7 +1,19 @@
+import type { ToolUIPart } from "ai";
+
 export type ChatSuggestion = { label: string; prompt: string };
 
 /** How reasoning and tool calls appear: a collapsible steps block, or hidden behind the thinking indicator (approval cards always show). */
 export type ChatStepsDisplay = "collapsible" | "hidden";
+
+/** Tool call states as the AI SDK reports them; `labels.toolState` names each one. */
+export type ChatToolState = ToolUIPart["state"];
+
+/** Which composer controls show besides the textarea and send button. `modelPicker` defaults to showing only when more than one model is available. */
+export type ChatComposerOptions = {
+  attachments?: boolean;
+  modelPicker?: boolean;
+  tokenUsage?: boolean;
+};
 
 export type ChatLabels = {
   emptyTitle: string;
@@ -31,6 +43,36 @@ export type ChatLabels = {
   securityTitle: string;
   securityBody: (tool: string) => string;
   buttonPressed: (tool: string) => string;
+  placeholder: string;
+  send: string;
+  stop: string;
+  attach: string;
+  addAttachment: string;
+  takeScreenshot: string;
+  removeAttachment: string;
+  selectModel: string;
+  searchModels: string;
+  noModels: string;
+  tokenUsage: string;
+  usageInput: string;
+  usageOutput: string;
+  usageReasoning: string;
+  usageCache: string;
+  usageTotalCost: string;
+  toolInput: string;
+  toolOutput: string;
+  toolState: (state: ChatToolState) => string;
+  usedSources: (count: number) => string;
+};
+
+const DEFAULT_TOOL_STATES: Record<ChatToolState, string> = {
+  "input-streaming": "Pending",
+  "input-available": "Running",
+  "approval-requested": "Awaiting approval",
+  "approval-responded": "Responded",
+  "output-available": "Completed",
+  "output-denied": "Denied",
+  "output-error": "Error",
 };
 
 /** `book_room` → `Book room`, `fixtures__write_file` → `Fixtures write file`. */
@@ -67,6 +109,26 @@ export const DEFAULT_LABELS: ChatLabels = {
   securityTitle: "Suspicious text in tool data",
   securityBody: (tool) => `Data returned by ${tool} contained instructions aimed at the assistant. They were ignored and tools that change data were disabled for this reply.`,
   buttonPressed: (tool) => humanizeToolName(tool),
+  placeholder: "Ask for an answer or a UI...",
+  send: "Send",
+  stop: "Stop",
+  attach: "Attach",
+  addAttachment: "Add photos or files",
+  takeScreenshot: "Take screenshot",
+  removeAttachment: "Remove attachment",
+  selectModel: "Select a model",
+  searchModels: "Search models...",
+  noModels: "No models found.",
+  tokenUsage: "Context usage",
+  usageInput: "Input",
+  usageOutput: "Output",
+  usageReasoning: "Reasoning",
+  usageCache: "Cache",
+  usageTotalCost: "Total cost",
+  toolInput: "Parameters",
+  toolOutput: "Result",
+  toolState: (state) => DEFAULT_TOOL_STATES[state],
+  usedSources: (count) => (count === 1 ? "Used 1 source" : `Used ${count} sources`),
 };
 
 export type ChatModel = {

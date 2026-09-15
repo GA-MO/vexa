@@ -1,12 +1,13 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { Readable } from "node:stream";
-import type { Plugin } from "vite";
-import { createVexaHandler } from "../../../src/server/index.ts";
-import { createScriptedModel, MOCK_MODEL_ID } from "../../shared/mock-model.ts";
-import { WIDGET_MOCK_SCRIPT } from "../src/guides/mock-script.ts";
+import { createServerModuleRunner, type Plugin } from "vite";
+import type { createWidgetChatHandler } from "../src/chat-handler.ts";
 
 const CHAT_PATH = "/api/chat";
 const LOCAL_ORIGIN = "http://localhost";
+const HANDLER_MODULE = "/src/chat-handler.ts";
+
+type ChatHandlerModule = { createWidgetChatHandler: typeof createWidgetChatHandler };
 
 function toRequest(req: IncomingMessage): Request {
   const method = req.method ?? "GET";
@@ -33,19 +34,21 @@ async function sendResponse(res: ServerResponse, response: Response) {
   res.end();
 }
 
-/** Serves the Vexa chat route from the Vite dev server: GET publishes the model list, POST streams the reply from the scripted mock model. */
+/** Serves the Vexa chat route from the Vite dev server: GET publishes the model list, POST streams the reply from the scripted mock model. The handler module is loaded through Vite so the `vexa/*` aliases apply. */
 export function chatApi(): Plugin {
-  const { GET, POST } = createVexaHandler({
-    models: { [MOCK_MODEL_ID]: { model: () => createScriptedModel(WIDGET_MOCK_SCRIPT), name: "Mock (scripted, free)", provider: "vexa-mock", maxTokens: 8_000 } },
-    persona: "You are the help assistant of Acme Notes, a note-taking app.",
-  });
   return {
     name: "vexa-chat-api",
     configureServer(server) {
+      const runner = createServerModuleRunner(server.environments.ssr);
+      const handler = runner.import<ChatHandlerModule>(HANDLER_MODULE).then((module) => module.createWidgetChatHandler());
       server.middlewares.use(CHAT_PATH, (req, res, next) => {
-        const handle = req.method === "POST" ? POST : req.method === "GET" ? GET : null;
-        if (!handle) return next();
-        void handle(toRequest(req)).then((response) => sendResponse(res, response), next);
+        void handler
+          .then(({ GET, POST }) => {
+            const handle = req.method === "POST" ? POST : req.method === "GET" ? GET : null;
+            if (!handle) return next();
+            return handle(toRequest(req)).then((response) => sendResponse(res, response));
+          })
+          .catch(next);
       });
     },
   };

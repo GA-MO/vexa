@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { GuideRedirect } from "@/components/guides/guide-redirect";
 
 export default function TestsIndexPage() {
-  redirect("/guides");
+  return <GuideRedirect />;
 }

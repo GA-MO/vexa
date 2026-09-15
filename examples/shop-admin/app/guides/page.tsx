@@ -7,8 +7,6 @@ import { mockPrompts } from "@/lib/scenarios/mock-prompts";
 import { readScenarioResults } from "@/lib/scenarios/results";
 import type { Scenario, ScenarioResultsFile } from "@/lib/scenarios/types";
 
-export const dynamic = "force-dynamic";
-
 const SHOW_RESULTS = process.env.NODE_ENV === "development";
 
 function tryLabel(scenario: Scenario): string {

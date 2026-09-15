@@ -8,7 +8,8 @@
     "build": "react-router build",
     "start": "bun --env-file=.env.local --bun react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc --noEmit",
-    "mcp:docs": "bun scripts/vexa-docs-mcp.ts"
+    "mcp:docs": "bun scripts/vexa-docs-mcp.ts",
+    "build:static": "VITE_VEXA_STATIC=1 react-router build && bun scripts/assemble-static.ts"
   },
   "dependencies": {
     "@json-render/react": "^0.20.0",

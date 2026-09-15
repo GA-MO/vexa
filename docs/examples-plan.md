@@ -160,4 +160,4 @@ Decided 2026-09-14: route is `/guides`; guide pages default to the mock and leav
 
 - Any change to `src/` other than what a guide proves missing.
 - Recording videos or GIFs of guides.
-- Hosting the example apps publicly (would need the mock to be the only model in production builds; decide when phase 4 lands).
+- ~~Hosting the example apps publicly~~ Done 2026-09-15: `bun run build:pages` (`scripts/build-pages.ts`) builds docs (React Router `ssr: false` + prerender), shop-admin (`next build` with `output: "export"`, the API route parked during the build) and the widget as static, mock-only sites and lays them out as `pages-site/` (`/`, `/shop-admin`, `/widget`); `.github/workflows/pages.yml` deploys it. In those builds `examples/shared/browser-chat.ts` routes `/api/chat` to `createVexaHandler` running in the browser with the scripted mock, which is why `vexa/server` loads the stdio MCP transport lazily.

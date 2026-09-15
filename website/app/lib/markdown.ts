@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { frontmatter } from "fumadocs-core/content/md/frontmatter";
+import { resolveExampleUrl } from "./example-urls";
 import { absoluteUrl } from "./site";
 import type { source } from "./source";
 
@@ -13,6 +14,7 @@ const INCLUDE_TAG = /^\s*<include(?:\s+meta='title="([^"]*)"')?>([^<]+)<\/includ
 const DOCS_CONTENT_DIR = path.join(process.cwd(), "content/docs");
 const REPEATED_BLANK_LINES = /\n{3,}/g;
 const LIVE_EXAMPLE_ANCHOR = "#live-example";
+const LOCAL_EXAMPLE_LINK = /\(http:\/\/localhost:300[13][^)]*\)/g;
 
 type DocsPage = ReturnType<typeof source.getPages>[number];
 
@@ -48,7 +50,7 @@ function transformContentLine(line: string, htmlUrl: string, includeDir: string)
   if (CATALOG_GALLERY_TAG.test(line)) return liveGalleryNote(htmlUrl);
   const include = INCLUDE_TAG.exec(line);
   if (include) return includedCodeFence(includeDir, include[2], include[1]);
-  return line;
+  return line.replace(LOCAL_EXAMPLE_LINK, (link) => `(${resolveExampleUrl(link.slice(1, -1))})`);
 }
 
 /** Turns an MDX body into plain Markdown: no generated markers, no ESM, no JSX tag an agent cannot render; `<include>` files become code fences. */

@@ -6,7 +6,9 @@ import { DOCS_SECTIONS } from "./app/lib/docs-sections";
 const DOCS_BASE_URL = "/docs";
 const DOCS_CONTENT_DIR = "content/docs";
 const SERVER_ONLY_PATHS = ["/api/health", "/api/chat", "/api/assistant", "/api/docs/search", "/api/docs/pages", "/api/docs/components", "/mcp"];
-const AGENT_SURFACE_PATHS = ["/llms.txt", "/llms-full.txt", "/sitemap.xml", "/robots.txt"];
+const AGENT_SURFACE_PATHS = ["/llms.txt", "/llms-full.txt", "/sitemap.xml", "/robots.txt", "/api/search", "/404.html"];
+const STATIC_BUILD = process.env.VITE_VEXA_STATIC === "1";
+const BASENAME = process.env.VITE_VEXA_BASE_PATH ?? "/";
 
 const getDocsUrl = createGetUrl(DOCS_BASE_URL);
 
@@ -28,7 +30,8 @@ async function collectDocsPaths() {
 }
 
 export default {
-  ssr: true,
+  ssr: !STATIC_BUILD,
+  basename: BASENAME,
   async prerender({ getStaticPaths }) {
     const staticPaths = getStaticPaths().filter((path) => !SERVER_ONLY_PATHS.includes(path));
     return [...new Set([...staticPaths, ...AGENT_SURFACE_PATHS, ...(await collectDocsPaths())])];

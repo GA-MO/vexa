@@ -11,6 +11,7 @@ bun run dev:widget   # embedded widget at http://localhost:3003
 bun run typecheck    # tsc for root, both examples and website. Must pass before any task is considered done
 bun run build
 bun run mcp:build && bun run mcp:http   # MCP provider that exposes render_ui
+bun run build:pages  # static, mock-only builds of docs + both examples in pages-site/ (what .github/workflows/pages.yml deploys to GitHub Pages)
 ```
 
 Verify a page renders without opening a browser:
@@ -43,7 +44,7 @@ src/core/chat.ts             streamText + pipeJsonRender (server only). Keep `or
 src/core/handler.ts          createVexaHandler: request parsing, host tools, MCP (server only)
 src/core/mcp.ts              MCP client connection, allow list, tier, fence() (server only)
 src/core/guard.ts            injection detection and per-turn tool downgrade
-src/server/index.ts          the vexa/server entry. Never import it from client code: it pulls in child_process
+src/server/index.ts          the vexa/server entry. Never import it from host client code. The stdio MCP transport is a dynamic import, so the static example builds can run createVexaHandler in the browser (examples/shared/browser-chat.ts routes /api/chat fetches to it)
 src/react/components.tsx     implementation of every catalog component
 src/react/registry.tsx       catalog → component map (update on every new component)
 src/react/runtime.ts         spec action handlers, computed functions, directives, state namespaces

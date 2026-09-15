@@ -1,5 +1,4 @@
 import { createMCPClient, type MCPClient } from "@ai-sdk/mcp";
-import { Experimental_StdioMCPTransport as StdioMCPTransport } from "@ai-sdk/mcp/mcp-stdio";
 import type { Tool, ToolSet } from "ai";
 import { fence } from "./guard";
 
@@ -38,10 +37,12 @@ function assertConfig(config: McpServerConfig) {
   }
 }
 
-function transportFor(config: McpTransportConfig) {
+/** The stdio transport is loaded on demand: it needs child_process, and a handler that only uses http MCP or none must stay bundleable for the browser. */
+async function transportFor(config: McpTransportConfig) {
   if (config.type === "http") {
     return { type: "http" as const, url: config.url, headers: config.headers };
   }
+  const { Experimental_StdioMCPTransport: StdioMCPTransport } = await import("@ai-sdk/mcp/mcp-stdio");
   return new StdioMCPTransport({ command: config.command, args: config.args, env: config.env });
 }
 
@@ -64,7 +65,7 @@ function wrapTool(tool: Tool, tier: ToolTier): Tool {
 
 async function connectOne(config: McpServerConfig): Promise<{ client: MCPClient; tools: ToolSet; tiers: Record<string, ToolTier> }> {
   assertConfig(config);
-  const client = await createMCPClient({ transport: transportFor(config.transport), clientName: "vexa" });
+  const client = await createMCPClient({ transport: await transportFor(config.transport), clientName: "vexa" });
   const available = await client.tools();
   const tools: ToolSet = {};
   const tiers: Record<string, ToolTier> = {};
