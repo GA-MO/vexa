@@ -2,11 +2,13 @@
 
 Status: **Done (rev 1)** · Revision 1 · 2026-09-12 · D1–D5b done 2026-09-12 (27 scenarios, `bun run test:scenarios` 27/27 with `mcp-stdio` skipped unless `VEXA_DEMO_MCP=1`); D6 done: `docs/control-best-practices.md` and `/docs/host/best-practices`
 
-The public catalog gallery now lives on the docs site (`/docs/catalog`), so `demo/` stops being a showcase and becomes the place where we prove, one scenario at a time, every way the chat can control a host app. Each scenario is a page under `/tests/<case>` plus a scripted run against `/api/chat`. What a scenario teaches becomes a best-practice paragraph in the docs. Nothing in this plan changes the library API unless a scenario proves the API is missing something.
+> Superseded in part by `docs/examples-plan.md` (2026-09-14): `/tests/<id>` pages are now `/guides/<id>` playable guides with a mock model; the runner and the scenario definitions described here are unchanged.
+
+The public catalog gallery now lives on the docs site (`/docs/catalog`), so `examples/shop-admin/` stops being a showcase and becomes the place where we prove, one scenario at a time, every way the chat can control a host app. Each scenario is a page under `/tests/<case>` plus a scripted run against `/api/chat`. What a scenario teaches becomes a best-practice paragraph in the docs. Nothing in this plan changes the library API unless a scenario proves the API is missing something.
 
 ## 1. The host app the chat controls
 
-Vexa Shop admin: a small in-memory app that has enough surface to exercise every control path. No database, no auth; data lives in `demo/lib/shop/data.ts` and a React store in `demo/lib/shop/store.tsx` (context + `useSyncExternalStore`, no new dependency).
+Vexa Shop admin: a small in-memory app that has enough surface to exercise every control path. No database, no auth; data lives in `examples/shop-admin/lib/shop/data.ts` and a React store in `examples/shop-admin/lib/shop/store.tsx` (context + `useSyncExternalStore`, no new dependency).
 
 | Route | Shows | Controlled by |
 |---|---|---|
@@ -17,11 +19,11 @@ Vexa Shop admin: a small in-memory app that has enough surface to exercise every
 | `/tests` | index of scenario pages with pass/fail from the last run | — |
 | `/tests/<case>` | one scenario: fixed spec or scripted prompts, expected outcome, notes | — |
 
-The old `/catalog` page, `demo/components/catalog-gallery.tsx`, `demo/lib/catalog-gallery.ts`, and the `open_catalog_item` tool are removed. The library keeps `src/examples` because the docs site renders them.
+The old `/catalog` page, `examples/shop-admin/components/catalog-gallery.tsx`, `examples/shop-admin/lib/catalog-gallery.ts`, and the `open_catalog_item` tool are removed. The library keeps `src/examples` because the docs site renders them.
 
 ## 2. Control paths under test
 
-Sixteen ways the chat and the host touch each other, then eight that start from the user's hands inside the rendered UI (§2, Interactive UI). The scenario id is the `/tests/<id>` route and the file name in `demo/lib/test-plans/<id>.ts`.
+Sixteen ways the chat and the host touch each other, then eight that start from the user's hands inside the rendered UI (§2, Interactive UI). The scenario id is the `/tests/<id>` route and the file name in `examples/shop-admin/lib/test-plans/<id>.ts`.
 
 | # | Scenario id | Path | What must be true |
 |---|---|---|---|
@@ -37,7 +39,7 @@ Sixteen ways the chat and the host touch each other, then eight that start from 
 | 10 | `approval` | `confirm: true` host tool and `needsApproval` server tool | approval card; Reject → `ok:false` with "declined"; model says nothing changed and does not retry |
 | 11 | `denial-semantics` | user rejects a destructive server tool twice | no retry loop; turn ends with a question, not an error |
 | 12 | `server-tools` | read tools (`get_orders`, `get_order`) with `toolTiers` | model reads before answering; numbers in the reply match the data |
-| 13 | `mcp-stdio` | a local stdio MCP server (filesystem on `demo/fixtures`) with an `allow` list | only allowed tools are visible; prefixed names; write tools need approval |
+| 13 | `mcp-stdio` | a local stdio MCP server (filesystem on `examples/shop-admin/fixtures`) with an `allow` list | only allowed tools are visible; prefixed names; write tools need approval |
 | 14 | `injection` | a tool result containing injected instructions | read-only downgrade for the turn; `data-notice` rendered; the model reports and does not comply |
 | 15 | `registry` | picker list from `GET`, unknown id → 400, per-request `model` resolver by header | 400 body names the id; the picker never shows an id the server does not have |
 | 16 | `theme-format` | `set_theme` and `set_locale` change tokens and number formatting live | charts and `Metric` reformat without reload; dark palette applies to the overlay |
@@ -61,7 +63,7 @@ Two cross-cutting checks run in every scenario: state namespaces (`/tools`, `/ho
 
 ## 3. How a scenario is written
 
-`demo/lib/test-plans/<id>.ts` exports one object:
+`examples/shop-admin/lib/test-plans/<id>.ts` exports one object:
 
 ```ts
 export const scenario: Scenario = {
@@ -79,7 +81,7 @@ export const scenario: Scenario = {
 ```
 
 - `fixture` renders deterministically on `/tests/<id>` with `SpecView` (no model), like `/tests/chat-elements`.
-- `script` runs against `/api/chat` with the real model through `demo/scripts/run-scenarios.ts` (`bun run test:scenarios [id]`): it sends the prompts with the host tool descriptors, asserts the tool calls and their order, executes host tools with a headless implementation, and prints pass/fail plus the model's text. Results are written to `demo/.scenario-results.json` for the `/tests` index.
+- `script` runs against `/api/chat` with the real model through `examples/shop-admin/scripts/run-scenarios.ts` (`bun run test:scenarios [id]`): it sends the prompts with the host tool descriptors, asserts the tool calls and their order, executes host tools with a headless implementation, and prints pass/fail plus the model's text. Results are written to `examples/shop-admin/.scenario-results.json` for the `/tests` index.
 - `bestPractice` is the sentence that goes into the docs; the scenario page shows it under the run.
 
 A scenario may declare `attempts: 2` when the only remaining failure is model non-determinism on a small model (currently `denial-semantics`); the result notes which attempt passed so flakiness stays visible. `requiresEnv` skips a scenario with a note when its environment variable is unset (`mcp-stdio` needs `VEXA_DEMO_MCP=1` on both the dev server and the runner).
@@ -94,8 +96,8 @@ The runner is what finds the best practice: when a prompt produces the wrong too
 | D2 | Scenario framework: `Scenario` type, `/tests` index, `/tests/<id>` page, `run-scenarios.ts` with a headless host tool implementation and assertions | 1 | `bun run test:scenarios chat-elements` and one live scenario pass |
 | D3 | Scenarios 1–8 (navigation, state, context, spec actions) | 1 | eight pages + scripts pass three runs |
 | D4 | Scenarios 9–12 (host→chat, approval, denial, server tools) | 1 | four pages + scripts pass; denial never retries |
-| D5 | Scenarios 13–16 (MCP stdio with a fixture directory, injection, registry, theme/format) | 1 | four pages + scripts pass; `demo/.mcp` config documented |
-| D5b | Interactive scenarios 17–24: fixture specs for each, a headless spec driver in the runner (`press`, `type`, `pick`, `toggle` steps that go through the same `createVexaHandlers` and state store as the UI), scripted runs for 20 and 22 | 1.5 | eight pages; `bun run test:scenarios bound-inputs` passes; the 340 px checks are done in Chrome once and recorded as screenshots under `demo/fixtures/screens` |
+| D5 | Scenarios 13–16 (MCP stdio with a fixture directory, injection, registry, theme/format) | 1 | four pages + scripts pass; `examples/shop-admin/.mcp` config documented |
+| D5b | Interactive scenarios 17–24: fixture specs for each, a headless spec driver in the runner (`press`, `type`, `pick`, `toggle` steps that go through the same `createVexaHandlers` and state store as the UI), scripted runs for 20 and 22 | 1.5 | eight pages; `bun run test:scenarios bound-inputs` passes; the 340 px checks are done in Chrome once and recorded as screenshots under `examples/shop-admin/fixtures/screens` |
 | D6 | Best-practice write-up: `docs/control-best-practices.md` from the `bestPractice` lines, then `website/content/docs/host/best-practices.mdx` and links from Host tools, runTool, Security | 0.5 | every scenario cited once; page ≤ 800 words |
 
 D1 and D2 run in parallel, D3–D5b after both, D6 last. Model per ticket: D1, D2 → Opus (library integration, typed config, runner design); D3, D4, D5, D5b → Sonnet (well-specified scenarios against a finished framework); D6 → Sonnet (prose). `bun run typecheck` and a curl of each new route close every ticket.

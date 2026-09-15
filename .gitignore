@@ -1,7 +1,7 @@
 node_modules
 .next
 .env.local
-demo/.env.local
+examples/shop-admin/.env.local
 **/data/*.db
 **/data/*.db-*
 drizzle

@@ -8,7 +8,7 @@ Companion: `docs/host-integration-spec.md` (library architecture), `DESIGN.md` (
 
 ## 0. Why a separate app
 
-`demo/` becomes a **test bench only**: every catalog example, every interactive case, every future regression scenario, driven by test plans and (later) Playwright. It stays plain, fast to iterate, and free to break. The public documentation moves to a new app, `website/`, with three audiences that pull in different directions:
+`examples/shop-admin/` becomes a **test bench only**: every catalog example, every interactive case, every future regression scenario, driven by test plans and (later) Playwright. It stays plain, fast to iterate, and free to break. The public documentation moves to a new app, `website/`, with three audiences that pull in different directions:
 
 | Audience | Needs | Consequence |
 |---|---|---|
@@ -24,11 +24,11 @@ The rule for the whole site: **spectacle on the surface, plain text underneath.*
 
 | Question | Decision | Why |
 |---|---|---|
-| Location | `website/` next to `demo/`, both depend on `vexa` via `file:..` | no monorepo tooling churn; same pattern that already works for `demo/` |
+| Location | `website/` next to `examples/shop-admin/`, both depend on `vexa` via `file:..` | no monorepo tooling churn; same pattern that already works for `examples/shop-admin/` |
 | Framework | **Vite 8 + React Router 8 (framework mode) + Fumadocs 16** via `fumadocs-core/framework/react-router` | a docs site does not need Next's RSC machinery; Vite 8 (Rolldown) builds fast, React Router gives file routes, SSG `prerender` for every docs page, and resource routes for `/api/chat`, `/api/search`, `/mcp`. Fumadocs officially supports React Router 7/8 and Vite 8 is in `@react-router/dev`'s peer range. Verified versions: vite 8.3.0, react-router 8.3.1, fumadocs-core 16.15.9 |
-| `demo/` framework | stays Next 15 for now; upgrade to Next 16 is ticket 0.4 (optional, matches the harness project on 16.3) | the test bench must not block the docs site; the two apps are independent |
+| `examples/shop-admin/` framework | stays Next 15 for now; upgrade to Next 16 is ticket 0.4 (optional, matches the harness project on 16.3) | the test bench must not block the docs site; the two apps are independent |
 | Content source | `website/content/**/*.mdx` written by hand, plus **generated** reference pages (components, actions, config types) from `src/core/catalog.ts` and the TS types | the catalog is already the single source of truth for the model; the docs must not drift from it |
-| Live examples | reuse `demo/lib/catalog-gallery.ts` data by moving the pure data into the library as `vexa/examples` (no React), so both apps import it | one set of examples, tested in `demo/`, shown in `website/` |
+| Live examples | reuse `examples/shop-admin/lib/catalog-gallery.ts` data by moving the pure data into the library as `vexa/examples` (no React), so both apps import it | one set of examples, tested in `examples/shop-admin/`, shown in `website/` |
 | Search | Fumadocs' built-in Orama index (client + `/api/search`) | good enough for < 500 pages, no service to run |
 | Agent access | `llms.txt`, `llms-full.txt`, `/<slug>.md` raw endpoints, `/api/search?q=` JSON, and an MCP server `vexa-docs` (`search_docs`, `get_page`) | covers file-fetching agents, HTTP agents, and MCP clients without three content pipelines |
 | Assistant on the site | `VexaChatOverlay` itself, with host tools `navigate`, `open_section`, `run_example` and a server tool `search_docs` | the docs site is the first real host integration; if it hurts, we fix the library |
@@ -41,9 +41,11 @@ The rule for the whole site: **spectacle on the surface, plain text underneath.*
 
 ```
 /                         Landing: live generative demo, feature strips, install snippet
-/docs                     Docs home: three doors (Get started · Host integration · Catalog)
+/docs                     Docs home: three doors (Get started · Examples · Config reference); sidebar groups Start / Integrate / Reference (2026-09-15, `docs/examples-plan.md` §6b)
 /docs/get-started         install → provider → route → first prompt (5 minutes)
-/docs/concepts/*          how it works: spec stream, catalog, state namespaces, host tools, security
+/docs/examples/*          example apps and their playable guides (shop-admin)
+/docs/config-reference    every createVexaHandler and VexaProvider option, two typechecked files included via <include>
+/docs/state, /docs/spec-stream   former concepts/ pages; concepts/catalog folded into /docs/catalog, concepts/host-tools into /docs/host/host-tools, concepts/security-model into /docs/security; old URLs 301 (app/lib/docs-redirects.ts)
 /docs/host/*              VexaProvider, host tools, runTool, format, labels, theme, models
 /docs/server/*            createVexaHandler, models registry, persona & rules, MCP, guard
 /docs/catalog             component index (generated), grouped like /catalog in demo
@@ -99,9 +101,9 @@ Six phases. Each ticket has an owner role, an estimate in days, and a definition
 
 | # | Ticket | Owner | Days | Done when |
 |---|---|---|---|---|
-| 0.1 | Scaffold `website/`: Vite 8, `@react-router/dev` 8 framework mode with `ssr: true` and `prerender` for `/docs/**`, `@vitejs/plugin-react` 6, Tailwind 4 via `@tailwindcss/vite`, `fumadocs-core` + `fumadocs-ui` + `fumadocs-mdx` (React Router adapter), `vexa` as `file:..` with tsconfig paths like `demo/`; root scripts `dev:site`, `build:site`, `typecheck` covers it | lib | 1 | `bun run dev:site` serves a hello page with `vexa/styles.css` tokens applied; `build:site` emits static HTML for a sample docs page |
-| 0.4 | Optional: upgrade `demo/` to Next 16 (`next@16.3`, codemods, verify `/catalog` and `/api/chat`) | lib | 0.5 | typecheck and both pages pass; not on the critical path |
-| 0.2 | Extract example data: move the pure spec data from `demo/lib/catalog-gallery.ts` to `src/examples/` exported as `vexa/examples` (`GALLERY_SECTIONS`, `COMPOSED_EXAMPLES`, `INTERACTIVE_SECTIONS`, `PRIMITIVE_GROUPS`); `demo/` imports from there | lib | 1 | `/catalog` in demo unchanged; typecheck passes; no React in `src/examples` |
+| 0.1 | Scaffold `website/`: Vite 8, `@react-router/dev` 8 framework mode with `ssr: true` and `prerender` for `/docs/**`, `@vitejs/plugin-react` 6, Tailwind 4 via `@tailwindcss/vite`, `fumadocs-core` + `fumadocs-ui` + `fumadocs-mdx` (React Router adapter), `vexa` as `file:..` with tsconfig paths like `examples/shop-admin/`; root scripts `dev:site`, `build:site`, `typecheck` covers it | lib | 1 | `bun run dev:site` serves a hello page with `vexa/styles.css` tokens applied; `build:site` emits static HTML for a sample docs page |
+| 0.4 | Optional: upgrade `examples/shop-admin/` to Next 16 (`next@16.3`, codemods, verify `/catalog` and `/api/chat`) | lib | 0.5 | typecheck and both pages pass; not on the critical path |
+| 0.2 | Extract example data: move the pure spec data from `examples/shop-admin/lib/catalog-gallery.ts` to `src/examples/` exported as `vexa/examples` (`GALLERY_SECTIONS`, `COMPOSED_EXAMPLES`, `INTERACTIVE_SECTIONS`, `PRIMITIVE_GROUPS`); `examples/shop-admin/` imports from there | lib | 1 | `/catalog` in demo unchanged; typecheck passes; no React in `src/examples` |
 | 0.3 | Reference generator script `scripts/generate-reference.ts`: reads `catalog` (zod → props tables with type, nullable, description, example) and emits `website/content/docs/catalog/<Name>.mdx` with a frozen frontmatter and a generated block between markers; also `actions.mdx` | lib | 1 | running the script twice is idempotent; hand-written sections outside the markers survive |
 
 ### Phase 1 · Docs core (4–5 days, after 0)
@@ -148,11 +150,11 @@ Total: about 18–21 working days for one frontend, one library engineer, one wr
 
 ---
 
-## 6. What `demo/` becomes
+## 6. What `examples/shop-admin/` becomes
 
-First case shipped: `/tests/chat-elements` (`demo/lib/test-plans/chat-elements.ts`) renders every chat part from fixed messages at 340px and 600px.
+First case shipped: `/tests/chat-elements` (`examples/shop-admin/lib/test-plans/chat-elements.ts`) renders every chat part from fixed messages at 340px and 600px.
 
-- Rename nothing. `demo/` stays the test bench with `/`, `/catalog`, and a new `/tests/<case>` route family driven by `demo/lib/test-plans/*.ts` (one file per scenario: state, spec, expected assertions).
+- Rename nothing. `examples/shop-admin/` stays the test bench with `/`, `/catalog`, and a new `/tests/<case>` route family driven by `examples/shop-admin/lib/test-plans/*.ts` (one file per scenario: state, spec, expected assertions).
 - Test plans to write next (separate document): host tool round trip, approval and denial, injection notice, model registry 400s, `runTool` from `watch`, namespace guard, theme dark mode, format locales, MCP against a local stdio server.
 - Playwright later runs `/tests/*` headless; until then the SSR + `bun -e` checks in `CLAUDE.md` remain the gate.
 

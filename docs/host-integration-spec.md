@@ -26,7 +26,7 @@ This document is the source of truth for phases 1 to 3. When code and document d
 |---|---|---|
 | Overlay props | `src/chat/overlay.tsx`, `src/chat/vexa-chat.tsx` | Only `api`, `title`, `subtitle`, open state. No way for the host to hand in capabilities |
 | Spec actions | `src/react/runtime.ts` | `submitForm`, `loadCities`, `toast` hard-coded, mutate SpecView state only. `registryActions` was dead code (SpecView used `createVexaHandlers`) |
-| Server route | `demo/app/api/chat/route.ts` → `src/core/chat.ts` | `streamText` with no `tools`, no `stopWhen`, no `experimental_context` |
+| Server route | `examples/shop-admin/app/api/chat/route.ts` → `src/core/chat.ts` | `streamText` with no `tools`, no `stopWhen`, no `experimental_context` |
 | Approval UI | `src/chat/messages.tsx` | Rendered `approval-requested` and called `addToolApprovalResponse`, **but** `useChat` had no `sendAutomaticallyWhen`, so approving never resubmitted |
 | MCP | `mcp/server.ts` | A *provider* (exposes `render_ui` to Claude Desktop), not a *consumer* |
 | SDK | `ai` 6.0.280, `@ai-sdk/react` 3.x, `@json-render/*` 0.20 | `@ai-sdk/mcp` was not installed |
@@ -259,7 +259,7 @@ Request limits enforced by `chatBody`: ≤ 200 messages, ≤ 32 host tools, desc
 Vexa does not import any provider package and never reads an API key. `createVexaHandler` requires `model` or a non-empty `models` registry of AI SDK `LanguageModel` instances and throws at startup otherwise. The host owns the provider client, the key, and the env var names. This keeps `vexa` free of provider dependencies and means a deployment can use OpenRouter, Anthropic, OpenAI, Bedrock, or a mix, without the library knowing.
 
 ```ts
-// demo/lib/models.ts (host code)
+// examples/shop-admin/lib/models.ts (host code)
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 const provider = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY! });
 export const demoModels = { "google/gemini-3.1-flash-lite": provider("google/gemini-3.1-flash-lite") };
@@ -324,7 +324,7 @@ The library ships exactly three: `submitForm`, `toast`, and `runTool`. Anything 
 "watch": { "/form/country": { "action": "runTool", "params": { "name": "load_cities", "input": { "country": { "$state": "/form/country" } } } } }
 ```
 
-The result lands under `/tools/load_cities`, so a Select can bind `options: { "$state": "/tools/load_cities/cities" }`. The demo's former `loadCities` action moved to `demo/components/demo-host.tsx` for exactly this reason: the library must not ship demo behavior.
+The result lands under `/tools/load_cities`, so a Select can bind `options: { "$state": "/tools/load_cities/cities" }`. The demo's former `loadCities` action moved to `examples/shop-admin/components/demo-host.tsx` for exactly this reason: the library must not ship demo behavior.
 
 `submitForm` is validation-aware: json-render's `validateForm` never short-circuits the rest of an `on.press` array, so `submitForm` itself reads `/formValidation` (the default result path of `validateForm`) and skips its write when `valid` is `false`. `[validateForm, submitForm]` therefore blocks an invalid submit; any other action placed after `validateForm` (`toast`, `runTool`) still runs and must be gated with `visible` or its own state check. Found by demo scenario `form-submit`.
 
@@ -373,9 +373,9 @@ Decision (resolves open question 1): only `/tools` and `/host` are reserved. Res
 | `src/chat/vexa-chat.tsx` | `transport.body` adds `context`, `hostTools`. `useChat` adds `onToolCall` (never `await addToolOutput` inside it, use a fire-and-forget IIFE) and `sendAutomaticallyWhen: (m) => lastAssistantMessageIsCompleteWithToolCalls(m) \|\| lastAssistantMessageIsCompleteWithApprovalResponses(m)` |
 | `src/core/chat.ts` | `hostTools` → `tool({ description, inputSchema: jsonSchema(...) })`. `stopWhen`. `convertToModelMessages(messages, { ignoreIncompleteToolCalls: true })`. `experimental_context: { context }` |
 | `src/core/handler.ts` (new) | `createVexaHandler` parses the body with `chatBody.strict()` then calls `streamAgentChat` |
-| `demo/app/api/chat/route.ts` | `export const { POST } = createVexaHandler();` |
-| `demo/components/demo-host.tsx` (new), `demo/app/layout.tsx` | `DemoHost` wraps the whole app in `VexaProvider` with tools `navigate`, `open_catalog_item`, `set_theme` (confirm) so both the home overlay and the catalog buttons share them |
-| `demo/lib/catalog-gallery.ts` | "Host tools · runTool" example in the Interactive tab |
+| `examples/shop-admin/app/api/chat/route.ts` | `export const { POST } = createVexaHandler();` |
+| `examples/shop-admin/components/demo-host.tsx` (new), `examples/shop-admin/app/layout.tsx` | `DemoHost` wraps the whole app in `VexaProvider` with tools `navigate`, `open_catalog_item`, `set_theme` (confirm) so both the home overlay and the catalog buttons share them |
+| `examples/shop-admin/lib/catalog-gallery.ts` | "Host tools · runTool" example in the Interactive tab |
 | `src/react/index.ts`, `src/core/index.ts` | new exports |
 
 ### Phase 3: MCP, tier/approval, guard
@@ -439,7 +439,7 @@ No full AuditEngine: host tools report through `onToolResult`; server-side audit
 ## 7. Usage example (demo)
 
 ```tsx
-// demo/app/page.tsx
+// examples/shop-admin/app/page.tsx
 "use client";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
@@ -479,7 +479,7 @@ export default function Page() {
 ```
 
 ```ts
-// demo/app/api/chat/route.ts
+// examples/shop-admin/app/api/chat/route.ts
 import { createVexaHandler } from "vexa/server";
 import { stepCountIs } from "ai";
 import { demoModels } from "@/lib/models";
@@ -496,7 +496,7 @@ export const { GET, POST } = createVexaHandler({ models: demoModels, stopWhen: s
 3. Multi-step needs `stopWhen: stepCountIs(n)` (the default is one step)
 4. `streamText({ instructions })` is a v7 API. Here it is `system`
 5. `onToolCall` is awaited inside `processUIMessageStream`. Never `await addToolOutput` inside it
-6. json-render merges every `data-spec` part of one message into a single spec. UI after a tool call must patch the existing spec
+6. json-render merges every `data-spec` part of one message into a single spec. UI after a tool call must patch the existing spec. A follow-up reply that only patches (no new `/root`) is rendered into the previous reply's spec (`src/chat/spec-continuation.ts`), so "add a button to that form" keeps the typed values
 7. `convertToModelMessages` throws on a tool call without output. Pass `ignoreIncompleteToolCalls: true`
 8. `needsApproval` on a tool without `execute` interacts badly with `onToolCall`. Host tools use client-side `confirm` instead
 9. `useJsonRenderMessage` detects changes by length and last-part identity only. Do not rely on spec rebuilds from `addToolOutput` on a non-final part

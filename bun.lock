@@ -53,8 +53,8 @@
         "react-dom": "^19.0.0",
       },
     },
-    "demo": {
-      "name": "vexa-demo",
+    "examples/shop-admin": {
+      "name": "vexa-shop-admin",
       "version": "0.1.0",
       "dependencies": {
         "@openrouter/ai-sdk-provider": "^2.0.0",
@@ -1844,7 +1844,7 @@
 
     "vary": ["vary@1.1.2", "", {}, "sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg=="],
 
-    "vexa-demo": ["vexa-demo@workspace:demo"],
+    "vexa-shop-admin": ["vexa-shop-admin@workspace:examples/shop-admin"],
 
     "vexa-website": ["vexa-website@workspace:website"],
 

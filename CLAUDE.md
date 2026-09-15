@@ -1,13 +1,13 @@
 # CLAUDE.md
 
-Vexa is a React library that embeds a chat overlay into any app. The assistant answers with text plus generative UI constrained to a catalog (json-render). The demo is a Next.js app in `demo/`.
+Vexa is a React library that embeds a chat overlay into any app. The assistant answers with text plus generative UI constrained to a catalog (json-render). The example apps live in `examples/`; `examples/shop-admin/` is the Next.js reference host (the demo).
 
 ## Commands
 
 ```bash
-bun install          # one bun workspace: root (the library), demo/, website/. Apps resolve `vexa/*` through tsconfig paths and the vite alias, not a package link; one React copy for everything
-bun run dev          # demo at http://localhost:3001 (pinned in demo/package.json)
-bun run typecheck    # tsc for root and demo. Must pass before any task is considered done
+bun install          # one bun workspace: root (the library), examples/*, website/. Apps resolve `vexa/*` through tsconfig paths and the vite alias, not a package link; one React copy for everything
+bun run dev          # shop admin at http://localhost:3001 (pinned in examples/shop-admin/package.json)
+bun run typecheck    # tsc for root, examples/shop-admin and website. Must pass before any task is considered done
 bun run build
 bun run mcp:build && bun run mcp:http   # MCP provider that exposes render_ui
 ```
@@ -16,9 +16,9 @@ Verify a page renders without opening a browser:
 ```bash
 curl -s http://localhost:3001/orders | grep -c "C-1042"
 ```
-`/tests/chat-elements` renders every chat message part (user text + attachment, reasoning, every tool state, approval, dynamic tool, sources, security notice, markdown with table and code, a spec) from fixed messages in `src/examples/chat-elements.ts` at 340px and 600px. The same file feeds the docs page `website/content/docs/host/chat-elements.mdx` (one example per element, server-rendered). Open both after touching `src/chat` or `src/ai-elements`; nothing may overflow or be clipped.
-`bun run test:scenarios [id…]` runs `demo/lib/test-plans/*.ts` against the dev server with the real model (`demo/scripts/run-scenarios.ts` mirrors useChat: host tool round trips, approvals, ⟦action⟧ forwarding); `/tests` lists them with the last result. Add a scenario for every new control path and keep its `bestPractice` line in sync with `docs/control-best-practices.md`. The model picker also offers `mock` (`demo/lib/mock-model.ts`: scripted reasoning → `get_orders` → reasoning → text + spec through the real handler, no API key, no cost); use it or `VEXA_SCENARIO_MODEL=mock` to check chat UI and runtime behaviour, never to judge how a prompt steers a model.
-The demo is the Vexa Shop admin test bench (`/`, `/orders`, `/orders/[id]`, `/settings`, `/tests`): data in `demo/lib/shop/data.ts`, store in `demo/lib/shop/store.tsx`, host tools in `demo/components/demo-host.tsx`, server tools in `demo/lib/shop/server-tools.ts`. The catalog gallery lives on the docs site (`website/`), which renders `src/examples`; to check example data without a browser, evaluate the module directly: `cd demo && bun -e 'import { GALLERY_SECTIONS } from "vexa/examples"; ...'`
+`/tests/chat-elements` renders every chat message part (user text + attachment, a forwarded button press, reasoning, every tool state, approval, dynamic tool, sources, security notice, markdown with table and code, a spec) from fixed messages in `src/examples/chat-elements.ts` at 340px and 600px. The same file feeds the docs page `website/content/docs/host/chat-elements.mdx` (one example per element, server-rendered). Open both after touching `src/chat` or `src/ai-elements`; nothing may overflow or be clipped.
+`bun run test:scenarios [id…]` runs `examples/shop-admin/lib/test-plans/*.ts` against the dev server with the real model (`examples/shop-admin/scripts/run-scenarios.ts` mirrors useChat: host tool round trips, approvals, ⟦action⟧ forwarding). `/guides` lists every guide-kind scenario grouped by what the developer wants (`examples/shop-admin/lib/scenarios/guide-groups.ts`); `/guides/<id>` renders one: control path, "Try it" (prompt buttons that apply `setup`, go to `page`, open the chat and send with the mock; a scenario with a fixture gets an `opener` prompt the mock answers with that fixture as a spec, so the reader uses it inside the chat like a real reply; forwarded-button scenarios point at the button in the reply instead of showing the ⟦action⟧ text), the script as prose (`describe.ts`), the mock script, the tool sources sliced from the app (`tool-sources.ts`), the `docs` link, and in development the last runner result. `/tests/*` redirects there. Add a scenario for every new control path and keep its `bestPractice` line in sync with `docs/control-best-practices.md`. The model picker also offers `mock` (`examples/shop-admin/lib/mock-model.ts`: plays the `mock: MockTurn[]` script of whichever scenario matches the last user message, through the real handler, no API key, no cost; a `tool` step must close its array and continue through `then` / `onError`, see `docs/examples-plan.md` §3); use it or `VEXA_SCENARIO_MODEL=mock` to check chat UI and runtime behaviour, never to judge how a prompt steers a model. Host tool descriptions and input schemas live once in `examples/shop-admin/lib/shop/host-tools.ts`; `demo-host.tsx` spreads them into `defineTool`, scenarios call `hostToolDescriptor(name)`.
+`examples/shop-admin` is the Vexa Shop admin test bench (`/`, `/orders`, `/orders/[id]`, `/settings`, `/guides`): data in `examples/shop-admin/lib/shop/data.ts`, store in `examples/shop-admin/lib/shop/store.tsx`, host tools in `examples/shop-admin/components/demo-host.tsx`, server tools in `examples/shop-admin/lib/shop/server-tools.ts`. The catalog gallery lives on the docs site (`website/`), which renders `src/examples`; to check example data without a browser, evaluate the module directly: `cd examples/shop-admin && bun -e 'import { GALLERY_SECTIONS } from "vexa/examples"; ...'`
 
 ## Code rules
 
@@ -48,19 +48,19 @@ src/react/registry.tsx       catalog → component map (update on every new comp
 src/react/runtime.ts         spec action handlers, computed functions, directives, state namespaces
 src/react/host.tsx           VexaProvider, defineTool, useVexaHost (host tools), theme wrapper
 src/react/theme.ts           VexaTheme → CSS variables
-src/styles.css               token declarations (@theme) and the dark palette. Hosts must import it. Every color utility used in src/ or by streamdown (popover, destructive, sidebar, success…) is declared here with a fallback to the host's shadcn variable, so a host only has to define background/foreground/card/primary/muted/accent/border/input/ring. It also styles scrollbars (thin, `foreground` at 22%, transparent track) under `[data-vexa-theme]`; add class `vexa-scrollbar` on `<html>` to get the same look page-wide (demo does; the website sets it on `html` in app.css)
+src/styles.css               token declarations (@theme) and the dark palette. Hosts must import it. Every color utility used in src/ or by streamdown (popover, destructive, sidebar, success…) is declared here with a fallback to the host's shadcn variable, so a host only has to define background/foreground/card/primary/muted/accent/border/input/ring. It also styles scrollbars (thin, `foreground` at 22%, transparent track) under `[data-vexa-theme]`; add class `vexa-scrollbar` on `<html>` to get the same look page-wide (shop-admin does; the website sets it on `html` in app.css)
 src/react/spec-view.tsx      renders a spec with its state store and devtools
 src/chat/                    VexaChat, VexaChatOverlay, messages, composer. `useChat` has `experimental_throttle: 50`; removing it makes fast streams throw "Maximum update depth exceeded" in hosts that mirror messages into their own state. Reasoning and tool calls render in one `ProcessSteps` block that stays collapsed ("Thinking…" while streaming, "N steps" after) unless the user expands it or a tool awaits approval. No separate plan block. The Restore checkpoint appears only under turns that have later messages (it truncates the chat back to that turn)
-src/chat/constants.ts        built-in MODELS and SUGGESTIONS. Every VexaChat / overlay prop (title, subtitle, models, defaultModel, suggestions, labels, steps, launcherLabel, position, defaultOpen) can be defaulted app-wide with VexaProvider chat={{ ... }}; component props override
+src/chat/constants.ts        built-in MODELS and SUGGESTIONS. Every VexaChat / overlay prop (title, subtitle, models, defaultModel, suggestions, labels, steps, launcherLabel, position, defaultOpen, backdrop) can be defaulted app-wide with VexaProvider chat={{ ... }}; component props override. A changed `defaultModel` re-applies until the user picks a model in the composer (the demo uses this to switch guides to the mock)
 src/ai-elements/             shadcn-style AI Elements used as chat chrome (not catalog types). Long content wraps (`wrap-anywhere`), containers use `min-w-0` not `overflow-hidden`
-demo/lib/test-plans/         fixed message sets for /tests/<case> pages
-src/examples/                 example specs shared by demo (tests) and website (docs); no React here
-demo/components/demo-host.tsx        VexaProvider for the shop admin: host tools, context, chat defaults, overlay
-demo/lib/shop/                       shop data, client store, server tools for the test bench
+examples/shop-admin/lib/test-plans/   one Scenario per control path: script, fixture, mock, docs, setup; feeds /guides and the runner
+src/examples/                 example specs shared by the example apps and website (docs); no React here
+examples/shop-admin/components/demo-host.tsx   VexaProvider for the shop admin: host tools, context, chat defaults, overlay
+examples/shop-admin/lib/shop/            shop data, client store, server tools for the test bench
 docs/host-integration-spec.md        spec for VexaProvider / host tools / MCP. Read before touching chat, runtime, core
-docs/docs-site-plan.md               plan for the public docs site in website/; demo/ is the test bench only
-docs/demo-control-plan.md            plan for demo/ as a control test bench: the Vexa Shop admin app, 16 control scenarios under /tests/<id>, the scenario runner
-docs/examples-plan.md                next plan: scenario-aware mock model, /tests → /guides playable guide pages, demo/ → examples/shop-admin, more example apps. Read before touching demo/lib/mock-model.ts or /tests pages
+docs/docs-site-plan.md               plan for the public docs site in website/; the example apps are the test bench. Sidebar groups are separators in website/content/docs/meta.json (Start / Integrate / Reference); a moved page gets a 301 in website/app/lib/docs-redirects.ts; website/content/docs/config-reference.mdx <include>s two real files next to it that the website typecheck covers, and the .md twin inlines them as code fences; every best-practice bullet ends with a Try it link to its /guides/<id>
+docs/demo-control-plan.md            original plan for the demo (now examples/shop-admin) as a control test bench (scenario framework, runner); guide pages superseded it
+docs/examples-plan.md                current plan: scenario-aware mock model, /guides playable guide pages, docs IA, demo/ → examples/shop-admin (all done), more example apps (next). Read before touching demo/lib/mock-model.ts, demo/lib/scenarios or /guides
 DESIGN.md                    design tokens (indigo → violet)
 ```
 
@@ -93,7 +93,7 @@ Components that take user input (Input, Select, Checkbox, ...) use `useBoundProp
 - `visible: { $state: "/path" }` and `{ $state, not: true }` show or hide elements
 - `repeat: { statePath, key }` re-renders the whole element per item. Children read `{ $item: "field" }`
 - State namespaces: `/tools/*` and `/host/*` are reserved for the runtime (writes from specs are dropped with a warning). Everything else is writable; prefer `/ui/*` for user-entered values
-- UI generated after a tool call must patch the existing spec. json-render merges every `data-spec` part in a message into one spec
+- UI generated after a tool call must patch the existing spec. json-render merges every `data-spec` part in a message into one spec. A later assistant message whose spec parts are patches only (no `/root`) continues the previous reply's spec in place (`src/chat/spec-continuation.ts`): the earlier SpecView gets the patches and keeps its state, the later message shows only its text
 
 ## Prompt layers
 
@@ -103,11 +103,11 @@ Components that take user input (Input, Select, Checkbox, ...) use `useBoundProp
 
 - Server (`createVexaHandler` in the route, env vars): model registry and default, persona / rules / instructions, server tools, MCP, stopWhen, approval secret, guard, provider options, API keys. Anything that costs money, grants capability, or is prompt text
 - Client (`VexaProvider`, overlay props): presentation (title, subtitle, suggestions, labels for i18n, launcher, position), `format` (locale + currency used by every catalog component), extra `$computed` `functions`, the model picker list (ids must exist in the server registry), host tools and page context. The server fences and size-caps everything the client sends
-- Built-in spec actions are only `submitForm`, `toast`, `runTool`. Host-specific behavior is a host tool called through `runTool` (from buttons or `watch`), never a new action baked into the library
+- Built-in spec actions are only `submitForm`, `toast`, `runTool`. A `runTool` whose name is not a host tool forwards `⟦action⟧ runTool <name> <json>` to the chat (`formatActionMessage`); the chat renders such a user message as a button press (`parseActionMessage`; `buttonPressed(tool)` defaults to the tool name as words, input shown as key/value pairs), never as raw text or JSON. Catalog `Input` with `inputType: "number"` binds a number, so a forwarded input satisfies `z.number()` tool schemas. Host-specific behavior is a host tool called through `runTool` (from buttons or `watch`), never a new action baked into the library
 - Never add a client-controlled field that changes server behavior without validating it against a server-side list
 - Config that comes in pairs must be typed together, not only checked at runtime: `contextSchema` infers the type of `context` on `VexaProvider<S>`, `defineTool` infers `run` input from `input`. When adding a new paired option, make the wrong combination a TypeScript error first
 - Never require zod from hosts. Schema-shaped options take AI SDK `FlexibleSchema` (Standard Schema or `jsonSchema()`) and go through `asSchema()`; zod is only for the catalog
-- Models: the library never imports a provider or reads an API key. The host passes AI SDK `LanguageModel` instances (or lazy `() => model` entries with name/maxTokens) in `createVexaHandler({ models })`; `GET /api/chat` publishes that list and the chat picker fetches it, so ids live in one place. The demo does this in `demo/lib/models.ts` with OpenRouter; `@openrouter/ai-sdk-provider` is a demo dependency only
+- Models: the library never imports a provider or reads an API key. The host passes AI SDK `LanguageModel` instances (or lazy `() => model` entries with name/maxTokens) in `createVexaHandler({ models })`; `GET /api/chat` publishes that list and the chat picker fetches it, so ids live in one place. The demo does this in `examples/shop-admin/lib/models.ts` with OpenRouter; `@openrouter/ai-sdk-provider` is a shop-admin dependency only
 
 ## Working in this repo
 

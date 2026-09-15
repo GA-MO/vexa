@@ -4,11 +4,12 @@ Reusable OpenRouter chat overlay that can answer in text **and** constrained gen
 
 ## Packages
 
-Exactly two packages:
+One bun workspace, three packages:
 
 ```
-package.json          # vexa (library)
-demo/package.json     # vexa-demo (Next host preview)
+package.json                        # vexa (library)
+examples/shop-admin/package.json    # vexa-shop-admin (Next.js reference host, playable /guides)
+website/package.json                # vexa-website (docs site)
 ```
 
 ```
@@ -21,30 +22,30 @@ src/
   ai-elements/
   ui/
 mcp/          MCP App server (scripts on the library package)
-demo/         Next.js preview host
+examples/     example host apps; shop-admin is the reference one
+website/      docs site (React Router + fumadocs)
 ```
 
 ## Setup
 
-1. Copy env into the demo app:
+1. Copy env into the shop admin app (skip it to use only the free mock model):
 
 ```bash
-cp demo/.env.example demo/.env.local
+cp examples/shop-admin/.env.example examples/shop-admin/.env.local
 ```
 
 ```env
-OPENROUTER_API_KEY=...        # used only by demo/lib/models.ts, the library never reads env
+OPENROUTER_API_KEY=...        # used only by examples/shop-admin/lib/models.ts, the library never reads env
 OPENROUTER_APP_TITLE=Vexa
 ```
 
-2. Install and run the demo:
+2. Install and run the shop admin:
 
 ```bash
 bun install
-bun dev
+bun run dev          # http://localhost:3001, guides at /guides
+bun run dev:site     # docs at http://localhost:3002
 ```
-
-Open [http://localhost:3000](http://localhost:3000) (or the next free port if 3000 is taken). Catalog review: [http://localhost:3000/catalog](http://localhost:3000/catalog).
 
 ## Use in another project
 
@@ -122,5 +123,6 @@ bun run mcp:http
 ## Design docs
 
 - [docs/host-integration-spec.md](docs/host-integration-spec.md) — how `VexaChatOverlay` will control the host app and connect to server tools / MCP (`VexaProvider`, host tools, `runTool`, `createVexaHandler`). Read this before touching `src/chat`, `src/react/runtime.ts`, or `src/core/chat.ts`.
-- [docs/docs-site-plan.md](docs/docs-site-plan.md) — plan and work breakdown for the public documentation site (`website/`), with `demo/` staying a test bench.
+- [docs/docs-site-plan.md](docs/docs-site-plan.md) — plan and work breakdown for the public documentation site (`website/`), with the example apps as the test bench.
+- [docs/examples-plan.md](docs/examples-plan.md) — the example apps, the scenario-aware mock model, and the playable `/guides` pages.
 - [DESIGN.md](DESIGN.md) — visual tokens and styling rules.
