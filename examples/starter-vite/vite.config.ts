@@ -23,6 +23,7 @@ export default defineConfig({
       { find: "vexa/core", replacement: path.join(librarySource, "core/index.ts") },
       { find: "vexa/react", replacement: path.join(librarySource, "react/index.ts") },
       { find: "vexa/chat", replacement: path.join(librarySource, "chat/index.ts") },
+      { find: "vexa/admin", replacement: path.join(librarySource, "admin/index.ts") },
       { find: "vexa/styles.css", replacement: path.join(librarySource, "styles.css") },
       { find: "vexa/lib", replacement: path.join(librarySource, "lib") },
       { find: "vexa/ui", replacement: path.join(librarySource, "ui") },

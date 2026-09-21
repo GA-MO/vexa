@@ -2,6 +2,7 @@ import type { Scenario } from "@/lib/scenarios/types";
 
 export const scenario: Scenario = {
   id: "smoke",
+  measures: "steering",
   kind: "check",
   title: "Plain text reply without UI",
   controlPath: "user prompt → /api/chat → text only",

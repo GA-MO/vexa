@@ -39,6 +39,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "button-runtool",
+  measures: "runtime",
   title: "Spec button runs a host tool",
   controlPath: "Button.on.press → runTool select_order → host tool → /tools/select_order + /toast",
   page: "/orders",

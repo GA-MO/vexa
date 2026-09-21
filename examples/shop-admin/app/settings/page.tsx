@@ -16,31 +16,47 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function PressedGroup<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: readonly T[];
+  value: T;
+  onChange: (option: T) => void;
+}) {
+  return (
+    <div role="group" aria-label={label} className="flex gap-1">
+      {options.map((option) => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={value === option}
+          onClick={() => onChange(option)}
+          className={cn(
+            "rounded-lg border px-3 py-1.5 text-sm font-medium capitalize transition-colors",
+            value === option ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
+        >
+          {option}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const HOST_TOOL_MODES = ["on", "off"] as const;
+
 export default function SettingsPage() {
-  const { theme, locale, currency, steps } = useShop();
-  const { setTheme, setLocale, setSteps } = useShopActions();
+  const { theme, locale, currency, steps, hostToolsEnabled } = useShop();
+  const { setTheme, setLocale, setSteps, setHostToolsEnabled } = useShopActions();
 
   return (
     <PageShell title="Settings" description="Presentation settings the chat can change through set_theme and set_locale.">
       <Panel title="Theme">
-        <div role="group" aria-label="Theme" className="flex gap-1">
-          {THEMES.map((option) => (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={theme === option}
-              onClick={() => setTheme(option)}
-              className={cn(
-                "rounded-lg border px-3 py-1.5 text-sm font-medium capitalize transition-colors",
-                theme === option
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
+        <PressedGroup label="Theme" options={THEMES} value={theme} onChange={setTheme} />
       </Panel>
 
       <Panel title="Locale and currency">
@@ -76,6 +92,18 @@ export default function SettingsPage() {
             ))}
           </select>
         </Field>
+      </Panel>
+
+      <Panel title="Assistant">
+        <div className="flex flex-col gap-2">
+          <PressedGroup
+            label="Host tools"
+            options={HOST_TOOL_MODES}
+            value={hostToolsEnabled ? "on" : "off"}
+            onChange={(mode) => setHostToolsEnabled(mode === "on")}
+          />
+          <p className="text-sm text-muted-foreground">Off: the assistant drives every page through admin_run only.</p>
+        </div>
       </Panel>
     </PageShell>
   );

@@ -59,6 +59,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "multi-step",
+  measures: "runtime",
   title: "A two-step wizard keeps state across next and back",
   controlPath: "step gated by visible + $state → Next/Back setState /ui/step → both steps' /ui/form values survive → submitForm sees both",
   page: "/guides/multi-step",

@@ -28,6 +28,7 @@ export type ChatLabels = {
   approve: string;
   reject: string;
   runOnPage: (tool: string) => string;
+  runSteps: (count: number) => string;
   run: string;
   cancel: string;
   restore: string;
@@ -94,6 +95,7 @@ export const DEFAULT_LABELS: ChatLabels = {
   approve: "Approve",
   reject: "Reject",
   runOnPage: (tool) => `Run ${tool} on this page?`,
+  runSteps: (count) => (count === 1 ? "Run 1 step on this page?" : `Run ${count} steps on this page?`),
   run: "Run",
   cancel: "Cancel",
   restore: "Restore",

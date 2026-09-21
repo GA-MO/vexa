@@ -3,15 +3,27 @@ import type { MockContinuation, MockStep, MockToolStep, MockTurn } from "vexa/mo
 
 export type { MockContinuation, MockStep, MockToolStep, MockTurn };
 import type { HostToolDescriptor, HostToolResult } from "vexa/react";
+import type { AdminConfirmPolicy } from "vexa/admin";
 import type { ShopFilters } from "@/lib/shop/data";
+import type { ShopState } from "@/lib/shop/store";
+
+/** What the real page must show after a step: its path, an open confirmation dialog, or a text somewhere in the document. */
+export type PageExpectation = { path?: string; dialogOpen?: boolean; textPresent?: string; textAbsent?: string };
+
+/** What the shop store must hold after a step, read from the DOM host; `label` is the prose the guide shows. */
+export type StoreExpectation = { label: string; check: (state: ShopState) => boolean };
 
 export type ModelExpectations = {
   expectTools?: string[];
+  expectToolsAnyOf?: string[][];
+  expectToolsInclude?: string[];
   expectToolsInOrder?: boolean;
   expectNoTools?: boolean;
   expectText?: RegExp | string;
   expectDataParts?: string[];
   expectToolInput?: Record<string, Record<string, unknown>>;
+  expectPage?: PageExpectation;
+  expectStore?: StoreExpectation;
 };
 
 export type UserStep = { user: string } & ModelExpectations;
@@ -33,6 +45,12 @@ export type RejectStep = { reject: string } & ModelExpectations;
 
 export type ExpectStateStep = { expectState: Record<string, unknown> };
 
+/** The reader presses a button on the real page, for example the app's own confirmation dialog. */
+export type PageClickStep = { pageClick: string; expectPage?: PageExpectation };
+
+/** The reader opens another page of the app, as if clicking its nav link. */
+export type PageNavigateStep = { pageNavigate: string; expectPage?: PageExpectation };
+
 export type ExpectSentToChatStep = { expectSentToChat: string | RegExp };
 
 export type RequestStep = {
@@ -51,6 +69,8 @@ export type Step =
   | TypeStep
   | ApproveStep
   | RejectStep
+  | PageClickStep
+  | PageNavigateStep
   | ExpectStateStep
   | ExpectSentToChatStep
   | RequestStep
@@ -69,6 +89,9 @@ export type HeadlessTool = HeadlessToolFn | { confirm: true; run: HeadlessToolFn
 
 export type ScenarioKind = "guide" | "check";
 
+/** What a scenario proves: `runtime` = the mock run proves it; `steering` = it exists to check that the prompt steers a real model. */
+export type ScenarioMeasure = "runtime" | "steering";
+
 /** Page state a guide applies before the first prompt, so the chat sees what the scenario assumes. */
 export type ScenarioSetup = { selectedOrderId?: string | null; filters?: Partial<ShopFilters> };
 
@@ -77,6 +100,7 @@ export type Scenario = {
   title: string;
   controlPath: string;
   page: string;
+  measures: ScenarioMeasure;
   kind?: ScenarioKind;
   docs?: string;
   setup?: ScenarioSetup;
@@ -87,6 +111,10 @@ export type Scenario = {
   bestPractice: string;
   hostTools?: HostToolDescriptor[];
   tools?: Record<string, HeadlessTool>;
+  domPage?: boolean;
+  confirmPolicy?: AdminConfirmPolicy;
+  discover?: boolean;
+  seeded?: boolean;
   context?: Record<string, unknown>;
   priorAssistantSpec?: Spec;
   manualChecks?: string[];
@@ -140,6 +168,14 @@ export function isRejectStep(step: Step): step is RejectStep {
   return "reject" in step;
 }
 
+export function isPageClickStep(step: Step): step is PageClickStep {
+  return "pageClick" in step;
+}
+
+export function isPageNavigateStep(step: Step): step is PageNavigateStep {
+  return "pageNavigate" in step;
+}
+
 export function isExpectSentToChatStep(step: Step): step is ExpectSentToChatStep {
   return "expectSentToChat" in step;
 }
@@ -162,6 +198,8 @@ export function describeStep(step: Step): string {
   if (isTypeStep(step)) return `type: ${step.type.path} = ${JSON.stringify(step.type.value)}`;
   if (isApproveStep(step)) return `approve: ${step.approve}`;
   if (isRejectStep(step)) return `reject: ${step.reject}`;
+  if (isPageClickStep(step)) return `pageClick: ${step.pageClick}`;
+  if (isPageNavigateStep(step)) return `pageNavigate: ${step.pageNavigate}`;
   if (isExpectSentToChatStep(step)) return `expectSentToChat: ${String(step.expectSentToChat)}`;
   if (isRequestStep(step)) return `request: ${step.request.method} ${step.request.path}`;
   if (isPatchStep(step)) return `patch: ${step.patch.map((op) => `${op.op} ${op.path}`).join(", ")}`;

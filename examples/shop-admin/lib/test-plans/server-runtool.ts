@@ -36,6 +36,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "server-runtool",
+  measures: "steering",
   title: "Spec button names a server tool",
   controlPath: "Button.on.press → runTool get_order → not a host tool → sendToChat(⟦action⟧ runTool get_order …) → model calls get_order",
   page: "/orders",

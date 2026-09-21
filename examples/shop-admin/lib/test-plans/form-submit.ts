@@ -54,6 +54,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "form-submit",
+  measures: "runtime",
   title: "Form blocks an invalid submit",
   controlPath: "Button.on.press → validateForm → submitForm (gated on /formValidation) → toast",
   page: "/orders",

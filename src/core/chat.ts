@@ -20,6 +20,7 @@ import { REASONING_METADATA_KEY } from "../protocol";
 import { buildAgentInstructions, type Persona, type PromptToolInfo, type ToolTier } from "./prompt";
 import { downgradeNotice, fence, fenceAsData, scanValue, type GuardFinding, type GuardRule } from "./guard";
 import { connectMcp, type McpServerConfig } from "./mcp";
+import { ADMIN_TOOLS } from "../admin/names";
 
 export type HostToolSchema = {
   name: string;
@@ -54,7 +55,11 @@ export type StreamAgentChatOptions = {
   toolApprovalSecret?: string;
   guard?: GuardConfig;
   req?: Request;
+  admin?: boolean;
 };
+
+const DEFAULT_STEP_COUNT = 4;
+const ADMIN_STEP_COUNT = 6;
 
 const MS_IN_SECOND = 1000;
 
@@ -106,7 +111,8 @@ function fenceToolSet(tools: ToolSet): ToolSet {
   return Object.fromEntries(Object.entries(tools).map(([name, definition]) => [name, fencedForModel(definition)]));
 }
 
-function tierOf(name: string, definition: Tool, explicit: Record<string, ToolTier>, hostToolNames: Set<string>): ToolTier {
+export function tierOf(name: string, definition: Tool, explicit: Record<string, ToolTier>, hostToolNames: Set<string>, admin = false): ToolTier {
+  if (admin && name === ADMIN_TOOLS.run) return "write";
   if (hostToolNames.has(name)) return "read";
   if (explicit[name]) return explicit[name];
   return definition.needsApproval ? "write" : "read";
@@ -162,7 +168,7 @@ export async function streamAgentChat(
   };
   const explicitTiers = { ...(options.toolTiers ?? {}), ...(mcp?.tiers ?? {}) };
   const tiers = Object.fromEntries(
-    Object.entries(tools).map(([name, definition]) => [name, tierOf(name, definition, explicitTiers, hostToolNames)]),
+    Object.entries(tools).map(([name, definition]) => [name, tierOf(name, definition, explicitTiers, hostToolNames, options.admin)]),
   ) as Record<string, ToolTier>;
   const readOnly = Object.keys(tools).filter((name) => tiers[name] === "read");
 
@@ -173,6 +179,7 @@ export async function streamAgentChat(
     tools: groupByTier(tools, tiers),
     context: options.context,
     req: options.req,
+    admin: options.admin,
   });
   const modelMessages = await convertToModelMessages(messages, { tools, ignoreIncompleteToolCalls: true });
   const guardState: GuardState = { flagged: null };
@@ -186,7 +193,7 @@ export async function streamAgentChat(
         system,
         messages: modelMessages,
         tools: Object.keys(tools).length > 0 ? tools : undefined,
-        stopWhen: options.stopWhen ?? stepCountIs(4),
+        stopWhen: options.stopWhen ?? stepCountIs(options.admin ? ADMIN_STEP_COUNT : DEFAULT_STEP_COUNT),
         prepareStep: guardStep(readOnly, system, options.guard, guardState),
         experimental_context: { context: options.context ?? {} },
         experimental_toolApprovalSecret: options.toolApprovalSecret,

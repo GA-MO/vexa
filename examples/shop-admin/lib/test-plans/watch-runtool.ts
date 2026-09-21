@@ -52,6 +52,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "watch-runtool",
+  measures: "runtime",
   title: "Select change cascades through watch",
   controlPath: "Select value change → watch → runTool load_branches → second Select bound to /tools/load_branches/branches",
   page: "/orders",

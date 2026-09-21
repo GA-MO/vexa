@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { appPath } from "@/lib/app-path";
-import { cn } from "vexa/react";
+import { appPath, isDevOnlyPage } from "@/lib/app-path";
+import { cn, VexaDiscoverPages } from "vexa/react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview" },
   { href: "/orders", label: "Orders" },
+  { href: "/products", label: "Products" },
   { href: "/settings", label: "Settings" },
   { href: "/guides", label: "Guides" },
 ] as const;
@@ -40,6 +41,7 @@ export function TopNav() {
             {item.label}
           </Link>
         ))}
+        <VexaDiscoverPages skip={isDevOnlyPage} className="ml-auto" />
       </nav>
     </header>
   );

@@ -19,6 +19,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "navigate",
+  measures: "steering",
   title: "Model navigates the admin",
   controlPath: "user prompt → navigate host tool → router.push → /tools/navigate",
   page: "/",

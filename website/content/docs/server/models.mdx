@@ -34,22 +34,49 @@ export const models: ModelRegistry = {
 
 Pass a function so provider construction and env reads happen on the first request, not at import or build time. The function is called once and memoized. Per-entry `model: () => …` is lazy as well, so an unused model never instantiates.
 
-```ts title="examples/shop-admin/lib/models.ts"
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+```ts title="examples/shop-admin/lib/models.ts (excerpt)"
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import type { LanguageModel } from "ai";
 import type { ModelRegistry } from "vexa/server";
 
-const DEMO_MODELS = [
-  { id: "google/gemini-3.1-flash-lite", name: "Gemini 3.1 Flash Lite", maxTokens: 1_000_000 },
-  { id: "anthropic/claude-sonnet-4", name: "Claude Sonnet 4", maxTokens: 200_000 },
-] as const;
+type ModelSpec = { id: string; name: string; maxTokens: number };
+type Provider = { create: (id: string) => LanguageModel; models: readonly ModelSpec[]; provider: string };
 
+const QWEN_MODELS: readonly ModelSpec[] = [
+  { id: "deepseek-v4-flash-0731", name: "DeepSeek V4 Flash (QwenCloud)", maxTokens: 128_000 },
+  { id: "qwen3.8-flash", name: "Qwen 3.8 Flash (QwenCloud)", maxTokens: 128_000 },
+];
+const GOOGLE_MODELS: readonly ModelSpec[] = [{ id: "gemini-3.1-flash-lite", name: "Gemini 3.1 Flash Lite (AI Studio)", maxTokens: 1_000_000 }];
+
+function qwenProvider(apiKey: string): Provider {
+  const client = createOpenAICompatible({ name: "qwencloud", baseURL: "https://maas.qwencloudapi.com/compatible-mode/v1", apiKey });
+  return { create: (id) => client(id), models: QWEN_MODELS, provider: "qwen" };
+}
+
+function googleProvider(apiKey: string): Provider {
+  const client = createGoogleGenerativeAI({ apiKey });
+  return { create: (id) => client(id), models: GOOGLE_MODELS, provider: "google" };
+}
+
+const PROVIDER_KEYS: ReadonlyArray<[env: string, build: (key: string) => Provider]> = [
+  ["QWEN_API_KEY", qwenProvider],
+  ["GOOGLE_GENERATIVE_AI_API_KEY", googleProvider],
+];
+
+/** Every provider whose key is set, in order; the first entry (DeepSeek V4 Flash via QwenCloud) is the default model. */
 export function demoModels(): ModelRegistry {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error("OPENROUTER_API_KEY is missing in examples/shop-admin/.env.local");
-  const provider = createOpenRouter({ apiKey, compatibility: "strict" });
-  return Object.fromEntries(DEMO_MODELS.map(({ id, name, maxTokens }) => [id, { model: () => provider(id), name, maxTokens }]));
+  const providers = PROVIDER_KEYS.flatMap(([env, build]) => (process.env[env] ? [build(process.env[env] as string)] : []));
+  if (providers.length === 0) throw new Error("Set QWEN_API_KEY or GOOGLE_GENERATIVE_AI_API_KEY in examples/shop-admin/.env.local");
+  return Object.fromEntries(
+    providers.flatMap(({ create, models, provider }) =>
+      models.map(({ id, name, maxTokens }) => [id, { model: () => create(id), name, provider, maxTokens }]),
+    ),
+  );
 }
 ```
+
+The shipped file also knows DeepSeek's own API, Groq, Anthropic and OpenRouter; whichever keys exist appear in the picker next to the mock, and `VEXA_PROVIDERS=GOOGLE_GENERATIVE_AI_API_KEY,QWEN_API_KEY` reorders them. DeepSeek V4 Flash is the default because it scored best on the data-checked generative-UI eval (`bun run eval:ui`, `docs/admin-ui-eval.md`); QwenCloud models get `providerOptions: { qwencloud: { enable_thinking: false } }` so they answer in 10–15 s instead of a minute.
 
 ```ts title="app/api/chat/route.ts"
 export const { GET, POST } = createVexaHandler({

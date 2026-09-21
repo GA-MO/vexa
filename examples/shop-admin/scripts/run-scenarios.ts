@@ -1,13 +1,15 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { getToolName, isToolUIPart, readUIMessageStream, type UIMessage, type UIMessageChunk } from "ai";
+import { getToolName, type UIMessage } from "ai";
 import {
   SCENARIOS,
   describeStep,
   isApproveStep,
   isExpectSentToChatStep,
   isExpectSpecStep,
+  isPageClickStep,
+  isPageNavigateStep,
   isPatchStep,
   isPressStep,
   isRejectStep,
@@ -15,158 +17,47 @@ import {
   isTypeStep,
   isUserStep,
   type ModelExpectations,
+  type PageExpectation,
   type Scenario,
+  type StoreExpectation,
   type ScenarioResult,
   type ScenarioResultsFile,
   type Step,
   type StepResult,
 } from "@/lib/scenarios";
-import { createHeadlessHost, createSpecDriver, type HeadlessHost, type SpecDriver } from "@/lib/scenarios/driver";
+import { createHeadlessHost, createSpecDriver, type SpecDriver } from "@/lib/scenarios/driver";
+import { createDomPageHost, type DomPageHost } from "@/lib/scenarios/dom-host";
+import type { AdminPages } from "vexa/admin";
+import { ADMIN_TOOLS, confirmationDialogsIn } from "vexa/admin";
+import { HOST_TOOL_DEFINITIONS } from "@/lib/shop/host-tools";
+import { adminHostToolDescriptors } from "@/lib/shop/admin-tools";
+import {
+  BASE_URL,
+  MODEL,
+  hasPendingApproval,
+  lastAssistantMessage,
+  runModelTurnRaw,
+  textOf,
+  toolParts,
+  upsertMessage,
+  withPart,
+  type ChatSession,
+  type ToolPart,
+  type Turn,
+} from "@/lib/scenarios/model-turn";
 
-const BASE_URL = process.env.VEXA_DEMO_URL ?? "http://localhost:3001";
-const MODEL = process.env.VEXA_SCENARIO_MODEL ?? "google/gemini-3.1-flash-lite";
-const MAX_ROUND_TRIPS = 6;
+const HOST_TOOLS_OFF = process.env.VEXA_SCENARIO_HOST_TOOLS === "off";
+const SHOP_HOST_TOOL_NAMES = new Set<string>(Object.keys(HOST_TOOL_DEFINITIONS));
 const TEXT_PREVIEW_LENGTH = 80;
 const RESULTS_PATH = fileURLToPath(new URL("../.scenario-results.json", import.meta.url));
 const FIXTURE_ONLY_NOTE = "fixture only, no script";
 
-type ToolPart = Extract<UIMessage["parts"][number], { toolCallId: string }>;
-
-type Session = {
+type Session = ChatSession & {
   scenario: Scenario;
-  chatId: string;
-  messages: UIMessage[];
-  host: HeadlessHost;
+  domPage: DomPageHost | null;
   driver: SpecDriver | null;
-  seenToolCallIds: Set<string>;
+  lastTurn: Turn | null;
 };
-
-type Turn = { tools: string[]; text: string; dataParts: string[]; toolInputs: Record<string, unknown>; errors: string[] };
-
-function dataPartTypesOf(message: UIMessage | undefined): string[] {
-  const types = (message?.parts ?? [])
-    .map((part) => part.type)
-    .filter((type) => type.startsWith("data-"));
-  return [...new Set(types)];
-}
-
-function parseSseEvent(event: string): UIMessageChunk[] {
-  const data = event
-    .split("\n")
-    .filter((line) => line.startsWith("data:"))
-    .map((line) => line.slice("data:".length).trim())
-    .join("\n");
-  if (!data || data === "[DONE]") return [];
-  return [JSON.parse(data) as UIMessageChunk];
-}
-
-function sseChunkStream(body: ReadableStream<Uint8Array>): ReadableStream<UIMessageChunk> {
-  const decoder = new TextDecoder();
-  let buffer = "";
-  return body.pipeThrough(
-    new TransformStream<Uint8Array, UIMessageChunk>({
-      transform(bytes, controller) {
-        buffer += decoder.decode(bytes, { stream: true });
-        const events = buffer.split("\n\n");
-        buffer = events.pop() ?? "";
-        for (const event of events) for (const chunk of parseSseEvent(event)) controller.enqueue(chunk);
-      },
-      flush(controller) {
-        for (const chunk of parseSseEvent(buffer)) controller.enqueue(chunk);
-      },
-    }),
-  );
-}
-
-function lastAssistantMessage(session: Session): UIMessage | undefined {
-  const last = session.messages.at(-1);
-  return last?.role === "assistant" ? last : undefined;
-}
-
-function textOf(message: UIMessage | undefined): string {
-  if (!message) return "";
-  return message.parts
-    .filter((part): part is { type: "text"; text: string } => part.type === "text")
-    .map((part) => part.text)
-    .join("\n")
-    .trim();
-}
-
-function toolParts(message: UIMessage | undefined): ToolPart[] {
-  return (message?.parts ?? []).filter((part): part is ToolPart => isToolUIPart(part));
-}
-
-function upsertMessage(session: Session, message: UIMessage) {
-  const index = session.messages.findIndex((existing) => existing.id === message.id);
-  if (index === -1) session.messages.push(message);
-  else session.messages[index] = message;
-}
-
-function recordNewToolCalls(session: Session, message: UIMessage, turn: Turn) {
-  for (const part of toolParts(message)) {
-    if (session.seenToolCallIds.has(part.toolCallId)) continue;
-    session.seenToolCallIds.add(part.toolCallId);
-    const name = getToolName(part);
-    turn.tools.push(name);
-    turn.toolInputs[name] = (part as { input?: unknown }).input;
-  }
-}
-
-async function postChat(session: Session, continuation: UIMessage | undefined): Promise<Response> {
-  const { scenario } = session;
-  return fetch(`${BASE_URL}/api/chat`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      id: session.chatId,
-      trigger: "submit-message",
-      messageId: continuation?.id,
-      messages: session.messages,
-      model: MODEL,
-      context: scenario.context ?? { path: scenario.page },
-      hostTools: scenario.hostTools ?? [],
-    }),
-  });
-}
-
-async function readAssistantMessage(response: Response, continuation: UIMessage | undefined, errors: string[]): Promise<UIMessage | undefined> {
-  if (!response.body) {
-    errors.push("Response had no body");
-    return undefined;
-  }
-  let message: UIMessage | undefined;
-  const stream = readUIMessageStream<UIMessage>({
-    message: continuation,
-    stream: sseChunkStream(response.body),
-    onError: (error) => errors.push(error instanceof Error ? error.message : String(error)),
-  });
-  for await (const state of stream) message = state;
-  return message;
-}
-
-function withPart(message: UIMessage, toolCallId: string, next: ToolPart): UIMessage {
-  return {
-    ...message,
-    parts: message.parts.map((part) => (isToolUIPart(part) && part.toolCallId === toolCallId ? next : part)),
-  };
-}
-
-async function runPendingHostTools(session: Session, message: UIMessage): Promise<{ message: UIMessage; ran: boolean }> {
-  let next = message;
-  let ran = false;
-  for (const part of toolParts(message)) {
-    const name = getToolName(part);
-    if (part.state !== "input-available" || !session.host.hasTool(name)) continue;
-    if (session.host.needsConfirm(name)) {
-      session.host.requestConfirm({ toolCallId: part.toolCallId, name, input: part.input });
-      continue;
-    }
-    const output = await session.host.runTool(name, part.input, { toolCallId: part.toolCallId, source: "model" });
-    next = withPart(next, part.toolCallId, { ...part, state: "output-available", output } as ToolPart);
-    ran = true;
-  }
-  return { message: next, ran };
-}
 
 async function tryHostConfirm(session: Session, toolName: string, approved: boolean): Promise<string | "handled" | "not-pending"> {
   const confirmed = await session.host.confirmTool(toolName, approved);
@@ -180,38 +71,12 @@ async function tryHostConfirm(session: Session, toolName: string, approved: bool
   return "handled";
 }
 
-function hasPendingApproval(message: UIMessage) {
-  return toolParts(message).some((part) => part.state === "approval-requested");
-}
-
-async function runModelTurnRaw(session: Session, continueLast: boolean): Promise<Turn> {
-  const turn: Turn = { tools: [], text: "", dataParts: [], toolInputs: {}, errors: [] };
-  let continuation = continueLast ? lastAssistantMessage(session) : undefined;
-  for (let roundTrip = 0; roundTrip < MAX_ROUND_TRIPS; roundTrip += 1) {
-    const response = await postChat(session, continuation);
-    if (!response.ok) {
-      turn.errors.push(`POST /api/chat → ${response.status}: ${(await response.text()).slice(0, 200)}`);
-      return turn;
-    }
-    const message = await readAssistantMessage(response, continuation, turn.errors);
-    if (!message) return turn;
-    recordNewToolCalls(session, message, turn);
-    const { message: settled, ran } = await runPendingHostTools(session, message);
-    upsertMessage(session, settled);
-    session.driver?.recordToolOutputs([settled]);
-    turn.text = textOf(settled);
-    turn.dataParts = dataPartTypesOf(settled);
-    if (turn.errors.length > 0 || hasPendingApproval(settled) || !ran) return turn;
-    continuation = settled;
-  }
-  turn.errors.push(`Stopped after ${MAX_ROUND_TRIPS} round trips`);
-  return turn;
-}
 
 /** Applies any data-spec parts from the final assistant message onto the fixture's live spec, the way a real client would merge a streamed patch or flat replacement. */
 async function runModelTurn(session: Session, continueLast: boolean): Promise<Turn> {
-  const turn = await runModelTurnRaw(session, continueLast);
+  const turn = await runModelTurnRaw(session, continueLast, (settled) => session.driver?.recordToolOutputs([settled]));
   session.driver?.applySpecParts(lastAssistantMessage(session)?.parts ?? []);
+  session.lastTurn = turn;
   return turn;
 }
 
@@ -242,6 +107,12 @@ function checkModelExpectations(step: ModelExpectations, turn: Turn): string[] {
   }
   if (step.expectTools && !step.expectToolsInOrder && uniqueSorted(step.expectTools).join(",") !== uniqueSorted(turn.tools).join(",")) {
     errors.push(`Expected tools {${step.expectTools.join(", ")}}, saw {${turn.tools.join(", ")}}`);
+  }
+  for (const name of step.expectToolsInclude ?? []) {
+    if (!turn.tools.includes(name)) errors.push(`Expected ${name} to be called, saw {${turn.tools.join(", ")}}`);
+  }
+  if (step.expectToolsAnyOf && !step.expectToolsAnyOf.some((set) => uniqueSorted(set).join(",") === uniqueSorted(turn.tools).join(","))) {
+    errors.push(`Expected tools to be one of ${step.expectToolsAnyOf.map((set) => `{${set.join(", ")}}`).join(" / ")}, saw {${turn.tools.join(", ")}}`);
   }
   if (typeof step.expectText === "string" && !turn.text.includes(step.expectText)) errors.push(`Expected text to include "${step.expectText}"`);
   if (step.expectText instanceof RegExp && !step.expectText.test(turn.text)) errors.push(`Expected text to match ${step.expectText}`);
@@ -344,7 +215,61 @@ async function runRequestStep(step: Extract<Step, { request: unknown }>, result:
   if (step.expectBody && !step.expectBody.test(body)) result.errors.push(`Expected body to match ${step.expectBody}, got: ${body.slice(0, 200)}`);
 }
 
+function applyDecidedAdminRun(session: Session, step: ModelExpectations, result: StepResult): boolean {
+  if (!session.domPage || !session.lastTurn) return false;
+  applyTurn(result, session.lastTurn, step);
+  return true;
+}
+
+function checkPageExpectation(session: Session, expected: PageExpectation | undefined, result: StepResult) {
+  if (!expected) return;
+  if (!session.domPage) {
+    result.errors.push("expectPage needs a domPage scenario");
+    return;
+  }
+  const doc = session.domPage.container.ownerDocument;
+  const dialogOpen = confirmationDialogsIn(doc.body).length > 0;
+  const text = doc.body.textContent ?? "";
+  const path = session.domPage.page().path;
+  if (expected.path !== undefined && path !== expected.path) result.errors.push(`Expected the page to be ${expected.path}, it is ${path}`);
+  if (expected.dialogOpen !== undefined && dialogOpen !== expected.dialogOpen) {
+    result.errors.push(expected.dialogOpen ? "Expected the app's confirmation dialog to be open" : "Expected no confirmation dialog on the page");
+  }
+  if (expected.textPresent && !text.includes(expected.textPresent)) result.errors.push(`Expected the page to show "${expected.textPresent}"`);
+  if (expected.textAbsent && text.includes(expected.textAbsent)) result.errors.push(`Expected the page not to show "${expected.textAbsent}"`);
+}
+
+function checkStoreExpectation(session: Session, expected: StoreExpectation | undefined, result: StepResult) {
+  if (!expected) return;
+  if (!session.domPage) {
+    result.errors.push("expectStore needs a domPage scenario");
+    return;
+  }
+  if (!expected.check(session.domPage.state())) result.errors.push(`Expected the store to satisfy: ${expected.label}`);
+}
+
+async function runPageClickStep(session: Session, step: Extract<Step, { pageClick: string }>, result: StepResult) {
+  if (!session.domPage) {
+    result.errors.push("pageClick needs a domPage scenario");
+    return;
+  }
+  const pressed = await session.domPage.pressButton(step.pageClick);
+  if (!pressed) result.errors.push(`No button named "${step.pageClick}" on the page`);
+  checkPageExpectation(session, step.expectPage, result);
+}
+
+async function runPageNavigateStep(session: Session, step: Extract<Step, { pageNavigate: string }>, result: StepResult) {
+  if (!session.domPage) {
+    result.errors.push("pageNavigate needs a domPage scenario");
+    return;
+  }
+  await session.domPage.navigate(step.pageNavigate);
+  await session.domPage.settle();
+  checkPageExpectation(session, step.expectPage, result);
+}
+
 async function runApprovalStep(session: Session, toolName: string, approved: boolean, step: ModelExpectations, result: StepResult) {
+  if (toolName === ADMIN_TOOLS.run && applyDecidedAdminRun(session, step, result)) return;
   const hostOutcome = await tryHostConfirm(session, toolName, approved);
   if (hostOutcome !== "not-pending") {
     if (hostOutcome !== "handled") {
@@ -369,11 +294,15 @@ async function runStep(session: Session, index: number, step: Step): Promise<Ste
     else if (isTypeStep(step)) await requireDriver(session).type(step.type.path, step.type.value);
     else if (isApproveStep(step)) await runApprovalStep(session, step.approve, true, step, result);
     else if (isRejectStep(step)) await runApprovalStep(session, step.reject, false, step, result);
+    else if (isPageClickStep(step)) await runPageClickStep(session, step, result);
+    else if (isPageNavigateStep(step)) await runPageNavigateStep(session, step, result);
     else if (isExpectSentToChatStep(step)) runExpectSentToChatStep(session, step, result);
     else if (isRequestStep(step)) await runRequestStep(step, result);
     else if (isPatchStep(step)) runPatchStep(session, step);
     else if (isExpectSpecStep(step)) runExpectSpecStep(session, step, result);
     else applyStateExpectation(requireDriver(session), step.expectState, result);
+    if (!isPageClickStep(step) && !isPageNavigateStep(step) && "expectPage" in step) checkPageExpectation(session, step.expectPage, result);
+    if ("expectStore" in step) checkStoreExpectation(session, step.expectStore, result);
   } catch (error) {
     result.errors.push(error instanceof Error ? error.message : String(error));
   }
@@ -392,15 +321,54 @@ function seedPriorSpec(session: Session, spec: Scenario["priorAssistantSpec"]) {
   session.driver?.applySpecParts(specMessage.parts);
 }
 
-function createSession(scenario: Scenario): Session {
-  const host = createHeadlessHost({ tools: scenario.tools, hostTools: scenario.hostTools, context: scenario.context });
+function adminRunDecision(scenario: Scenario): boolean {
+  return !scenario.script.some((step) => isRejectStep(step) && step.reject === ADMIN_TOOLS.run);
+}
+
+let seedPages: AdminPages | null = null;
+
+/** What an earlier visit would have left in the browser's storage: one discovery over a throwaway copy of the app, exported once per run. */
+async function storedPagesSeed(): Promise<AdminPages> {
+  if (seedPages) return seedPages;
+  const earlier = await createDomPageHost("/", { passive: false, frame: false });
+  await earlier.discover({ skip: (path) => path.startsWith("/guides") });
+  seedPages = earlier.exportPages();
+  await earlier.dispose();
+  return seedPages;
+}
+
+async function createDomPage(scenario: Scenario): Promise<DomPageHost | null> {
+  if (!scenario.domPage) return null;
+  console.log(`  dom page ${scenario.page}`);
+  const approved = adminRunDecision(scenario);
+  const pages = scenario.seeded ? await storedPagesSeed() : undefined;
+  const host = await createDomPageHost(scenario.page, {
+    setup: scenario.setup,
+    confirm: async () => approved,
+    confirmPolicy: scenario.confirmPolicy,
+    pages,
+  });
+  if (pages) console.log(`  restored ${pages.pages.length} stored pages`);
+  if (!scenario.discover) return host;
+  const progress = await host.discover();
+  console.log(`  discovered ${progress.visited.length} pages`);
+  return host;
+}
+
+async function createSession(scenario: Scenario): Promise<Session> {
+  const domPage = await createDomPage(scenario);
+  const tools = { ...(scenario.tools ?? {}), ...(domPage?.tools ?? {}) };
+  const host = createHeadlessHost({ tools, hostTools: scenario.hostTools, context: scenario.context });
   const session: Session = {
     scenario,
     chatId: crypto.randomUUID(),
     messages: [],
     host,
+    request: { context: scenario.context ?? { path: scenario.page }, hostTools: scenario.hostTools ?? [] },
+    domPage,
     driver: scenario.fixture ? createSpecDriver(scenario.fixture, host) : null,
     seenToolCallIds: new Set(),
+    lastTurn: null,
   };
   seedPriorSpec(session, scenario.priorAssistantSpec);
   return session;
@@ -422,9 +390,10 @@ async function runScenarioOnce(scenario: Scenario): Promise<ScenarioResult> {
   if (scenario.requiresEnv && !process.env[scenario.requiresEnv]) {
     return { id: scenario.id, pass: true, ranAt, model: MODEL, note: `skipped: start the dev server and the runner with ${scenario.requiresEnv}=1`, steps: [] };
   }
-  const session = createSession(scenario);
+  const session = await createSession(scenario);
   const steps: StepResult[] = [];
   for (const [index, step] of scenario.script.entries()) steps.push(await runStep(session, index, step));
+  await session.domPage?.dispose();
   return { id: scenario.id, pass: steps.every((step) => step.pass), ranAt, model: MODEL, steps };
 }
 
@@ -464,6 +433,51 @@ async function writeResults(results: ScenarioResult[]) {
   await writeFile(RESULTS_PATH, JSON.stringify(file, null, 2));
 }
 
+function admittedToolName(name: string) {
+  return SHOP_HOST_TOOL_NAMES.has(name) ? ADMIN_TOOLS.run : name;
+}
+
+function admittedToolSet(names: string[]): string[] {
+  return [...new Set(names.map(admittedToolName))];
+}
+
+function withObserveAllowed(sets: string[][]): string[][] {
+  const allowed = sets.flatMap((set) => [set, [...new Set([ADMIN_TOOLS.observe, ...set])]]);
+  return [...new Map(allowed.map((set) => [uniqueSorted(set).join(","), set])).values()];
+}
+
+function admittedExpectations(step: ModelExpectations): ModelExpectations {
+  const { expectTools, expectToolsAnyOf, expectToolsInclude, expectNoTools, expectText, expectDataParts, expectToolInput, expectPage, expectStore } = step;
+  const next: ModelExpectations = { expectNoTools, expectText, expectDataParts, expectToolInput, expectPage, expectStore };
+  if (expectToolsInclude) next.expectToolsInclude = admittedToolSet(expectToolsInclude);
+  const sets: string[][] = [];
+  if (expectTools) sets.push(admittedToolSet(expectTools));
+  if (expectToolsAnyOf) sets.push(...expectToolsAnyOf.map(admittedToolSet));
+  if (sets.length > 0) next.expectToolsAnyOf = withObserveAllowed(sets);
+  return next;
+}
+
+function admittedStep(step: Step): Step {
+  if (isUserStep(step)) return { user: step.user, ...admittedExpectations(step) };
+  if (isApproveStep(step)) return { approve: admittedToolName(step.approve), ...admittedExpectations(step) };
+  if (isRejectStep(step)) return { reject: admittedToolName(step.reject), ...admittedExpectations(step) };
+  return step;
+}
+
+/** Runs a scenario with the shop host tools removed: only admin_observe / admin_run over the real page, and every host tool expectation rewritten to admin_run. */
+function withoutHostTools(scenario: Scenario): Scenario {
+  if (!scenario.page || scenario.page.startsWith("/guides")) return scenario;
+  return {
+    ...scenario,
+    hostTools: adminHostToolDescriptors(),
+    tools: undefined,
+    domPage: true,
+    script: scenario.script.map(admittedStep),
+  };
+}
+
+const STEERING_FLAG = "--steering";
+
 function selectScenarios(ids: string[]): Scenario[] {
   if (ids.length === 0) return SCENARIOS;
   const unknown = ids.filter((id) => !SCENARIOS.some((scenario) => scenario.id === id));
@@ -472,8 +486,13 @@ function selectScenarios(ids: string[]): Scenario[] {
 }
 
 async function main() {
-  const selected = selectScenarios(process.argv.slice(2));
-  console.log(`Running ${selected.length} scenario(s) against ${BASE_URL} with ${MODEL}`);
+  const args = process.argv.slice(2);
+  const steeringOnly = args.includes(STEERING_FLAG);
+  const chosen = selectScenarios(args.filter((arg) => arg !== STEERING_FLAG)).filter((scenario) => !steeringOnly || scenario.measures === "steering");
+  const selected = HOST_TOOLS_OFF ? chosen.map(withoutHostTools) : chosen;
+  const steering = selected.filter((scenario) => scenario.measures === "steering").length;
+  console.log(`Running ${selected.length} scenario(s) against ${BASE_URL} with ${MODEL} (${steering} steering, ${selected.length - steering} runtime)`);
+  if (HOST_TOOLS_OFF) console.log("host tools: off");
   const results: ScenarioResult[] = [];
   for (const scenario of selected) {
     const result = await runScenario(scenario);

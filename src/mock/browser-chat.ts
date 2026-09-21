@@ -1,4 +1,15 @@
-type ChatHandler = { GET: () => Promise<Response>; POST: (request: Request) => Promise<Response> };
+type ChatHandler = { GET: () => Promise<Response>; POST: (request: Request) => Promise<Response>; PUT?: (request: Request) => Promise<Response> };
+
+function notFound() {
+  return Response.json({ error: "Not found" }, { status: 404 });
+}
+
+function dispatch(handler: ChatHandler, request: Request): Promise<Response> {
+  if (request.method === "GET") return handler.GET();
+  if (request.method === "POST") return handler.POST(request);
+  if (request.method === "PUT" && handler.PUT) return handler.PUT(request);
+  return Promise.resolve(notFound());
+}
 
 const DEFAULT_CHAT_PATH = "/api/chat";
 
@@ -9,7 +20,7 @@ export function serveChatInBrowser(handler: ChatHandler, path = DEFAULT_CHAT_PAT
     const request = new Request(input, init);
     const url = new URL(request.url, window.location.href);
     if (!url.pathname.endsWith(path)) return originalFetch(input, init);
-    return request.method === "GET" ? handler.GET() : handler.POST(request);
+    return dispatch(handler, request);
   };
   window.fetch = routedFetch as typeof window.fetch;
 }

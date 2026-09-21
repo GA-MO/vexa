@@ -22,6 +22,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "deep-link",
+  measures: "steering",
   title: "Model deep-links into an order section",
   controlPath: "user prompt → open_order host tool (id, section) → router.push + scrollIntoView",
   page: "/orders",

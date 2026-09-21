@@ -32,6 +32,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "page-state",
+  measures: "steering",
   title: "Model filters the orders table",
   controlPath: "user prompt → set_filter host tool → table filters → context.filters on the next turn",
   page: "/orders",

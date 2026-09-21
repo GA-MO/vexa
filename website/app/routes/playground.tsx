@@ -2,8 +2,9 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { CheckIcon, ClipboardCopyIcon, Sparkles } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { VexaChat, type ChatSuggestion } from "vexa/chat";
-import { PLAYGROUND_MOCK_SUGGESTIONS, servePlaygroundMockInBrowser } from "@/lib/playground-mock";
+import { VexaChat } from "vexa/chat";
+import { VexaProvider } from "vexa/react";
+import { PLAYGROUND_SUGGESTIONS, servePlaygroundMockInBrowser } from "@/lib/playground-mock";
 import { STATIC_BUILD } from "@/lib/static-build";
 import type { VexaMessage } from "vexa/protocol";
 import { CodeSurface } from "@/components/code-surface";
@@ -21,15 +22,6 @@ const INSPECTOR_TABS = ["Spec", "JSONL", "State"];
 const COPY_FEEDBACK_MS = 2000;
 
 if (STATIC_BUILD) servePlaygroundMockInBrowser();
-
-const LIVE_SUGGESTIONS: readonly ChatSuggestion[] = [
-  { label: "KPI dashboard", prompt: "Show 3 KPI metrics for an online shop with a revenue bar chart by month" },
-  { label: "Pricing table", prompt: "Compare three subscription plans in a table with a call-to-action button per plan" },
-  { label: "Signup form", prompt: "Build a signup form with name, email, plan select and a submit button" },
-  { label: "Order timeline", prompt: "Show the status of order #4821 as a timeline with a progress bar" },
-];
-
-const PLAYGROUND_SUGGESTIONS = STATIC_BUILD ? PLAYGROUND_MOCK_SUGGESTIONS : LIVE_SUGGESTIONS;
 
 type CopyState = "idle" | "copied" | "failed";
 
@@ -93,13 +85,15 @@ function Playground() {
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="h-[min(720px,calc(100dvh-11rem))] min-h-[520px] min-w-0">
         {mounted ? (
-          <VexaChat
-            api={CHAT_API}
-            onMessagesChange={setMessages}
-            subtitle="Every reply renders catalog UI"
-            suggestions={PLAYGROUND_SUGGESTIONS}
-            title="Vexa playground"
-          />
+          <VexaProvider api={CHAT_API}>
+            <VexaChat
+              api={CHAT_API}
+              onMessagesChange={setMessages}
+              subtitle="Every reply renders catalog UI"
+              suggestions={PLAYGROUND_SUGGESTIONS}
+              title="Vexa playground"
+            />
+          </VexaProvider>
         ) : (
           <ChatShell />
         )}

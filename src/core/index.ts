@@ -1,4 +1,5 @@
 export { catalog, type Catalog } from "./catalog";
+export { normalizeSpec } from "./spec";
 export {
   buildAgentInstructions,
   buildStandaloneAgentInstructions,

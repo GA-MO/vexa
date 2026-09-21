@@ -21,6 +21,7 @@
       "vexa/core": ["../../src/core/index.ts"],
       "vexa/server": ["../../src/server/index.ts"],
       "vexa/mock": ["../../src/mock/index.ts"],
+      "vexa/admin": ["../../src/admin/index.ts"],
       "vexa/react": ["../../src/react/index.ts"],
       "vexa/chat": ["../../src/chat/index.ts"],
       "vexa/lib/*": ["../../src/lib/*"],

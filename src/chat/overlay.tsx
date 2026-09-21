@@ -4,6 +4,7 @@ import { useEffect, useId, useState } from "react";
 import { MessageCircleIcon, XIcon } from "lucide-react";
 import { cn } from "vexa/lib/utils";
 import { useVexaHostContext } from "vexa/react";
+import { isVexaFrame } from "vexa/admin";
 import { VexaChat, type VexaChatProps } from "./vexa-chat";
 import { DEFAULT_LABELS } from "./constants";
 
@@ -19,6 +20,14 @@ export type VexaChatOverlayProps = Omit<VexaChatProps, "layout" | "onClose"> &
     /** `true` (default) dims the page and closes the panel on an outside click; `false` leaves the page usable while the chat is open. */
     backdrop?: boolean;
   };
+
+function useInDiscoveryFrame(): boolean {
+  const [inFrame, setInFrame] = useState(false);
+  useEffect(() => {
+    if (isVexaFrame()) setInFrame(true);
+  }, []);
+  return inFrame;
+}
 
 export function VexaChatOverlay({
   defaultOpen: defaultOpenProp,
@@ -40,6 +49,7 @@ export function VexaChatOverlay({
   const launcherIcon = launcherIconProp ?? host?.chat.launcherIcon ?? <MessageCircleIcon className="size-5" />;
   const titleId = useId();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+  const inDiscoveryFrame = useInDiscoveryFrame();
   const isControlled = openProp !== undefined;
   const open = isControlled ? openProp : uncontrolledOpen;
 
@@ -61,8 +71,10 @@ export function VexaChatOverlay({
 
   const side = position === "bottom-left" ? "left-4 sm:left-6" : "right-4 sm:right-6";
 
+  if (inDiscoveryFrame) return null;
+
   return (
-    <div className="pointer-events-none fixed inset-0 z-50">
+    <div className="pointer-events-none fixed inset-0 z-50" data-vexa-ignore="">
       {backdrop ? (
         <button
           type="button"

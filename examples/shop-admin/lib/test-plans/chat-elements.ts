@@ -7,6 +7,7 @@ const dashboardSpec = COMPOSED_EXAMPLES.find((example) => example.id === "dashbo
 
 export const scenario: Scenario = {
   id: "chat-elements",
+  measures: "runtime",
   title: "Every chat element at 340 and 600 px",
   controlPath: "fixed messages → AssistantMessage / UserMessage → SpecView",
   page: "/tests/chat-elements",

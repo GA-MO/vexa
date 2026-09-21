@@ -20,6 +20,7 @@ const OVERSIZED_CONTEXT = { path: "/orders", note: "x".repeat(4_100) };
 
 export const scenario: Scenario = {
   id: "context",
+  measures: "steering",
   title: "Model answers from page context",
   controlPath: "contextSchema (route, filters, selectedOrderId) → persona → answer with no tool call",
   page: "/orders",

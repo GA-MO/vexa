@@ -24,6 +24,7 @@ import {
   type HostToolResult,
   type VexaHostValue,
 } from "vexa/react";
+import { IDLE_DISCOVERY } from "vexa/admin";
 import type { Spec, SpecPatch } from "vexa/protocol";
 import type { HeadlessTool, HeadlessToolFn, ScenarioFixture, StateDiff } from "./types";
 
@@ -91,9 +92,24 @@ export function createHeadlessHost({ tools = {}, hostTools = [], context = {} }:
   return host;
 }
 
+const NO_ADMIN: VexaHostValue["admin"] = {
+  enabled: false,
+  discover: () => Promise.resolve(IDLE_DISCOVERY),
+  progress: IDLE_DISCOVERY,
+  blocked: null,
+  routes: [],
+  observed: [],
+  exportPages: () => ({ version: 1, pages: [], links: [] }),
+  importPages: () => ({ ok: false, error: "no admin in the headless host" }),
+  canSave: false,
+  save: () => Promise.resolve({ ok: false, error: "no admin in the headless host" }),
+  clear: () => undefined,
+};
+
 function toHostValue(host: HeadlessHost): VexaHostValue {
   return {
     api: "/api/chat",
+    admin: NO_ADMIN,
     chat: {},
     formatter: createFormatter(),
     functions: {},

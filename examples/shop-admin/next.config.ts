@@ -6,7 +6,7 @@ const appDir = path.dirname(fileURLToPath(import.meta.url));
 const staticBuild = process.env.NEXT_PUBLIC_VEXA_STATIC === "1";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-const NODE_ONLY_MODULES = ["@ai-sdk/mcp/mcp-stdio"];
+const NODE_ONLY_MODULES = ["@ai-sdk/mcp/mcp-stdio", "fs/promises", "path"];
 const BROWSER_STUB = "./lib/browser-stub.ts";
 
 const nextConfig: NextConfig = {

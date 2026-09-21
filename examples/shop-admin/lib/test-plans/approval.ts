@@ -17,6 +17,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "approval",
+  measures: "steering",
   title: "Confirm before a host tool changes something",
   controlPath: "user asks → model calls update_status (confirm: true) → approval card → Reject → ok:false, no retry",
   page: `/orders/${ORDER_ID}`,

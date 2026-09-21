@@ -35,6 +35,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "keyboard",
+  measures: "runtime",
   title: "Tab order, Enter-to-submit, and Escape inside the overlay",
   controlPath: "fixture only — checked by hand with the chat overlay open",
   page: "/guides/keyboard",

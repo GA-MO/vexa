@@ -1,22 +1,16 @@
 import type { Scenario } from "@/lib/scenarios/types";
 
-const KNOWN_MODEL_IDS = [
-  "google/gemini-3.1-flash-lite",
-  "google/gemini-2.5-flash",
-  "anthropic/claude-sonnet-4",
-  "openai/gpt-4.1-mini",
-];
-
-const ALL_KNOWN_MODELS = new RegExp(KNOWN_MODEL_IDS.map((id) => `(?=.*${id.replace(/[/.]/g, "\\$&")})`).join(""));
+const PUBLISHED_REGISTRY = /"models":\[\{"id":"[^"]+".*"default":"[^"]+"/;
 
 export const scenario: Scenario = {
   id: "registry",
+  measures: "runtime",
   kind: "check",
   title: "Model picker list from GET, unknown id rejected with 400",
   controlPath: "GET /api/chat → model list; POST { model: \"nope\" } → 400 naming the id",
   page: "/settings",
   script: [
-    { request: { method: "GET", path: "/api/chat" }, expectStatus: 200, expectBody: ALL_KNOWN_MODELS },
+    { request: { method: "GET", path: "/api/chat" }, expectStatus: 200, expectBody: PUBLISHED_REGISTRY },
     {
       request: {
         method: "POST",

@@ -15,6 +15,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "denial-semantics",
+  measures: "steering",
   attempts: 2,
   title: "Rejecting a destructive tool twice never triggers a retry loop",
   controlPath: "user asks → refund_order (needsApproval) → Reject → user asks again → refund_order → Reject → question, no tool call",
@@ -22,9 +23,9 @@ export const scenario: Scenario = {
   docs: "server/handler",
   fixture: { spec },
   script: [
-    { user: `Refund order ${ORDER_ID}, the customer changed their mind`, expectTools: ["refund_order"] },
+    { user: `Refund order ${ORDER_ID}, the customer changed their mind`, expectToolsInclude: ["refund_order"] },
     { reject: "refund_order", expectNoTools: true, expectText: /not|nothing|didn't|cancel|declined|denied|no change/i },
-    { user: `Please refund order ${ORDER_ID} anyway`, expectTools: ["refund_order"] },
+    { user: `Please refund order ${ORDER_ID} anyway`, expectToolsInclude: ["refund_order"] },
     { reject: "refund_order", expectNoTools: true },
   ],
   mock: [

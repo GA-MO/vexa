@@ -7,6 +7,7 @@ const NEW_HOURS_LINE = "Closed on Mondays.";
 
 export const scenario: Scenario = {
   id: "mcp-stdio",
+  measures: "steering",
   requiresEnv: "VEXA_DEMO_MCP",
   title: "Local stdio MCP server with an allow list",
   controlPath: "stdio MCP (fixtures) → allow list → prefixed tool name; write needs approval",

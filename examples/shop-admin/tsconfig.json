@@ -23,6 +23,7 @@
       "vexa/server": ["../../src/server/index.ts"],
       "vexa/eval": ["../../src/eval/index.ts"],
       "vexa/mock": ["../../src/mock/index.ts"],
+      "vexa/admin": ["../../src/admin/index.ts"],
       "vexa/react": ["../../src/react/index.ts"],
       "vexa/chat": ["../../src/chat/index.ts"],
       "vexa/lib/*": ["../../src/lib/*"],
@@ -30,6 +31,6 @@
       "vexa/ai-elements/*": ["../../src/ai-elements/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../../node_modules/@types/bun/index.d.ts"],
   "exclude": ["node_modules"]
 }

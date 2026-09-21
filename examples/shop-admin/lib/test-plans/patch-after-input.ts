@@ -22,6 +22,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "patch-after-input",
+  measures: "steering",
   title: "A follow-up patch keeps the typed value and the existing spec",
   controlPath: "type /ui/name → user asks for more UI → model patches the existing root (same ids) → /ui/name untouched",
   page: "/guides/patch-after-input",

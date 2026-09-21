@@ -57,6 +57,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "validation",
+  measures: "runtime",
   title: "validateForm blocks submitForm until every check passes",
   controlPath: "empty Input + checks → press Check → validateForm invalid → fix fields → Check → valid → Submit → submitForm",
   page: "/guides/validation",

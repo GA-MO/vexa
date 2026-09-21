@@ -3,27 +3,35 @@
 import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   findOrder,
+  findProduct,
+  nextProductId,
   ORDERS,
+  PRODUCTS,
   type Currency,
   type Locale,
   type Order,
+  type Product,
+  type ProductInput,
   type ShopFilters,
   type Status,
   type StepsMode,
   type Theme,
 } from "./data";
 
-export { CURRENCIES, LOCALES, STEPS_MODES, THEMES, filterOrders } from "./data";
-export type { Currency, Locale, ShopFilters, StatusFilter, StepsMode, Theme } from "./data";
+export { CATEGORIES, CURRENCIES, LOCALES, PRODUCT_STATUSES, STEPS_MODES, THEMES, filterOrders, filterProducts } from "./data";
+export type { Category, Currency, Locale, Product, ProductInput, ProductStatus, ShopFilters, StatusFilter, StepsMode, Theme } from "./data";
 
 export type ShopState = {
   orders: Order[];
+  products: Product[];
+  lastProductNotice: string | null;
   filters: ShopFilters;
   selectedOrderId: string | null;
   theme: Theme;
   locale: Locale;
   currency: Currency;
   steps: StepsMode;
+  hostToolsEnabled: boolean;
 };
 
 export type ShopActions = {
@@ -34,6 +42,10 @@ export type ShopActions = {
   setTheme: (theme: Theme) => void;
   setLocale: (locale: Locale, currency: Currency) => void;
   setSteps: (steps: StepsMode) => void;
+  setHostToolsEnabled: (enabled: boolean) => void;
+  addProduct: (input: ProductInput) => Product;
+  updateProduct: (id: string, input: ProductInput) => Product | null;
+  deleteProduct: (id: string) => Product | null;
 };
 
 type ShopStore = {
@@ -44,12 +56,15 @@ type ShopStore = {
 
 const INITIAL_STATE: ShopState = {
   orders: ORDERS,
+  products: PRODUCTS,
+  lastProductNotice: null,
   filters: { status: "all", search: "" },
   selectedOrderId: null,
   theme: "light",
   locale: "en-US",
   currency: "USD",
   steps: "collapsible",
+  hostToolsEnabled: true,
 };
 
 const STATUS_EVENT_TITLES: Record<Status, string> = {
@@ -101,6 +116,25 @@ function createShopStore(): ShopStore {
     setTheme: (theme) => setState({ theme }),
     setLocale: (locale, currency) => setState({ locale, currency }),
     setSteps: (steps) => setState({ steps }),
+    setHostToolsEnabled: (hostToolsEnabled) => setState({ hostToolsEnabled }),
+    addProduct: (input) => {
+      const product = { id: nextProductId(state.products), ...input };
+      setState({ products: [...state.products, product], lastProductNotice: `Created ${product.name}` });
+      return product;
+    },
+    updateProduct: (id, input) => {
+      const current = findProduct(state.products, id);
+      if (!current) return null;
+      const next = { ...current, ...input };
+      setState({ products: state.products.map((product) => (product.id === current.id ? next : product)), lastProductNotice: `Saved ${next.name}` });
+      return next;
+    },
+    deleteProduct: (id) => {
+      const current = findProduct(state.products, id);
+      if (!current) return null;
+      setState({ products: state.products.filter((product) => product.id !== current.id), lastProductNotice: `Deleted ${current.name}` });
+      return current;
+    },
   };
 
   return {

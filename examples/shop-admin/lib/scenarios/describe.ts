@@ -6,11 +6,14 @@ import {
   isExpectSpecStep,
   isPatchStep,
   isPressStep,
+  isPageClickStep,
+  isPageNavigateStep,
   isRejectStep,
   isRequestStep,
   isTypeStep,
   isUserStep,
   type ModelExpectations,
+  type PageExpectation,
   type Scenario,
   type Step,
 } from "./types";
@@ -52,13 +55,29 @@ function textExpectation(expected: RegExp | string): string {
   return `The reply matches ${code(String(expected))}.`;
 }
 
-function modelOutcomes(step: ModelExpectations): string[] {
+function pageOutcomes(page: PageExpectation | undefined): string[] {
+  if (!page) return [];
   const outcomes: string[] = [];
+  if (page.path) outcomes.push(`The app is still on ${code(page.path)}; the assistant did not navigate.`);
+  if (page.dialogOpen === true) outcomes.push("The app's own confirmation dialog is open; nothing is committed yet.");
+  if (page.dialogOpen === false) outcomes.push("No dialog is open.");
+  if (page.textPresent) outcomes.push(`The page shows ${quote(page.textPresent)}.`);
+  if (page.textAbsent) outcomes.push(`The page no longer shows ${quote(page.textAbsent)}.`);
+  return outcomes;
+}
+
+function modelOutcomes(step: ModelExpectations): string[] {
+  const outcomes: string[] = [...pageOutcomes(step.expectPage)];
   if (step.expectNoTools) outcomes.push("The model answers without calling a tool.");
+  if (step.expectToolsAnyOf) {
+    outcomes.push(`The model calls ${step.expectToolsAnyOf.map((set) => list(set)).join(", or ")}.`);
+  }
   if (step.expectTools) {
     const order = step.expectToolsInOrder && step.expectTools.length > 1 ? " in that order" : "";
     outcomes.push(`The model calls ${list(step.expectTools)}${order}.`);
   }
+  if (step.expectToolsInclude) outcomes.push(`The model calls ${list(step.expectToolsInclude)} at least once.`);
+  if (step.expectStore) outcomes.push(`Afterwards ${step.expectStore.label}.`);
   if (step.expectToolInput) {
     for (const [name, input] of Object.entries(step.expectToolInput)) outcomes.push(`${code(name)} receives ${code(input)}.`);
   }
@@ -101,6 +120,8 @@ export function describeScriptStep(step: Step, spec: Spec | undefined): StepDesc
   if (isTypeStep(step)) return { action: `Set ${fieldLabel(spec, step.type.path)} to ${code(step.type.value)}.`, outcomes: [] };
   if (isApproveStep(step)) return { action: `Approve the ${code(step.approve)} prompt.`, outcomes: modelOutcomes(step) };
   if (isRejectStep(step)) return { action: `Reject the ${code(step.reject)} prompt.`, outcomes: modelOutcomes(step) };
+  if (isPageClickStep(step)) return { action: `Press ${code(step.pageClick)} in the app's own dialog.`, outcomes: pageOutcomes(step.expectPage) };
+  if (isPageNavigateStep(step)) return { action: `Open ${code(step.pageNavigate)} yourself, as if clicking its nav link.`, outcomes: pageOutcomes(step.expectPage) };
   if (isExpectSentToChatStep(step)) return { action: null, outcomes: [`The chat receives a message matching ${code(String(step.expectSentToChat))}.`] };
   if (isRequestStep(step)) return describeRequest(step);
   if (isPatchStep(step)) return { action: `The spec is patched: ${step.patch.map((op) => code(`${op.op} ${op.path}`)).join(", ")}.`, outcomes: [] };

@@ -1,4 +1,4 @@
-import { catalog } from "vexa/core";
+import { catalog, normalizeSpec } from "vexa/core";
 import type { Spec } from "vexa/protocol";
 
 export type SpecIssue = {
@@ -11,11 +11,12 @@ export type SpecEvaluation = {
   issues: SpecIssue[];
 };
 
-export function evaluateSpec(spec: Spec | null | undefined): SpecEvaluation {
-  if (!spec) {
+export function evaluateSpec(rawSpec: Spec | null | undefined): SpecEvaluation {
+  if (!rawSpec) {
     return { ok: false, issues: [{ path: "/", message: "Spec is empty" }] };
   }
 
+  const spec = normalizeSpec(rawSpec);
   const issues: SpecIssue[] = [];
   const result = catalog.validate(spec);
 

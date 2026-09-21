@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const openrouter = createOpenRouter({ apiKey: process.env.OPENROUTER_API_KEY });
 
-export const { GET, POST } = createVexaHandler({
+export const { GET, POST, PUT } = createVexaHandler({
   // Model registry: ids the client picker may request; GET /api/chat publishes this list.
   models: {
     "google/gemini-2.5-flash": { model: () => openrouter("google/gemini-2.5-flash"), name: "Gemini 2.5 Flash", maxTokens: 1_000_000 },
@@ -58,6 +58,8 @@ export const { GET, POST } = createVexaHandler({
   ],
   // Bounds the tool loop per request; keep it small, every step costs a model call.
   stopWhen: stepCountIs(6),
+  // Accepts the provider's admin_observe / admin_run / admin_discover schemas, adds the "Driving the page" rules and makes admin_run write tier; off by default, and the client cannot turn it on alone. Pages are discovered in the browser; `admin: { pagesFile }` is the optional repo-file path instead.
+  admin: true,
   // Signs approvals so a client cannot forge or replay one; set it from the environment.
   toolApprovalSecret: process.env.VEXA_APPROVAL_SECRET,
   // Injection guard over tool results: "downgrade" (default) limits the turn to read tools and shows a notice; add rules instead of turning it off.

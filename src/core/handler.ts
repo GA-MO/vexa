@@ -4,6 +4,8 @@ import { streamAgentChat, type GuardConfig, type HostToolSchema } from "./chat";
 import type { Persona, ToolTier } from "./prompt";
 import { prefixedToolName } from "./mcp";
 import type { McpServerConfig } from "./mcp";
+import { isAdminToolName } from "../admin/names";
+import { createPagesReader, handlePagesWrite, nodePagesFs, pagesFileWritable, type PagesSource } from "./pages-file";
 
 const hostToolSchema = z.object({
   name: z.string().regex(/^[a-z][a-z0-9_]{0,63}$/),
@@ -53,7 +55,19 @@ export type VexaHandlerConfig<T extends ToolSet = ToolSet> = {
   stopWhen?: StopCondition<ToolSet>;
   toolApprovalSecret?: string;
   guard?: GuardConfig;
+  admin?: boolean | AdminHandlerOptions;
 };
+
+/** `pagesFile`: the pages file GET serves and the dev server writes (relative to the process cwd; never written in production). `pages`: the same data from elsewhere (a fetch, an import) for hosts with no filesystem. */
+export type AdminHandlerOptions = { pagesFile?: string; pages?: PagesSource };
+
+export function adminEnabled(admin: VexaHandlerConfig["admin"]): boolean {
+  return Boolean(admin);
+}
+
+function adminOptionsOf(admin: VexaHandlerConfig["admin"]): AdminHandlerOptions {
+  return typeof admin === "object" ? admin : {};
+}
 
 function errorResponse(message: string, status: number) {
   return Response.json({ error: message }, { status });
@@ -138,6 +152,12 @@ function knownToolNames(config: VexaHandlerConfig, body: ChatBody) {
   return names;
 }
 
+/** Removes admin_* host tool schemas from a request unless the handler opted into page driving; only the server decides what the model may drive. */
+export function dropAdminHostTools(body: ChatBody, admin: boolean | undefined): ChatBody {
+  if (admin || !body.hostTools) return body;
+  return { ...body, hostTools: body.hostTools.filter((hostTool) => !isAdminToolName(hostTool.name)) };
+}
+
 function textOf(message: UIMessage) {
   return message.parts
     .filter((part): part is { type: "text"; text: string } => part.type === "text")
@@ -173,11 +193,38 @@ export function createVexaHandler<T extends ToolSet>(config: VexaHandlerConfig<T
   assertModelSource(config);
   const registry = memoizedRegistry(config.models);
 
+  const { pagesFile, pages: pagesSource } = adminOptionsOf(config.admin);
+  const admin = adminEnabled(config.admin);
+  const readPages = createPagesReader(pagesFile, pagesSource, nodePagesFs);
+
+  const adminInfo = async () => {
+    if (!admin) return {};
+    const pages = await readPages();
+    return {
+      ...(pagesFileWritable(pagesFile) ? { pagesFile: { enabled: true } } : {}),
+      ...(pages ? { pages } : {}),
+    };
+  };
+
   const GET = async () => {
-    if (config.models === undefined) return Response.json({ models: [], default: null });
+    const info = await adminInfo();
+    if (config.models === undefined) return Response.json({ models: [], default: null, ...info });
     const entries = registry();
     const models = Object.entries(entries).map(([id, entry]) => modelInfo(id, entry));
-    return Response.json({ models, default: models[0]?.id ?? null });
+    return Response.json({ models, default: models[0]?.id ?? null, ...info });
+  };
+
+  const PUT = async (req: Request) => {
+    if (!pagesFileWritable(pagesFile)) return errorResponse("Not found", 404);
+    const fs = await nodePagesFs();
+    if (!fs) return errorResponse("Not found", 404);
+    let raw: unknown;
+    try {
+      raw = await req.json();
+    } catch {
+      return errorResponse("Request body must be JSON", 400);
+    }
+    return handlePagesWrite(pagesFile, raw, fs);
   };
 
   const POST = async (req: Request) => {
@@ -192,7 +239,7 @@ export function createVexaHandler<T extends ToolSet>(config: VexaHandlerConfig<T
       const detail = parsed.error.issues.map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`).join("; ");
       return errorResponse(`Invalid chat request: ${detail}`, 400);
     }
-    const body = parsed.data;
+    const body = dropAdminHostTools(parsed.data, admin);
     const model = await resolveModel(config, registry, body, req);
     if (!model.ok) return errorResponse(model.error, 400);
     try {
@@ -211,10 +258,11 @@ export function createVexaHandler<T extends ToolSet>(config: VexaHandlerConfig<T
         stopWhen: config.stopWhen,
         toolApprovalSecret: config.toolApprovalSecret,
         guard: config.guard,
+        admin,
       });
     } catch (error) {
       return errorResponse(error instanceof Error ? error.message : "Failed to stream chat", 500);
     }
   };
-  return { GET, POST };
+  return { GET, POST, PUT };
 }

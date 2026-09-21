@@ -9,6 +9,23 @@ export const CURRENCIES = ["USD", "EUR"] as const;
 export const THEMES = ["light", "dark"] as const;
 export const STEPS_MODES = ["collapsible", "hidden"] as const;
 
+export const CATEGORIES = ["Beans", "Equipment", "Accessories", "Merch"] as const;
+export const PRODUCT_STATUSES = ["active", "draft", "archived"] as const;
+
+export type Category = (typeof CATEGORIES)[number];
+export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
+
+export type Product = {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  category: Category;
+  status: ProductStatus;
+};
+
+export type ProductInput = Omit<Product, "id">;
+
 export type Locale = (typeof LOCALES)[number];
 export type Currency = (typeof CURRENCIES)[number];
 export type Theme = (typeof THEMES)[number];
@@ -46,7 +63,7 @@ const SHIPPING_FEE = 60;
 
 const STATUS_STEPS: Record<Status, number> = { pending: 1, paid: 2, shipped: 3, delivered: 4, refunded: 5 };
 
-const PRODUCTS: Record<string, number> = {
+const ITEM_PRICES: Record<string, number> = {
   "Cold brew concentrate 1L": 320,
   "Single-origin beans 250g": 390,
   "Ceramic pour-over set": 1290,
@@ -66,7 +83,7 @@ type Seed = {
   status: Status;
   daysAgo: number;
   hour: number;
-  items: Array<[keyof typeof PRODUCTS, number]>;
+  items: Array<[keyof typeof ITEM_PRICES, number]>;
 };
 
 const SEEDS: Seed[] = [
@@ -122,7 +139,7 @@ function buildTimeline(seed: Seed, createdAt: number, total: number): TimelineEv
 
 function buildOrder(seed: Seed): Order {
   const createdAt = ANCHOR - seed.daysAgo * DAY + seed.hour * HOUR;
-  const items = seed.items.map(([name, qty]) => ({ name, qty, price: PRODUCTS[name] }));
+  const items = seed.items.map(([name, qty]) => ({ name, qty, price: ITEM_PRICES[name] }));
   const total = totals({ items }).total;
   return {
     id: seed.id,
@@ -136,6 +153,33 @@ function buildOrder(seed: Seed): Order {
 }
 
 export const ORDERS: Order[] = SEEDS.map(buildOrder);
+
+export const PRODUCTS: Product[] = [
+  { id: "P-1001", name: "Single-origin beans 250g", sku: "BN-250", price: 390, category: "Beans", status: "active" },
+  { id: "P-1002", name: "Cold brew concentrate 1L", sku: "CB-1000", price: 320, category: "Beans", status: "active" },
+  { id: "P-1003", name: "Drip bag sampler", sku: "DB-010", price: 260, category: "Beans", status: "draft" },
+  { id: "P-1004", name: "Gooseneck kettle", sku: "EQ-KET", price: 1890, category: "Equipment", status: "active" },
+  { id: "P-1005", name: "Ceramic pour-over set", sku: "EQ-POS", price: 1290, category: "Equipment", status: "active" },
+  { id: "P-1006", name: "Espresso tamper", sku: "EQ-TMP", price: 750, category: "Equipment", status: "archived" },
+  { id: "P-1007", name: "Reusable filter", sku: "AC-FLT", price: 180, category: "Accessories", status: "active" },
+  { id: "P-1008", name: "Insulated tumbler", sku: "MR-TUM", price: 590, category: "Merch", status: "active" },
+  { id: "P-1009", name: "Electric kettle", sku: "EQ-EKT", price: 1450, category: "Equipment", status: "active" },
+];
+
+export function findProduct(products: Product[], id: string): Product | undefined {
+  return products.find((product) => product.id.toLowerCase() === id.trim().toLowerCase());
+}
+
+export function nextProductId(products: Product[]): string {
+  const highest = products.reduce((max, product) => Math.max(max, Number(product.id.replace(/\D/g, "")) || 0), 1000);
+  return `P-${highest + 1}`;
+}
+
+export function filterProducts(products: Product[], search: string): Product[] {
+  const needle = search.trim().toLowerCase();
+  if (!needle) return products;
+  return products.filter((product) => [product.name, product.sku, product.category].some((field) => field.toLowerCase().includes(needle)));
+}
 
 export function totals(order: Pick<Order, "items">): OrderTotals {
   const subtotal = order.items.reduce((sum, item) => sum + item.qty * item.price, 0);

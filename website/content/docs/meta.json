@@ -10,6 +10,7 @@
     "server/models",
     "host/host-tools",
     "host/runtool",
+    "host/admin",
     "server/persona-and-rules",
     "server/mcp",
     "server/guard",

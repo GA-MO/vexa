@@ -32,6 +32,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "theme-format",
+  measures: "steering",
   title: "Theme and locale change tokens and formatting live",
   controlPath: "Button runTool set_locale → format reflows Metric; model calls set_theme → confirm → dark palette",
   page: "/settings",

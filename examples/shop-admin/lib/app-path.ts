@@ -11,3 +11,10 @@ export function appPath(pathname: string): string {
 export function samePath(left: string, right: string): boolean {
   return appPath(left) === appPath(right);
 }
+
+const DEV_ONLY_PAGES = /^\/guides(\/|$)/;
+
+/** The guide pages are the test bench, not the admin: discovery skips them. */
+export function isDevOnlyPage(path: string): boolean {
+  return DEV_ONLY_PAGES.test(path);
+}

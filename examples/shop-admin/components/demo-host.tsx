@@ -5,22 +5,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { z } from "zod";
 import { VexaChatOverlay } from "vexa/chat";
 import { defineTool, useVexaHost, VexaProvider, type HostTool, type HostToolResult } from "vexa/react";
-import { appPath, samePath } from "@/lib/app-path";
+import { appPath, isDevOnlyPage, samePath } from "@/lib/app-path";
 import { MOCK_MODEL_ID } from "@/lib/mock-model-id";
 import type { ScenarioSetup } from "@/lib/scenarios/types";
 import { LOCALES, THEMES, filterOrders, findOrder, totals, type Order } from "@/lib/shop/data";
 import { HOST_TOOL_DEFINITIONS } from "@/lib/shop/host-tools";
+import { SUGGESTIONS } from "@/lib/suggestions";
 import { ShopProvider, useShop, useShopActions, useShopSnapshot, type ShopActions, type ShopState } from "@/lib/shop/store";
 
 const SECTION_POLL_MS = 50;
 const SECTION_POLL_LIMIT = 40;
-
-const SUGGESTIONS = [
-  "Show pending orders in Bangkok",
-  "Open order C-1042",
-  "Switch to dark theme",
-  "Refund the last delivered order",
-].map((prompt) => ({ label: prompt, prompt }));
 
 const contextSchema = z.object({
   path: z.string(),
@@ -31,6 +25,8 @@ const contextSchema = z.object({
 });
 
 const GUIDES_PREFIX = "/guides";
+const HOST_TOOLS_PARAM = "hostTools";
+const NO_TOOLS: Record<string, HostTool> = {};
 
 /** A guide's "Try it": put the page in the state the scenario assumes, go to its page, open the chat, send the prompt. */
 export type GuidePromptRequest = { prompt: string; page: string; setup: ScenarioSetup | null };
@@ -148,6 +144,10 @@ function isGuidePage(pathname: string) {
   return pathname.startsWith(GUIDES_PREFIX);
 }
 
+function hostToolsParamIsOff() {
+  return new URLSearchParams(window.location.search).get(HOST_TOOLS_PARAM) === "off";
+}
+
 function applySetup(setup: ScenarioSetup | null, actions: ShopActions) {
   if (!setup) return;
   if (setup.selectedOrderId !== undefined) actions.selectOrder(setup.selectedOrderId);
@@ -170,9 +170,12 @@ function GuidePromptSender({ pending, onSent }: { pending: GuidePromptRequest | 
 function ShopHost({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { theme, locale, currency, steps } = useShop();
+  const { theme, locale, currency, steps, hostToolsEnabled } = useShop();
   const snapshot = useShopSnapshot();
   const actions = useShopActions();
+  useEffect(() => {
+    if (hostToolsParamIsOff()) actions.setHostToolsEnabled(false);
+  }, [actions]);
   const [chatOpen, setChatOpen] = useState(false);
   const [pendingPrompt, setPendingPrompt] = useState<GuidePromptRequest | null>(null);
   const [preferMock, setPreferMock] = useState(false);
@@ -180,7 +183,9 @@ function ShopHost({ children }: { children: ReactNode }) {
     if (isGuidePage(pathname)) setPreferMock(true);
   }, [pathname]);
 
-  const tools = useMemo(() => createShopTools(router, snapshot, actions), [router, snapshot, actions]);
+  const shopTools = useMemo(() => createShopTools(router, snapshot, actions), [router, snapshot, actions]);
+  const tools = hostToolsEnabled ? shopTools : NO_TOOLS;
+  const admin = useMemo(() => ({ navigate: (path: string) => router.push(path), discover: { skip: isDevOnlyPage } }), [router]);
   const format = useMemo(() => ({ locale, currency }), [locale, currency]);
   const themeConfig = useMemo(() => ({ mode: theme }), [theme]);
   const defaultModel = preferMock ? MOCK_MODEL_ID : undefined;
@@ -233,6 +238,7 @@ function ShopHost({ children }: { children: ReactNode }) {
       context={context}
       contextSchema={contextSchema}
       tools={tools}
+      admin={admin}
       onToolResult={onToolResult}
     >
       <ChatControlsContext.Provider value={controls}>

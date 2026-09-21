@@ -45,6 +45,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "conditional-ui",
+  measures: "runtime",
   title: "Switch visibility, repeat push, and $item reach the right handlers",
   controlPath: "Switch → visible; pushState into a repeat array; per-item Button runTool → { $item: 'id' } resolves to the pressed row",
   page: "/guides/conditional-ui",

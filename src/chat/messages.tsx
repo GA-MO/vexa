@@ -1,7 +1,7 @@
 "use client";
 
 import { useJsonRenderMessage } from "@json-render/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getToolName,
   isFileUIPart,
@@ -14,6 +14,7 @@ import {
 import {
   CheckIcon,
   ChevronDownIcon,
+  HandIcon,
   MousePointerClickIcon,
   PaperclipIcon,
   ShieldAlertIcon,
@@ -25,7 +26,9 @@ import {
   type VexaMessage,
 } from "vexa/protocol";
 import { DEFAULT_LABELS, type ChatLabels, type ChatStepsDisplay } from "./constants";
+import { normalizeSpec } from "vexa/core";
 import { SpecView, parseActionMessage } from "vexa/react";
+import { ADMIN_TOOLS, describeSteps, type RunResult, type Step, type TraceItem } from "vexa/admin";
 import { specPartsFor } from "./spec-continuation";
 import {
   Attachment,
@@ -126,6 +129,66 @@ function ToolApproval({
   );
 }
 
+function isRunResult(value: unknown): value is RunResult {
+  if (typeof value !== "object" || value === null) return false;
+  return Array.isArray((value as { trace?: unknown }).trace);
+}
+
+function adminRunResult(part: ToolUIPart | DynamicToolUIPart): RunResult | null {
+  if (getToolName(part) !== ADMIN_TOOLS.run || !("output" in part)) return null;
+  const output = part.output as { data?: unknown } | undefined;
+  return isRunResult(output?.data) ? output.data : null;
+}
+
+function stepSentence(item: TraceItem, index: number, steps: Step[]): string {
+  const step = steps[index];
+  if (step) return describeSteps([step])[0];
+  return item.action;
+}
+
+function AdminTraceRow({ item, sentence }: { item: TraceItem; sentence: string }) {
+  const Icon = item.ok ? CheckIcon : XIcon;
+  return (
+    <li className="flex min-w-0 items-start gap-2">
+      <Icon className={item.ok ? "mt-0.5 size-3.5 shrink-0 text-success" : "mt-0.5 size-3.5 shrink-0 text-danger"} />
+      <span className="min-w-0 wrap-anywhere">
+        {sentence}
+        {item.error ? (
+          <span className="block text-danger">
+            {item.error}
+            {item.detail ? `: ${item.detail}` : ""}
+          </span>
+        ) : null}
+      </span>
+    </li>
+  );
+}
+
+const WAITING_FOR_PAGE_CONFIRM = "Waiting for you to confirm on the page";
+
+function AdminTraceStopped() {
+  return (
+    <li className="flex min-w-0 items-start gap-2 text-muted-foreground">
+      <HandIcon className="mt-0.5 size-3.5 shrink-0" />
+      <span className="min-w-0 wrap-anywhere">{WAITING_FOR_PAGE_CONFIRM}</span>
+    </li>
+  );
+}
+
+function AdminTrace({ part }: { part: ToolUIPart | DynamicToolUIPart }) {
+  const result = adminRunResult(part);
+  if (!result) return null;
+  const steps = "input" in part && part.input ? ((part.input as { steps?: Step[] }).steps ?? []) : [];
+  return (
+    <ol className="flex min-w-0 flex-col gap-1 px-3 py-2 text-xs text-foreground">
+      {result.trace.map((item, index) => (
+        <AdminTraceRow key={index} item={item} sentence={stepSentence(item, index, steps)} />
+      ))}
+      {result.stopped === "confirmation" ? <AdminTraceStopped /> : null}
+    </ol>
+  );
+}
+
 function ToolPartView({
   part,
   messageId,
@@ -156,6 +219,7 @@ function ToolPartView({
           <ToolHeader state={part.state} statusLabel={labels.toolState(part.state)} title={toolName} type={part.type} />
         )}
         <ToolContent>
+          <AdminTrace part={part} />
           {"input" in part && part.input != null ? (
             <ToolInput input={part.input} title={labels.toolInput} />
           ) : null}
@@ -353,7 +417,8 @@ export function AssistantMessage({
   labels?: ChatLabels;
   steps?: ChatStepsDisplay;
 }) {
-  const { spec, hasSpec } = useJsonRenderMessage(specPartsFor(message, messages));
+  const { spec: rawSpec, hasSpec } = useJsonRenderMessage(specPartsFor(message, messages));
+  const spec = useMemo(() => normalizeSpec(rawSpec), [rawSpec]);
   const sourceParts = message.parts.filter(
     (part) => part.type === "source-url" || part.type === "source-document",
   );

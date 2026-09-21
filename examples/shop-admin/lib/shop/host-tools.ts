@@ -2,13 +2,13 @@ import { z } from "zod";
 import type { HostToolDescriptor } from "vexa/react";
 import { CITIES, CURRENCIES, LOCALES, STATUSES, THEMES } from "./data";
 
-export const ROUTES = ["/", "/orders", "/settings", "/guides"] as const;
+export const ROUTES = ["/", "/orders", "/products", "/settings", "/guides"] as const;
 export const ORDER_SECTIONS = ["items", "timeline"] as const;
 const DESCRIPTION_MAX_LENGTH = 300;
 
 export const HOST_TOOL_DEFINITIONS = {
   navigate: {
-    description: "Open one of the admin pages: / (overview), /orders, /settings, or /guides.",
+    description: "Open one of the admin pages: / (overview), /orders, /products, /settings, or /guides.",
     input: z.object({ to: z.enum(ROUTES) }),
   },
   set_filter: {

@@ -41,6 +41,7 @@ Built on the [AI SDK](https://ai-sdk.dev) (`ai` 6) and React 19. The library nev
 - **Generative UI from a catalog.** Cards, Metric, Table, Bar and Line charts, Timeline, Form inputs bound to state, Carousel, Map and more. The catalog schema is the source of truth for both the prompt and the renderer.
 - **Streamed as patches.** The reply is one text sentence plus JSONL patches that build the spec in place; a follow-up turn patches the previous UI instead of starting over.
 - **Host tools.** `defineTool` on `VexaProvider`: the model navigates, reads page state and changes the page; `confirm: true` shows a Run / Cancel card first. Buttons in generated UI run the same tools through `runTool`.
+- **Drive the page.** `admin` on the provider and the handler adds three generic tools: `admin_observe` reads the page through its accessibility tree, `admin_run` executes a validated plan of steps (navigate, click, fill, select, submit, read) against the real DOM, and `admin_discover` lets the model look through the app without moving the user; when a click opens the app's own confirmation dialog the run stops and the user decides there (a Vexa card instead with `confirm: "mutating"`). Any accessible control works, no per-screen tool and no data attributes; the app's pages are discovered by themselves in a hidden frame after load and kept per user for a day, every page the user visits is remembered, and nobody has to run or ship anything (an optional `vexa-pages.json` written by the dev server remains for hosts that want the map in git). See [Drive the page](https://ga-mo.github.io/vexa/docs/host/admin).
 - **Server tools, MCP, approvals.** `createVexaHandler({ tools, mcp, toolTiers })`: read, write and destructive tiers, approval cards for gated tools, an allow list per MCP server.
 - **Injection guard.** Every tool result is fenced as data and scanned; a hit downgrades the turn to read tools and shows a security notice in the chat.
 - **Yours to style.** Tokens for colours and radius, light and dark, `theme.glow` for the tinted shadows, `chat.labels` for every string, `format` for locale and currency. Overlay, panel, inline or full page layouts.
@@ -138,6 +139,7 @@ Both apps are hosted with the docs as static, mock-only builds: every guide play
 | `vexa/server` | `createVexaHandler`, `connectMcp`, guard rules | server only |
 | `vexa/core` | catalog, prompt assembly, spec validation | both |
 | `vexa/mock` | `createScriptedModel`, `serveChatInBrowser` for tests and demos | both |
+| `vexa/admin` | step schema, error codes, `createAdminTools` for tests; the provider wires it with `admin` | browser |
 | `vexa/styles.css` | the token declarations, light defaults and the dark palette | import once |
 
 ## Working on the library
@@ -157,7 +159,7 @@ bun run test:scenarios     # the guides as headless scenarios (VEXA_SCENARIO_MOD
 bun run build:pages        # the static docs + examples that GitHub Pages serves
 ```
 
-The shop admin lists OpenRouter models next to the mock when `examples/shop-admin/.env.local` has `OPENROUTER_API_KEY`; the starters use `ANTHROPIC_API_KEY`. The library itself reads no environment variable.
+The shop admin lists the models of every provider whose key is in `examples/shop-admin/.env.local` next to the mock (`QWEN_API_KEY` first, then `DEEPSEEK_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY`, `GROQ_API_KEY`, `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`); the docs site's playground and assistant read `QWEN_API_KEY` (DeepSeek V4 Flash, the default) and `OPENROUTER_API_KEY` from `website/.env.local`; the starters use `ANTHROPIC_API_KEY`. The library itself reads no environment variable.
 
 ```
 src/

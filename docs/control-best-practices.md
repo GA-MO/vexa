@@ -138,7 +138,7 @@ What worked: the manual checks record the exact sequence: Tab visits Name → Em
 
 ## Model quirks
 
-Running these scenarios against Gemini 3.1 Flash Lite (the small default model in `examples/shop-admin/lib/models.ts`) surfaced a consistent set of failure modes, each fixed by changing the wording the model reads, not the model's behavior:
+Running these scenarios against Gemini 3.1 Flash Lite (the small model that was the default in `examples/shop-admin/lib/models.ts` at the time; DeepSeek V4 Flash is the default since the 2026-09-21 eval) surfaced a consistent set of failure modes, each fixed by changing the wording the model reads, not the model's behavior:
 
 - **The model tried to look things up before calling a tool that already does the lookup.** Fix: tool descriptions that say the tool "looks the order up itself, so there is no need to read the order before calling it" (`update_status` in `approval.ts`). Without this the model would call `get_order` first, burning a turn and sometimes producing a text answer before the approval card ever appeared.
 - **The model asked for confirmation in chat text instead of calling a `confirm: true` tool.** Fix: descriptions that say the tool "opens its own confirmation prompt" and explicitly "do not ask the user to confirm in chat first" (`set_theme` in `theme-format.ts`). A `confirm: true` tool with only "asks the user to confirm first" in its description is ambiguous about *where* — the model reads that as its own job and never calls the tool.
@@ -146,6 +146,74 @@ Running these scenarios against Gemini 3.1 Flash Lite (the small default model i
 - **A rejected approval was treated as a permanent block, or retried immediately.** Fix: the prompt has to separate "denied within this turn" from "the user asking again later" — `"a denied result is not an error"` plus `"do not repeat the same call"` stop the immediate retry loop (`src/core/prompt.ts`), while `"a new user message is a fresh instruction"` (`route.ts`) is what lets a second, later request for the same refund actually run instead of the model refusing on principle.
 - **A UI-only request ("add a field", "add a button") triggered an unnecessary tool call or a "let me check the data" detour.** Fix: an explicit rule that a UI edit is not an order question — `route.ts`: `"A request to add, remove, or relabel a UI element (a field, a button, a section) is not a question about orders: answer it by patching the spec directly, with no tool call, unless the user also asks for order data."` This is what makes `patch-after-input` reliably skip `set_filter`/`get_orders` and go straight to a spec patch.
 - **Two tool calls in one turn ran out of order or the model assumed the first tool's result before the second ran.** Fix (mechanism, not wording): `deep-link`'s script uses `expectToolsInOrder: true` and the host tool itself (`open_order`) does the ordering internally (`router.push` then `await waitForElement` then `scrollIntoView`) rather than relying on the model to sequence two separate tool calls correctly.
+
+## Driving the page
+
+Source: the fifteen `admin-*` scenarios (`admin-stale` and `admin-mutating-policy` are runner checks, off the guide index). Every user prompt is a plain request on a task that has no dedicated host tool, so the guide shows what a person would type; nothing in a prompt names a tool or a control. The runner mounts the real shop-admin page in happy-dom (`examples/shop-admin/lib/scenarios/dom-host.tsx`) and executes `admin_observe` / `admin_run` against it; the guide pages run the same mock scripts against the page in the browser. All ten pass with the real model (`google/gemini-3.1-flash-lite`, 2026-09-20; `admin-delete-declined` needed a second attempt once).
+
+### `admin-observe` — /tests/admin-observe
+Path: model reads the page through the accessibility tree (`user prompt → admin_observe → snapshot (refs, roles, names, values) → answer from the snapshot`).
+Best practice: with `VexaProvider admin` enabled the model reads the page through `admin_observe` (roles, accessible names, values) instead of a per-page tool, so every control that has an accessible name is visible to it without host code; an unnamed control shows up only in the `unnamed` count.
+
+### `admin-settings` — /tests/admin-settings
+Path: a setting with no tool (`user prompt → admin_observe → admin_run [select Steps display → hidden] → executor drives the real select → trace + page`).
+Best practice: a setting with no host tool is still one `admin_run` call: observe once, then select by accessible name; fill, select and check never ask for confirmation because they change the form, not the record.
+
+### `admin-find-product` — /tests/admin-find-product
+Path: search a table and open the matching row (`user prompt → admin_run [fill search, click the row link inside the table] → product page opens → trace`).
+Best practice: elements inside a table are addressed with `within` (the table or a row) plus `nth`, and a `read` step returns the rows, so the model can search, inspect and open a record without the page exposing an id anywhere.
+
+### `admin-create-product` — /tests/admin-create-product
+Path: create through the app's own form (`user prompt → admin_observe → admin_run [navigate, fill ×3, select ×2, submit] → product list shows the new row`).
+Best practice: a create flow is one `admin_run` plan: navigate through the page's own link, fill and select by accessible name (a custom combobox is opened and its option clicked like a user would), then submit; under the default confirm policy nothing asks first, the app's own form validation and dialogs are the gate.
+
+### `admin-edit-product` — /tests/admin-edit-product
+Path: open a record from its table and save (`user prompt → admin_run [click row link, fill Price, submit Save] → back on the list with the new price`).
+Best practice: an edit flow clicks the record's own link in the table, fills only the field that changes and submits; because the plan is one `admin_run` call the model never sees the intermediate page, and the app's own Save is the commit.
+
+### `admin-delete-product` — /tests/admin-delete-product
+Path: destructive click stops at the app's own dialog (`user prompt → admin_run [click the product link, click Delete product] → the app's alertdialog opens → run stops with stopped: confirmation → user presses Delete in the dialog → product removed`).
+Best practice: under the default confirm policy the app's own dialog is the approval: a click that opens it ends the run with `stopped: confirmation`, the model tells the user what the dialog will do, and only a human press in the dialog commits the delete.
+
+### `admin-delete-declined` — /tests/admin-delete-declined
+Path: Cancel in the app's dialog (`user prompt → admin_run → the app's alertdialog opens → run stops → user presses Cancel → product still listed → model confirms from the page, no retry`).
+Best practice: the model never learns what the user pressed in the app's dialog from the chat; it reads the page afterwards and reports what is there, so a cancelled dialog is reported as unchanged and never retried.
+
+### `admin-mutating-policy` — runner check, off the guide index
+Path: `confirm: "mutating"` (`user prompt → admin_run [click the product link, click Delete product, click Delete in the dialog] → Vexa confirmation before the first destructive click → Reject → DECLINED → nothing changed`).
+Best practice: with `confirm: mutating`, `DECLINED` is not an error to recover from: the trace stops at the first mutating step and the model states that nothing changed without trying another way to delete.
+
+### `admin-not-found` — /tests/admin-not-found
+Path: a missing target (`user prompt → admin_run [click Export] → TARGET_NOT_FOUND → model reports what the page has, no retry`).
+Best practice: a target that does not resolve ends the plan with `TARGET_NOT_FOUND` and the current page, never a guessed click; the model answers from that page and does not retry the same target.
+
+### `admin-ambiguous` — /tests/admin-ambiguous
+Path: several matches (`user prompt → admin_run [click the kettle link] → two products match → TARGET_AMBIGUOUS + candidates → model asks which one`).
+Best practice: when several elements match, the executor returns `TARGET_AMBIGUOUS` with up to five candidates (name and the row or group they sit in) so the model can ask or pick one by `nth`; it never clicks the first match silently.
+
+### `admin-stale` — runner check (`kind: "check"`, no guide page)
+Path: a ref outlives its page (`user prompt → admin_observe → admin_run [navigate Create product, click <ref from /products>] → TARGET_STALE + new page → model re-observes`).
+Best practice: refs are valid only for the page they were observed on: a ref used after a navigate fails with `TARGET_STALE` and the trace carries the new page, so the model re-observes instead of clicking whatever now sits at that position.
+
+### `admin-cross-page` — /tests/admin-cross-page
+Path: a task on another page after discovery (`discover pages → user prompt on /settings → admin_observe { path: /products/new } from memory → one admin_run [navigate, fill ×3, select ×2, submit] → product created`).
+Best practice: once a page has been discovered or visited, `admin_observe { path }` answers from memory, so a task that starts elsewhere still fits one `admin_run` that begins with `navigate` and addresses the form by role and name; discovery is read-only and runs in a hidden frame, automatically after load or when the model asks.
+
+### `admin-not-observed` — /tests/admin-not-observed
+Path: a page nobody visited (`user prompt on /settings → admin_observe { path: /products } → PAGE_NOT_OBSERVED + routes → admin_run [navigate /products] → trace carries the page → model describes it`).
+Best practice: `admin_observe { path }` never guesses: an unvisited page returns `PAGE_NOT_OBSERVED` together with `routes`, so the model navigates (the trace item carries the new page) or calls `admin_discover`, instead of inventing what the page contains.
+
+### `admin-passive` — /tests/admin-passive
+Path: pages the user visited (`user opens /products, then /settings → passive cache records both → user prompt → admin_observe { path: /products } cached: true → model describes it without navigating`).
+Best practice: leave `passive` on: every page the user lands on is snapshotted after it settles (about a millisecond, no navigation), so by the time they ask, the pages they actually use are readable from memory; turn it off only for pages that must never be captured.
+
+### `admin-discover` — /tests/admin-discover
+Path: the model asks (`user prompt on /settings, nothing discovered → admin_discover {} → hidden frame walks the app → routes + observed → model names the products page`).
+Best practice: `admin_discover` is the model's way to learn the app without moving the user: it walks the pages in a hidden frame and returns `routes` and `observed`; it is read-only, answers from the last discovery while that is fresh, and reports `DISCOVERY_UNAVAILABLE` with the reason when the app cannot be framed, after which the model navigates and looks.
+
+### `admin-seeded` — /tests/admin-seeded
+Path: an earlier visit (`automatic discovery stored per origin and user → restored at startup → user prompt on /settings → admin_observe { path: /products } cached: true → model describes it without navigating`).
+Best practice: discovery runs by itself in a hidden frame after the app loads and its result is kept per origin and user (`scope`) for a day, so the second visit starts with every page known; a live observation of the same path always replaces the stored copy, so storage can only be stale, never wrong about a page the user has opened.
 
 ## Library findings
 

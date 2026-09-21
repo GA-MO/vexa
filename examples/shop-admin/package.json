@@ -7,9 +7,16 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "build:static": "bun scripts/build-static.ts"
+    "build:static": "bun scripts/build-static.ts",
+    "eval:ui": "bun --preload ./lib/scenarios/register-dom.ts scripts/eval-ui.ts",
+    "probe": "bun --preload ./lib/scenarios/register-dom.ts scripts/probe.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/deepseek": "^2.0.0",
+    "@ai-sdk/google": "^2.0.0",
+    "@ai-sdk/groq": "^2.0.0",
+    "@ai-sdk/openai-compatible": "^2.0.0",
     "@openrouter/ai-sdk-provider": "^2.0.0",
     "ai": "^6.0.84",
     "lucide-react": "^0.563.0",

@@ -9,7 +9,7 @@ import {
 } from "ai";
 import { CheckIcon, RotateCcwIcon, Sparkles, XIcon } from "lucide-react";
 import type { VexaMessage } from "vexa/protocol";
-import { useVexaHostContext, type PendingConfirmation } from "vexa/react";
+import { ConfirmationSummary, useVexaHostContext, type PendingConfirmation } from "vexa/react";
 import {
   Confirmation,
   ConfirmationAction,
@@ -346,6 +346,7 @@ export function VexaChat({
   return (
     <section
       aria-label={title}
+      data-vexa-ignore=""
       className={cn(
         "relative flex min-h-0 flex-col overflow-hidden bg-card text-card-foreground",
         LAYOUT_FRAME[layout],
@@ -587,10 +588,9 @@ function HostToolConfirmation({
     >
       <ConfirmationTitle>
         <ConfirmationRequest>
-          <span>
-            {labels.runOnPage(item.name)}
-            <span className="block text-xs text-muted-foreground">{item.description}</span>
-          </span>
+          <div className="min-w-0">
+            <ConfirmationSummary item={item} labels={labels} />
+          </div>
         </ConfirmationRequest>
       </ConfirmationTitle>
       <ConfirmationActions>

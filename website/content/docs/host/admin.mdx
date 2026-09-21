@@ -1,0 +1,277 @@
+---
+title: Drive the page
+description: Let the model operate any React admin through its accessibility tree with generic host tools (admin_observe, admin_run, admin_discover) instead of one host tool per screen. Opt in on the provider and the handler; no markup changes, no data attributes; the app's pages are discovered by themselves.
+---
+
+## What it is
+
+A [host tool](/docs/host/host-tools) is the right answer for the five or ten operations an app cares most about. It is the wrong answer as the only path: an admin with forty screens would need hundreds of tools, and an app that adopts Vexa late will not write them. `admin` adds a second path that needs no per-feature code and no markup: the chat reads the page through the **accessibility tree** (roles and accessible names, the same tree a screen reader uses), the model sends one short **plan of generic steps**, and a deterministic executor in the browser runs the steps against the real DOM and returns a compact trace.
+
+```text
+                     model turn
+                         │
+   ┌─────────────────────┼─────────────────────────┐
+   │ host tools (browser, the existing loop)       │
+   │                                               │
+   │  admin_observe()  ──► snapshot of the page    │  read tier
+   │  admin_run(steps) ──► executor ──► trace +    │  write tier, stops when the app
+   │                                    snapshot   │  opens its own confirmation
+   └───────────────────────────────────────────────┘
+```
+
+The prompt tells the model to prefer a dedicated host tool when one fits the request and to use `admin_run` for everything else. Keep your `navigate`, `set_filter` or `update_status` tools; they stay faster and more precise for what they cover, and the generic path handles the long tail.
+
+## Enable it on both sides
+
+```tsx title="app/app-shell.tsx"
+import { useRouter } from "next/navigation";
+import { VexaChatOverlay } from "vexa/chat";
+import { VexaProvider } from "vexa/react";
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  return (
+    <VexaProvider admin={{ navigate: router.push }}>
+      {children}
+      <VexaChatOverlay />
+    </VexaProvider>
+  );
+}
+```
+
+```ts title="app/api/chat/route.ts"
+import { createVexaHandler } from "vexa/server";
+
+export const { GET, POST } = createVexaHandler({ models, admin: true });
+```
+
+`admin` alone (or `admin={true}`) is enough on the provider; `navigate` is only needed for paths that no link on the current page points to, and `confirm` defaults to `"page"`: the app's own dialogs are the approval (see [Confirmation](#confirmation)). Both sides are required because the server owns prompt text and tool tiers: the handler adds the "Driving the page" rules to the prompt, marks `admin_run` as write tier so the injection guard can drop it, and raises the default `stopWhen` from four to six steps. A handler without `admin: true` drops any `admin_*` schema a client sends, so a client cannot switch the feature on by itself.
+
+## What the model sees
+
+`admin_observe` returns the current page as a list of elements with a short ref, a role, an accessible name and the state that matters. This is the real output on the shop admin's `/settings` page, which has no Vexa markup at all:
+
+```json title="admin_observe on /settings"
+{
+  "path": "/settings",
+  "title": "Settings",
+  "elements": [
+    { "ref": "h1", "role": "heading", "name": "Settings" },
+    { "ref": "g3", "role": "group", "name": "Theme" },
+    { "ref": "b4", "role": "button", "name": "light", "within": "g3", "pressed": true },
+    { "ref": "b5", "role": "button", "name": "dark", "within": "g3", "pressed": false },
+    { "ref": "s7", "role": "combobox", "name": "Locale", "value": "en-US", "options": ["en-US", "de-DE"] },
+    { "ref": "s8", "role": "combobox", "name": "Currency", "value": "USD", "options": ["USD", "EUR"] },
+    { "ref": "s10", "role": "combobox", "name": "Steps display", "value": "collapsible", "options": ["collapsible", "hidden"] }
+  ],
+  "unnamed": 0
+}
+```
+
+The rules that shape it:
+
+- Only interactive and structural roles are listed: `link button textbox searchbox spinbutton combobox listbox option checkbox radio switch slider tab` plus `group form table dialog alertdialog tablist heading` as scopes for `within`.
+- The name follows the accessible-name algorithm: `aria-labelledby`, then `aria-label`, then the associated `<label>` (`for` or wrapping), then the element's text for buttons, links and options, then `placeholder`, then `title`.
+- Hidden elements are skipped: `hidden`, `aria-hidden`, `display: none`, `visibility: hidden`, a closed `<dialog>`. A `display: contents` wrapper is walked through.
+- Values of password fields, credential autocomplete fields and anything with `data-sensitive` are never included; the element appears with `"sensitive": true`. `<input type="hidden">` is not listed.
+- A table with more than five rows is summarised as its columns and row count; its rows come from a `read` step, capped at 50 rows and 12 columns. A table with five rows or fewer lists its controls, since small tables are usually action lists.
+- The list stops at 120 elements and sets `truncated: true`; open dialogs are listed first.
+- Strings are cut at 80 characters and empty fields are omitted, so a settings page is around 700 characters and an orders list with a 24-row table under 800.
+
+## Steps
+
+`admin_run` takes `{ steps: Step[] }`, one to twenty steps, each a flat object with `action` plus the fields that action needs. The executor runs them in order and stops at the first failure.
+
+```json title="one step per action"
+{ "action": "navigate", "to": "/orders" }
+{ "action": "navigate", "to": "Create product" }
+{ "action": "click", "target": "b5" }
+{ "action": "fill", "target": { "role": "textbox", "name": "Name" }, "value": "Cold brew bottle" }
+{ "action": "select", "target": { "role": "combobox", "name": "Category" }, "value": "Beans" }
+{ "action": "check", "target": { "role": "checkbox", "name": "Featured" }, "checked": true }
+{ "action": "submit", "target": { "role": "button", "name": "Create product" } }
+{ "action": "read", "target": "t10" }
+{ "action": "wait", "for": "idle" }
+```
+
+A target is either a ref from the latest snapshot (`"b5"`) or a query `{ role, name, within?, nth? }`. `name` matches the accessible name exactly, case-insensitively, or as a regex written `/^C-/`. Refs are valid only for the page they were observed on; after a `navigate` the remaining steps must use role and name. `within` scopes a query to a ref or to another query such as a row: `{ "role": "link", "name": "/^C-/", "within": "t10", "nth": 0 }` clicks the first order link in a summarised table; `{ "role": "button", "name": "Edit", "within": { "role": "row", "name": "/C-1042/" } }` picks the Edit button of one row. `navigate` clicks the link on the page whose `href` equals the path or whose name matches, and falls back to the provider's `navigate` for a path with no link. The executor waits for navigation after `navigate`, for the page to settle after `submit` and after a click that opened a dialog, and yields once after every input so React has rendered before the next target resolves.
+
+The result is a trace plus the page after the last step:
+
+```json title="admin_run result"
+{
+  "ok": false,
+  "trace": [
+    { "action": "navigate", "to": "/orders", "ok": true, "ms": 210, "mode": "router" },
+    { "action": "fill", "target": { "role": "searchbox", "name": "Search orders" }, "ok": true, "ms": 4 },
+    { "action": "click", "target": { "role": "link", "name": "Edit" }, "ok": false, "ms": 2, "error": "TARGET_AMBIGUOUS",
+      "candidates": [{ "ref": "b14", "name": "Edit", "within": "C-1042 Napat Srisuwan Bangkok pending" }, { "ref": "b19", "name": "Edit", "within": "C-1041 Ploy Chaiyaporn Chiang Mai paid" }] }
+  ],
+  "page": { "path": "/orders", "title": "Orders", "elements": [], "unnamed": 0 }
+}
+```
+
+The chat renders the trace as one row per step with a check or a cross; the `page` field is for the model. Error codes, exported as `ADMIN_ERROR_CODES` from `vexa/admin`:
+
+| Code | Meaning |
+|---|---|
+| `TARGET_NOT_FOUND` | no element matches the ref or query on the current page |
+| `TARGET_AMBIGUOUS` | several match and no `nth` was given; up to five candidates are listed |
+| `TARGET_STALE` | the ref comes from an earlier snapshot and its element has left the page |
+| `ELEMENT_NOT_INTERACTABLE` | disabled, `aria-disabled`, or a custom combobox that opened no listbox |
+| `OPTION_NOT_FOUND` | the select or listbox has no option with that label or value; the options are listed |
+| `ROUTE_NOT_FOUND` | no link on the page leads to the path and the provider has no `navigate` |
+| `NAVIGATION_TIMEOUT` | the path did not change within five seconds |
+| `FORM_INVALID` | `checkValidity()` failed; the first invalid field is named |
+| `SUBMIT_FAILED` | the form is still there and a `role="alert"` appeared after the submit; its text is included |
+| `DECLINED` | `confirm: "mutating"` or `"all"` only: the user pressed Cancel on the Vexa card; nothing after that step ran |
+| `ACTION_NOT_ALLOWED` | a step inside the app's open confirmation dialog, `admin_run` from a spec button, or `read` on a sensitive field |
+| `PLAN_INVALID` | the steps failed schema validation; the detail names the step and field |
+| `NOT_SUPPORTED` | the action does not apply to that element (for example `fill` on a button) |
+| `PAGE_NOT_OBSERVED` | `admin_observe { path }` asked for a page nobody has visited or discovered; the result carries `routes` |
+| `DISCOVERY_UNAVAILABLE` | `admin_discover` could not open the app in its hidden frame (framing refused, redirected to a login page, or discovery is off); the detail says why |
+
+## Pages you are not on
+
+Every page the executor sees is kept in an observation cache for the life of the provider: `admin_observe()` and each `admin_run` remember the page they end on, and a `navigate` step remembers the page it arrives at and attaches that snapshot to its own trace item. Every result therefore carries two more lists next to the elements:
+
+- `routes`: paths that exist, collected from every in-app link seen so far (including links inside summarised tables). Three or more id-like siblings collapse into one entry such as `{ "path": "/orders/:id", "sample": "/orders/C-1042" }`; the list is capped at 40, observed pages first.
+- `observed`: paths the model can read without going there.
+
+`admin_observe { path: "/products/new" }` answers from the cache for an observed page (`cached: true`, `observedAt`), live for the current page, and with `PAGE_NOT_OBSERVED` plus `routes` for anything else. The prompt tells the model what follows: a task on an observed page is one `admin_run` that starts with `navigate` and addresses the form by role and name; a task on an unknown page starts with `navigate` and continues from the page in that trace item. Refs are checked before use: a ref resolves only while its element is still on the page with the same role and name, otherwise the step fails with `TARGET_STALE` and says what the ref used to be.
+
+## Knowing pages ahead
+
+The model should know the whole admin from the first message, and nobody should have to remember to make that happen. Four layers fill the cache, in this order of importance; the first two are on by default.
+
+### Automatic discovery in a hidden frame (default)
+
+Shortly after the app loads (when the browser is idle, about two seconds in), the provider opens a hidden same-origin `<iframe>` (`name="vexa-discover"`, 1 × 1 px, off-screen, `inert`, `aria-hidden`, sandboxed so it can never navigate your tab) and walks the app inside it: it follows every in-app link breadth-first, read-only, snapshots each page, and closes the frame. The user's tab never moves. The result is kept in the browser for a day, so the next visit starts with every page known and no discovery runs; `[vexa] discovering` and `[vexa] pages restored (n)` in the console say which happened. In the shop admin the walk takes about a second for seven pages.
+
+What it costs: one `GET` per discovered page against your app, once per browser per day, up to `limit` pages (default 25). What it never does: click a button, fill a field, submit a form, or press anything inside a dialog. The provider inside the frame sees that it is the discovery frame and registers nothing (no chat, no tools, no passive watcher, no discovery of its own), so there is no recursion and no second assistant.
+
+```tsx
+<VexaProvider admin={{ navigate: router.push, discover: { skip: (path) => path.startsWith("/guides") } }}>
+```
+
+`discover` takes `"auto"` (default), `"model"` (only when the model asks, see below), `"off"`, or an object with `mode`, `limit`, `skip` and `ttlMs` (default 24 h). `version` on the provider (a build id, a commit hash) invalidates what an earlier build discovered as soon as a new one ships. `useVexaAdmin()` reports `progress`, `routes`, `observed` and `blocked`, and `<VexaDiscoverPages />` shows them; its button reruns the walk on demand.
+
+**Discovery sees what the signed-in user sees.** The frame runs with the user's own session, so the pages it finds and the controls on them are the ones that user is allowed to reach; a manager and a clerk get different maps. That is why the result is stored per user, not per browser: pass `scope` (a user id, or a hash of it) and the pages live in `localStorage` under `vexa-pages:<origin>:<scope>`, invisible to the next person who signs in on the same machine; without `scope` they stay in `sessionStorage`, per tab and gone when it closes, which is the safe default for a shared browser. None of this is a security boundary: the map only tells the model where things are, and your backend still authorises every request the page makes. A pages file written by a developer (below) reflects the developer's permissions, which is one more reason the automatic path is the default.
+
+What blocks it, and what happens then: an `X-Frame-Options: DENY` or `SAMEORIGIN`-less `frame-ancestors` header, a login page that the framed request redirects to, or a page that refuses to render inside any frame. The provider then records the reason (`blocked` on `useVexaAdmin()`, the control shows "Discovery unavailable: …"), does not retry in this session, and the model falls back to the second layer: it navigates and looks. If your app sets `frame-ancestors`, allow `'self'`; the frame is same-origin.
+
+### The model can ask
+
+`admin_discover` is a third read-only host tool: the prompt tells the model to call it once when it does not know which page holds something and that page is neither in `routes` nor `observed`. It runs the same hidden-frame walk (or answers at once from the fresh result of the automatic one, `cached: true`), returns `routes`, `observed` and the pages it looked at, and reports `DISCOVERY_UNAVAILABLE` with the reason when the frame is blocked, after which the model navigates. Like `admin_run`, it never runs from a spec button. With `discover: "off"` the tool is not registered.
+
+### Passive cache
+
+With `admin` on, the provider also watches the page the user is on: whenever the route changes and the DOM has been quiet for 300 ms it snapshots the new page into the cache (about a millisecond, no navigation, no model call). Nothing is captured that the user did not open themselves; the values of password and other sensitive fields are never captured anywhere. `admin={{ passive: false }}` turns it off for apps with pages that must not be remembered.
+
+### The pages file (optional)
+
+For hosts that cannot frame their app or want the map in the repository, the pages file from the previous design is still supported: `admin: { pagesFile: "lib/vexa-pages.json" }` on the handler lets the dev server write it while a developer browses (`PUT /api/chat`, dev only, validated, written only when the structure differs) and serves it through `GET`; `admin={{ pages }}` on the provider takes the parsed file directly for a static build. The file is deterministic (sorted, no timestamps, structure only) and belongs in git like a lockfile. A live observation always wins over the file, and a stored discovery wins over both. Remember that it reflects the permissions of whoever browsed.
+
+`<VexaDiscoverPages />` renders nothing when `admin` is off. Under the hood it is `useVexaAdmin()`: `discover(options)`, `progress`, `blocked`, `routes`, `observed`, `canSave`, `save()`, `exportPages()`, `importPages()` and `clear()`; outside a provider it returns `enabled: false` and no-op functions. Vexa's own chat, launcher, confirmation tray, the discovery frame and this control carry `data-vexa-ignore`, so they never appear in a snapshot; put the same attribute on your own dev widgets.
+
+## Confirmation
+
+Most admin apps already confirm their own destructive actions with a modal, and a person expects to press that modal, not a second card from the chat. The `confirm` option on the provider decides who approves a change; the default is the page itself.
+
+- `"page"` (default): every step runs, including `submit` and destructive clicks, and Vexa never shows a card. When a `click` or `submit` opens the app's own **confirmation dialog** (an `alertdialog`, or a `dialog` with no inputs and at most four buttons), the run stops right there with `ok: true`, `stopped: "confirmation"` and the steps that did not run in `remaining`; the returned `page` shows the dialog. The model tells the user what the dialog will do and that they decide in it. A later step that targets anything inside that dialog is refused with `ACTION_NOT_ALLOWED` ("the page is asking the user to confirm; the user decides in the dialog"), so the model cannot press Delete, Cancel or OK for the user. A dialog with inputs is a form, not a confirmation, and the run continues through it.
+- `"mutating"`: for apps without their own modals. Before the first mutating step the executor pauses and shows the remaining steps in plain words ("Fill Name with "Cold brew bottle"", "Select Beans in Category", "Submit Create product") with Run and Cancel, through the same card and tray every `confirm: true` host tool uses. Mutating means every `submit`; a `click` on a button inside a `dialog` or `alertdialog`, on a `<button type="submit">`, or on an element whose name starts with `delete`, `remove`, `archive`, `unpublish`, `publish`, `discard`, `revoke` or `reset`. One confirmation per plan; Cancel ends the plan with `DECLINED`, the steps that already ran stay on the page, nothing was committed. Because the user approved the whole plan, the model may drive the app's dialog afterwards.
+- `"all"`: every step asks through the Vexa card.
+- `"none"`: nothing asks and nothing stops, for a sandbox.
+- `(step, element) => boolean`: your own rule for the Vexa card, called with the resolved element.
+
+```json title="admin_run result under confirm: \"page\""
+{
+  "ok": true,
+  "stopped": "confirmation",
+  "trace": [
+    { "action": "click", "target": { "role": "link", "name": "Gooseneck kettle" }, "ok": true, "ms": 18 },
+    { "action": "click", "target": { "role": "button", "name": "Delete product" }, "ok": true, "ms": 9, "opened": "confirmation" }
+  ],
+  "remaining": [],
+  "page": { "path": "/products/P-1004", "title": "P-1004", "elements": [{ "ref": "d1", "role": "alertdialog", "name": "Delete Gooseneck kettle?" }, "…"], "unnamed": 0 }
+}
+```
+
+The chat renders that trace with a final "Waiting for you to confirm on the page" row. `fill`, `select`, `check`, `read`, `navigate` and `wait` never ask under any policy: they change the form, not the record.
+
+`admin_run` never runs from a button in generated UI: a spec that calls `runTool` with `admin_run` gets `ACTION_NOT_ALLOWED`. Only a model turn, which the user started, can drive the page. `admin_observe` may run from buttons.
+
+## Accessibility is the contract
+
+The executor sees exactly what a screen reader sees, so the price of the feature is accessibility, not annotation. No `data-*` attributes are needed and none are read. The `unnamed` counter in every snapshot is the diagnostic: it counts interactive elements the model cannot address because they have no accessible name. Three patterns hide a control:
+
+| Pattern | Fix |
+|---|---|
+| an icon button with no text: `<button><TrashIcon /></button>` | add `aria-label="Delete"` |
+| a clickable `<div onClick>` | make it a `<button>` (or give it `role="button"` and a name) |
+| a custom widget with no ARIA role, for example a dropdown built from divs | use `role="combobox"` on the trigger, `role="listbox"` and `role="option"` on the popup, as `@base-ui/react` and Radix already do |
+
+Each of these is a fix the app needs for its keyboard and screen-reader users anyway; a linter such as `eslint-plugin-jsx-a11y` catches all three.
+
+## Security model
+
+The feature changes two rules of the [host tool](/docs/host/host-tools) model and keeps everything else:
+
+- Host tools you define must still be idempotent and must not mutate data. `admin_run` may submit forms, so it is the one write-tier host tool: the server assigns the tier by its reserved name (host tools may not use the `admin_` prefix) and the injection guard drops it when a tool result is flagged.
+- Under the default `confirm: "page"` the final press on anything the app guards with a confirmation dialog is always a human's: the executor stops when the dialog opens and refuses every step inside it. Under `"mutating"` the human approves the plan on the Vexa card instead. Either way the model never commits a guarded action on its own.
+- A spec button may call any host tool except `admin_run`.
+- The server accepts `admin_*` schemas only when the handler has `admin` on; otherwise they are removed from the request before the model sees them.
+- The discovery frame is same-origin, hidden, inert and sandboxed without `allow-top-navigation`, so a frame-busting script inside it cannot move the user's tab; it only follows links, and the provider inside it disables Vexa entirely. What it finds is kept per user (`scope`) or per tab, never shared across sign-ins.
+- The pages file, when a host opts into it, is written only by the dev server (`NODE_ENV` other than `production`), only to the path the server config names, only after validation against the file schema and a 2 MB cap, and only when the structure differs; the client never chooses a path and production answers 404 to every `PUT`.
+- The client policy decides which steps ask the user first; it is not a security boundary. Your backend still authorises every request the page makes, exactly as it does for a human user with the same session.
+
+The model never receives the value of a password, credential or `data-sensitive` field, and `read` on one returns `ACTION_NOT_ALLOWED`. The executor runs only the eight predefined actions; no step evaluates a string as code.
+
+## Limits and troubleshooting
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| `TARGET_NOT_FOUND` for a control you can see | it has no accessible name, or it is inside a summarised table | check `unnamed`; label the control; address rows with `within` and `nth` |
+| `TARGET_AMBIGUOUS` | several controls share a name (Edit on every row) | the model picks a candidate or scopes with `within: { role: "row", name: "/…/" }` |
+| `TARGET_STALE` after a navigate | a ref from the previous page was reused | use role and name after `navigate`; the trace carries the new page |
+| `ELEMENT_NOT_INTERACTABLE` with `no listbox` | the custom select does not open on click or its popup has no `role="listbox"` | give the popup `role="listbox"` and its items `role="option"`; `aria-controls` on the trigger helps |
+| `ROUTE_NOT_FOUND` | the path has no link on the current page | pass `navigate: router.push` on the provider |
+| `NAVIGATION_TIMEOUT` | the link is intercepted by something that does not change the URL | make the link a real route, or use `navigate` |
+| `SUBMIT_FAILED` | the form stayed and showed a `role="alert"` | the detail carries the alert text; the model reports it |
+| `PLAN_INVALID` with `steps.0: must be an object` | a small model sent steps as strings | the prompt already shows a literal step object; a stronger model or a shorter task usually resolves it |
+| the model announces a change and stops | it wrote the sentence but not the call | the prompt says both belong in one turn; retry once |
+| the run stops with `stopped: "confirmation"` on a dialog that is not a confirmation | the dialog has no inputs and four buttons or fewer, so it matches the rule | the user presses through it once; if that dialog needs the model, give it a `role="dialog"` with its inputs inside, or use `confirm: "none"` in a sandbox |
+| `ACTION_NOT_ALLOWED` on a click inside a dialog | `confirm: "page"` never presses the app's confirmation buttons | the user presses Delete or Cancel in the dialog; the model reads the page afterwards |
+| `PAGE_NOT_OBSERVED` for a page that exists | discovery has not run or was blocked, and nobody visited the page | the model calls `admin_discover` or navigates there; the result lists `routes` |
+| `DISCOVERY_UNAVAILABLE`, "Discovery unavailable" in the control | the app refuses to be framed, redirects framed requests to a login page, or the page never finished loading | allow `frame-ancestors 'self'`; check that the framed request carries the session; the model still works page by page |
+| discovery visits dozens of pages | a section with many static children (docs, guides) | pass `discover: { skip }` on the provider; six or more siblings under one parent collapse into one route anyway |
+| the model already knows a page you just changed | the stored discovery is up to a day old | pass `version` (a build id) on the provider, or `ttlMs`; a page the user opens is always re-read live |
+
+The default `stopWhen` with `admin: true` is six steps per request: observe, run, run again after a failure, and the final message. A task that needs more is two requests. The executor is one browser tab: it cannot open new windows, upload files, or drive `<canvas>`, and it will not `location.assign` a path on its own.
+
+## Best practices
+
+Each of these comes from an `admin-*` scenario in `examples/shop-admin/lib/test-plans` that passes against a real, small model on the real page, and each is a playable guide in the [Shop admin](/docs/examples/shop-admin) example.
+
+- With `admin` enabled the model reads the page through `admin_observe` (roles, accessible names, values) instead of a per-page tool, so every control that has an accessible name is visible to it without host code; an unnamed control shows up only in the `unnamed` count. *[Try it](http://localhost:3001/guides/admin-observe)*
+- A setting with no host tool is still one `admin_run` call: observe once, then select by accessible name; `fill`, `select` and `check` never ask for confirmation because they change the form, not the record. *[Try it](http://localhost:3001/guides/admin-settings)*
+- Elements inside a table are addressed with `within` (the table or a row) plus `nth`, and a `read` step returns the rows, so the model can search, inspect and open a record without the page exposing an id anywhere. *[Try it](http://localhost:3001/guides/admin-find-product)*
+- A target that does not resolve ends the plan with `TARGET_NOT_FOUND` and the current page, never a guessed click; the model answers from that page and does not retry the same target. *[Try it](http://localhost:3001/guides/admin-not-found)*
+- When several elements match, the executor returns `TARGET_AMBIGUOUS` with up to five candidates (name and the row or group they sit in) so the model can ask or pick one by `nth`; it never clicks the first match silently. *[Try it](http://localhost:3001/guides/admin-ambiguous)*
+- A create flow is one `admin_run` plan: navigate through the page's own link, fill and select by accessible name (a custom combobox is opened and its option clicked like a user would), then submit; under the default confirm policy nothing asks first, the app's own form validation and dialogs are the gate. *[Try it](http://localhost:3001/guides/admin-create-product)*
+- An edit flow clicks the record's own link in the table, fills only the field that changes and submits; because the plan is one `admin_run` call the model never sees the intermediate page, and the app's own Save is the commit. *[Try it](http://localhost:3001/guides/admin-edit-product)*
+- Under the default confirm policy the app's own dialog is the approval: a click that opens it ends the run with `stopped: confirmation`, the model tells the user what the dialog will do, and only a human press in the dialog commits the delete. *[Try it](http://localhost:3001/guides/admin-delete-product)*
+- The model never learns what the user pressed in the app's dialog from the chat; it reads the page afterwards and reports what is there, so a cancelled dialog is reported as unchanged and never retried. *[Try it](http://localhost:3001/guides/admin-delete-declined)*
+- With `confirm: "mutating"`, `DECLINED` is not an error to recover from: the trace stops at the first mutating step and the model states that nothing changed without trying another way to delete. *(runner check `admin-mutating-policy`, not a guide page)*
+- Refs are valid only for the page they were observed on: a ref used after a `navigate` fails with `TARGET_STALE` and the trace carries the new page, so the model re-observes instead of clicking whatever now sits at that position. *(runner check `admin-stale`, not a guide page)*
+- Once a page has been discovered or visited, `admin_observe { path }` answers from memory, so a task that starts elsewhere still fits one `admin_run` that begins with `navigate` and addresses the form by role and name; discovery runs from the host (`useVexaAdmin().discover()`), read-only, never from the model. *[Try it](http://localhost:3001/guides/admin-cross-page)*
+- `admin_observe { path }` never guesses: an unvisited page returns `PAGE_NOT_OBSERVED` together with `routes`, so the model navigates (the trace item carries the new page) or asks the host to run discovery, instead of inventing what the page contains. *[Try it](http://localhost:3001/guides/admin-not-observed)*
+- Leave `passive` on: every page the user lands on is snapshotted after it settles (about a millisecond, no navigation), so by the time they ask, the pages they actually use are readable from memory; turn it off only for pages that must never be captured. *[Try it](http://localhost:3001/guides/admin-passive)*
+- Keep `vexa-pages.json` in the repo like a lockfile: `pagesFile` on the handler lets the dev server write it while you browse (auto sync) or press Save, `admin={{ pages }}` loads it at startup for every user, production never writes, and a live observation of the same path always replaces the shipped copy, so the file can only be stale, never wrong about a page the user has opened. *[Try it](http://localhost:3001/guides/admin-seeded)*
+
+## Related
+
+- [Host tools](/docs/host/host-tools): the dedicated-tool path this complements
+- [Provider](/docs/host/provider) and [Config reference](/docs/config-reference): where `admin` sits among the other options
+- [Security](/docs/security): tiers, approvals and the guard
+- [Shop admin](/docs/examples/shop-admin): the products pages are driven with no product-specific tool at all

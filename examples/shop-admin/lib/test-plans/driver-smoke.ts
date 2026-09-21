@@ -16,6 +16,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "driver-smoke",
+  measures: "runtime",
   kind: "check",
   title: "Headless driver presses a spec button",
   controlPath: "fixture Button → on.press setState → /ui/pressed",

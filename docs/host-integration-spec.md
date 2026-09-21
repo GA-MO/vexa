@@ -397,18 +397,20 @@ Decision (resolves open question 1): only `/tools` and `/host` are reserved. Res
 
 ## 6. Security
 
+The generic page-driving tools (`admin_observe`, `admin_run`) are specified in `docs/admin-plan.md`; its §6 is the source for the `admin_run` rows in T1 and T5 below and for the checklist item in 6.2. The public page is `website/content/docs/host/admin.mdx`.
+
 ### 6.1 Threat model
 
 | # | Threat | Mitigation |
 |---|---|---|
-| T1 | A model-authored button calls `runTool` with input from `/ui/*` written by the user or by a tool result | host tools are read-tier and may run. Any other name becomes a user message so the server gate applies (3.2) |
+| T1 | A model-authored button calls `runTool` with input from `/ui/*` written by the user or by a tool result | host tools are read-tier and may run, except `admin_run`, which returns `ACTION_NOT_ALLOWED` for `source: "button"` (`docs/admin-plan.md` §6). Any other name becomes a user message so the server gate applies (3.2) |
 | T2 | MCP descriptions or outputs carry injected instructions | `fence()` on both, mandatory `allow`, guard 6.3 |
 | T3 | `context()` leaks tokens or PII to the model and to external MCP | `contextSchema` is mandatory. Context is never copied into tool inputs automatically |
 | T4 | The client forges a tier or auto-approves | body is `.strict()` with no tier field. Tiers live on the server. `experimental_toolApprovalSecret` signs approvals |
 | T8 | The client picks an expensive or unapproved model, or floods the prompt with host tool descriptions / context | server `models` registry (400 otherwise), fenced descriptions and context, size caps on messages, host tools and context |
 | T9 | A generated button (or a forged user message) carries `⟦action⟧ runTool` with a tool name that does not exist or was never exposed | the server rewrites the message into an "unavailable" note before the model sees it |
 | T10 | Host `instructions` or `rules` weaken security rules by being later in the prompt | library invariants are appended after every host layer |
-| T5 | A host tool runs without a user gesture (navigation, DOM, `window.open`) | `confirm: true` on tools with visible side effects. Host tools must be idempotent and must not mutate data |
+| T5 | A host tool runs without a user gesture (navigation, DOM, `window.open`) | `confirm: true` on tools with visible side effects. Host-defined tools must be idempotent and must not mutate data. The library's `admin_run` may submit forms: it is write tier on the server (only with `createVexaHandler({ admin: true })`, otherwise its schema is dropped), and under the default `admin.confirm: "page"` it stops when a click opens the app's own confirmation dialog and refuses every step inside it, so a human presses the final button; `"mutating"` pauses before the first mutating step through the same `requestConfirmation` instead. Host tools may not use the `admin_` prefix |
 | T6 | A spec forges a tool result that other components bind to | `/tools/*` is written by the runtime only (4.5) |
 | T7 | An MCP tool name collides with a local one | mandatory prefix, name regex |
 
@@ -422,6 +424,7 @@ Decision (resolves open question 1): only `/tools` and `/host` are reserved. Res
 - [ ] `setState` into `/tools/*` or `/host/*` is a no-op
 - [ ] `context` without `contextSchema` throws on mount
 - [ ] Every string from MCP passes through `fence()` before reaching the model
+- [ ] `admin_run` is the only mutating host tool: write tier on the server, refuses `source: "button"`, never presses the app's own confirmation dialog (default `confirm: "page"`) or asks on the Vexa card first (`"mutating"`); `admin_*` schemas are dropped unless the handler sets `admin: true`
 
 ### 6.3 Injection guard
 

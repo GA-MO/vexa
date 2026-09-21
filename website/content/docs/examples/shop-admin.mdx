@@ -24,7 +24,7 @@ bun run dev                      # http://localhost:3001
 VEXA_DEMO_MCP=1 bun run dev      # also starts the fixtures MCP server for the mcp-stdio guide
 ```
 
-Then open [the guides](http://localhost:3001/guides). Every guide page defaults the model picker to **mock**, so nothing below needs an API key; the dev server also lists the OpenRouter models when `OPENROUTER_API_KEY` is set. `bun run test:scenarios` runs the same scenarios headlessly against the real model; add `VEXA_SCENARIO_MODEL=mock` to run them against the script.
+Then open [the guides](http://localhost:3001/guides). Every guide page defaults the model picker to **mock**, so nothing below needs an API key; the dev server also lists the models of every provider whose key is in `examples/shop-admin/.env.local` (`QWEN_API_KEY` first, so DeepSeek V4 Flash is the default; see [Models](/docs/server/models)). `bun run test:scenarios` runs the same scenarios headlessly against the real model; add `VEXA_SCENARIO_MODEL=mock` to run them against the script.
 
 ## Guides
 

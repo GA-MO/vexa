@@ -56,6 +56,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "narrow-panel",
+  measures: "runtime",
   title: "Select, Carousel, and a wide Table at 340px",
   controlPath: "fixture only — checked by hand in a 340px chat panel",
   page: "/guides/narrow-panel",

@@ -21,12 +21,34 @@ import {
   type ChatSuggestion,
 } from "../chat/constants";
 import { PortalContainerContext } from "../lib/portal";
+import { ADMIN_TOOLS, isAdminToolName } from "../admin/names";
+import { createResolver, type Resolver } from "../admin/resolve";
+import { currentPage } from "../admin/snapshot";
+import { createObservationCache, type ObservationCache, type RouteEntry } from "../admin/cache";
+import { IDLE_DISCOVERY, DISCOVERY_PAGE_LIMIT, type DiscoverOptions, type DiscoveryProgress } from "../admin/discover";
+import { createFrameHost, discoverInFrame, isVexaFrame, type FrameHost } from "../admin/frame";
+import { watchPages } from "../admin/passive";
+import { exportPages, importPages, toPagesFile, type AdminPages, type ImportPagesResult } from "../admin/seed";
+import { loadStoredPages, storePages, STORED_PAGES_TTL_MS } from "../admin/store";
+import { fetchPagesEndpoint, savePagesFile, watchPagesFile, type SavePagesResult } from "../admin/sync";
+import {
+  createAdminTools,
+  describeSteps,
+  type AdminConfirmPolicy,
+  type AdminDiscoverMode,
+  type AdminOptions,
+  type AdminSyncMode,
+  type DiscoverOutcome,
+  type DiscoverRequest,
+} from "../admin/tools";
+export type { AdminOptions } from "../admin/tools";
+import type { Step } from "../admin/schema";
 import { createFormatter, DEFAULT_FORMAT, type Formatter, type VexaFormat } from "./format";
 import { themeStyle, type VexaTheme } from "./theme";
 
 export type HostToolResult =
   | { ok: true; summary?: string; data?: unknown }
-  | { ok: false; error: string };
+  | { ok: false; error: string; data?: unknown };
 
 export type HostToolContext = {
   toolCallId: string | null;
@@ -51,6 +73,7 @@ export type PendingConfirmation = {
   name: string;
   input: unknown;
   description: string;
+  steps?: string[];
 };
 
 export type VexaChatDefaults = {
@@ -70,8 +93,23 @@ export type VexaChatDefaults = {
   backdrop?: boolean;
 };
 
+export type VexaAdminValue = {
+  enabled: boolean;
+  discover: (options?: DiscoverOptions) => Promise<DiscoveryProgress>;
+  progress: DiscoveryProgress;
+  blocked: string | null;
+  routes: RouteEntry[];
+  observed: string[];
+  exportPages: () => AdminPages;
+  importPages: (data: unknown) => ImportPagesResult;
+  canSave: boolean;
+  save: () => Promise<SavePagesResult>;
+  clear: () => void;
+};
+
 export type VexaHostValue = {
   api: string;
+  admin: VexaAdminValue;
   chat: VexaChatDefaults;
   formatter: Formatter;
   functions: Record<string, ComputedFunction>;
@@ -93,7 +131,7 @@ type VexaProviderBaseProps = {
   functions?: Record<string, ComputedFunction>;
   theme?: VexaTheme;
   tools?: Record<string, HostTool>;
-
+  admin?: boolean | AdminOptions;
   onToolResult?: (name: string, result: HostToolResult) => void;
   children: ReactNode;
 };
@@ -127,6 +165,9 @@ function assertToolNames(tools: Record<string, HostTool>) {
   for (const name of Object.keys(tools)) {
     if (!TOOL_NAME.test(name)) {
       throw new Error(`Vexa host tool "${name}" must match ${TOOL_NAME}`);
+    }
+    if (isAdminToolName(name)) {
+      throw new Error(`Vexa host tool "${name}" uses the reserved admin_ prefix; enable page driving with the admin prop instead`);
     }
     if (RESERVED_ACTION_NAMES.has(name)) {
       throw new Error(`Vexa host tool "${name}" collides with a built-in spec action`);
@@ -171,6 +212,337 @@ export type VexaProviderProps<S extends ContextSchema = ContextSchema> = VexaPro
 const NO_CHAT_DEFAULTS: VexaChatDefaults = {};
 const NO_FUNCTIONS: Record<string, ComputedFunction> = {};
 const NO_TOOLS: Record<string, HostTool> = {};
+const NO_ADMIN: AdminOptions | null = null;
+const DEFAULT_ADMIN: AdminOptions = {};
+
+function adminOptionsOf(admin: boolean | AdminOptions | undefined, inFrame: boolean): AdminOptions | null {
+  if (!admin || inFrame) return NO_ADMIN;
+  return admin === true ? DEFAULT_ADMIN : admin;
+}
+
+/** False on the server and on the first client render (so hydration matches), true once mounted inside the hidden discovery frame. */
+function useInDiscoveryFrame(): boolean {
+  const [inFrame, setInFrame] = useState(false);
+  useEffect(() => {
+    if (isVexaFrame()) setInFrame(true);
+  }, []);
+  return inFrame;
+}
+
+type ConfirmRequest = (name: string, input: unknown, description: string, steps?: string[]) => Promise<boolean>;
+
+type AdminRuntime = {
+  resolver: Resolver;
+  cache: ObservationCache;
+  createdAt: number;
+  frame: FrameHost | null;
+  plansRunning: number;
+  discoveredAt: number | null;
+  blocked: string | null;
+  inFlight: Promise<DiscoverOutcome> | null;
+};
+
+type DiscoverSettings = { mode: AdminDiscoverMode; ttlMs: number; limit: number; skip?: (path: string) => boolean };
+
+const DEFAULT_DISCOVER_MODE: AdminDiscoverMode = "auto";
+const API_PATH = /\/api\//;
+const AUTO_DISCOVERY_DELAY_MS = 2000;
+const AUTO_DISCOVERY_RETRY_MS = 2000;
+const AUTO_DISCOVERY_RETRIES = 15;
+
+function discoverSettingsOf(admin: AdminOptions | null): DiscoverSettings {
+  const raw = admin?.discover;
+  const options = typeof raw === "string" ? { mode: raw } : (raw ?? {});
+  return {
+    mode: options.mode ?? DEFAULT_DISCOVER_MODE,
+    ttlMs: options.ttlMs ?? STORED_PAGES_TTL_MS,
+    limit: options.limit ?? DISCOVERY_PAGE_LIMIT,
+    skip: options.skip,
+  };
+}
+
+function skipWith(custom: ((path: string) => boolean) | undefined): (path: string) => boolean {
+  return (path) => API_PATH.test(path) || (custom?.(path) ?? false);
+}
+
+function storedPlace(admin: AdminOptions): { origin: string; scope?: string } {
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  return admin.scope ? { origin, scope: admin.scope } : { origin };
+}
+
+function seededCache(admin: AdminOptions | null): ObservationCache {
+  const cache = createObservationCache();
+  if (!admin?.pages) return cache;
+  const result = importPages(cache, admin.pages);
+  if (!result.ok) console.warn(`VexaProvider: admin.pages ignored, ${result.error}`);
+  return cache;
+}
+
+function createAdminRuntime(admin: AdminOptions | null): AdminRuntime {
+  return {
+    resolver: createResolver(),
+    cache: seededCache(admin),
+    createdAt: Date.now(),
+    frame: null,
+    plansRunning: 0,
+    discoveredAt: null,
+    blocked: null,
+    inFlight: null,
+  };
+}
+
+function restoreStoredPages(runtime: AdminRuntime, admin: AdminOptions) {
+  const settings = discoverSettingsOf(admin);
+  if (settings.mode === "off" || runtime.discoveredAt !== null) return;
+  const stored = loadStoredPages(storedPlace(admin), { version: admin.version, ttlMs: settings.ttlMs });
+  if (!stored) return;
+  importPages(runtime.cache, stored.file, stored.storedAt);
+  runtime.discoveredAt = stored.storedAt;
+  console.debug(`[vexa] pages restored (${stored.file.pages.length})`);
+}
+
+function useAdminRuntime(admin: AdminOptions | null): AdminRuntime {
+  const runtime = useRef<AdminRuntime | null>(null);
+  runtime.current ??= createAdminRuntime(admin);
+  const optionsRef = useRef(admin);
+  optionsRef.current = admin;
+  const enabled = admin !== null;
+  const passive = admin?.passive !== false;
+  useEffect(() => {
+    if (enabled && !isVexaFrame()) restoreStoredPages(runtime.current as AdminRuntime, optionsRef.current ?? DEFAULT_ADMIN);
+  }, [enabled]);
+  useEffect(() => {
+    if (!enabled || !passive || isVexaFrame()) return;
+    return watchPages({ root: () => document.body, page: () => currentPage(), cache: (runtime.current as AdminRuntime).cache });
+  }, [enabled, passive]);
+  return runtime.current;
+}
+
+function isFresh(runtime: AdminRuntime, ttlMs: number): boolean {
+  return runtime.discoveredAt !== null && Date.now() - runtime.discoveredAt <= ttlMs;
+}
+
+function freshOutcome(runtime: AdminRuntime): DiscoverOutcome {
+  return { ok: true, cached: true, progress: { status: "done", visited: runtime.cache.observed(), pending: 0, errors: [] } };
+}
+
+type FrameDiscoverRequest = DiscoverRequest & { skip?: (path: string) => boolean; onProgress?: (progress: DiscoveryProgress) => void };
+
+async function discoverThroughFrame(runtime: AdminRuntime, admin: AdminOptions, request: FrameDiscoverRequest): Promise<DiscoverOutcome> {
+  if (runtime.blocked) return { ok: false, detail: runtime.blocked };
+  if (runtime.inFlight) return runtime.inFlight;
+  const settings = discoverSettingsOf(admin);
+  runtime.frame ??= createFrameHost({ onBlocked: (reason) => (runtime.blocked = reason) });
+  const run = discoverInFrame(
+    { frame: runtime.frame, cache: runtime.cache, startPath: currentPage().path },
+    { limit: request.limit ?? settings.limit, skip: skipWith(request.skip ?? settings.skip), onProgress: request.onProgress },
+  ).then((result): DiscoverOutcome => {
+    if (!result.ok) return { ok: false, detail: result.detail };
+    runtime.discoveredAt = Date.now();
+    storePages(storedPlace(admin), toPagesFile(runtime.cache), { version: admin.version });
+    return { ok: true, progress: result.progress };
+  });
+  runtime.inFlight = run;
+  try {
+    return await run;
+  } finally {
+    runtime.inFlight = null;
+  }
+}
+
+function scheduleIdle(callback: () => void): () => void {
+  if (typeof requestIdleCallback === "function") {
+    const handle = requestIdleCallback(callback, { timeout: AUTO_DISCOVERY_DELAY_MS });
+    return () => cancelIdleCallback(handle);
+  }
+  const timer = setTimeout(callback, AUTO_DISCOVERY_DELAY_MS);
+  return () => clearTimeout(timer);
+}
+
+function useAutoDiscovery(admin: AdminOptions | null, runtime: AdminRuntime, report: (progress: DiscoveryProgress) => void) {
+  const optionsRef = useRef(admin);
+  optionsRef.current = admin;
+  const mode = discoverSettingsOf(admin).mode;
+  const enabled = admin !== null;
+  useEffect(() => {
+    if (!enabled || mode !== "auto" || isVexaFrame()) return;
+    let cancelled = false;
+    let retries = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
+    const start = () => {
+      if (cancelled || runtime.blocked || isFresh(runtime, discoverSettingsOf(optionsRef.current).ttlMs)) return;
+      if (runtime.plansRunning > 0 && retries < AUTO_DISCOVERY_RETRIES) {
+        retries += 1;
+        retryTimer = setTimeout(start, AUTO_DISCOVERY_RETRY_MS);
+        return;
+      }
+      console.debug("[vexa] discovering");
+      void discoverThroughFrame(runtime, optionsRef.current ?? DEFAULT_ADMIN, { onProgress: report }).then((outcome) => {
+        if (cancelled) return;
+        if (!outcome.ok) report({ status: "failed", visited: runtime.cache.observed(), pending: 0, errors: [{ path: currentPage().path, error: "DISCOVERY_UNAVAILABLE" }] });
+      });
+    };
+    const cancelIdle = scheduleIdle(start);
+    return () => {
+      cancelled = true;
+      cancelIdle();
+      clearTimeout(retryTimer);
+      runtime.frame?.close();
+    };
+  }, [enabled, mode, runtime, report]);
+}
+
+const DEFAULT_SYNC: AdminSyncMode = "auto";
+
+function usePagesFileSync(api: string, admin: AdminOptions | null, runtime: AdminRuntime): boolean {
+  const enabled = admin !== null;
+  const sync = admin?.sync ?? DEFAULT_SYNC;
+  const [canSave, setCanSave] = useState(false);
+  useEffect(() => {
+    if (!enabled || isVexaFrame()) return;
+    let active = true;
+    void fetchPagesEndpoint(api).then((info) => {
+      if (!active) return;
+      if (info.pages) importPages(runtime.cache, info.pages, runtime.createdAt);
+      setCanSave(info.writable && sync !== "off");
+    });
+    return () => {
+      active = false;
+    };
+  }, [api, enabled, sync, runtime]);
+  useEffect(() => {
+    if (!enabled || !canSave || sync !== "auto") return;
+    return watchPagesFile({ api, cache: runtime.cache });
+  }, [api, enabled, canSave, sync, runtime]);
+  return canSave;
+}
+
+function countingPlans<T extends HostTool>(tool: T, runtime: AdminRuntime): T {
+  return {
+    ...tool,
+    run: async (input: unknown, ctx: HostToolContext) => {
+      runtime.plansRunning += 1;
+      try {
+        return await tool.run(input, ctx);
+      } finally {
+        runtime.plansRunning -= 1;
+      }
+    },
+  };
+}
+
+function useAdminTools(admin: AdminOptions | null, runtime: AdminRuntime, requestConfirmation: ConfirmRequest): Record<string, HostTool> {
+  const enabled = admin !== null;
+  const mode = discoverSettingsOf(admin).mode;
+  const optionsRef = useRef(admin);
+  optionsRef.current = admin;
+  return useMemo(() => {
+    if (!enabled) return NO_TOOLS;
+    const confirm = (steps: Step[]) => {
+      const sentences = describeSteps(steps);
+      return requestConfirmation(ADMIN_TOOLS.run, { steps }, sentences.join("\n"), sentences);
+    };
+    const options = () => optionsRef.current ?? DEFAULT_ADMIN;
+    const discover = async (request: DiscoverRequest): Promise<DiscoverOutcome> => {
+      if (isFresh(runtime, discoverSettingsOf(options()).ttlMs)) return freshOutcome(runtime);
+      return discoverThroughFrame(runtime, options(), request);
+    };
+    const tools = createAdminTools({
+      root: () => document.body,
+      page: () => currentPage(),
+      resolver: runtime.resolver,
+      cache: runtime.cache,
+      confirm,
+      options,
+      discover: mode === "off" ? undefined : discover,
+    }) as Record<string, HostTool>;
+    tools[ADMIN_TOOLS.run] = countingPlans(tools[ADMIN_TOOLS.run], runtime);
+    return tools;
+  }, [enabled, mode, runtime, requestConfirmation]);
+}
+
+const NO_ROUTES: RouteEntry[] = [];
+const NO_OBSERVED: string[] = [];
+
+const DISABLED_ADMIN: VexaAdminValue = {
+  enabled: false,
+  discover: () => Promise.resolve(IDLE_DISCOVERY),
+  progress: IDLE_DISCOVERY,
+  blocked: null,
+  routes: NO_ROUTES,
+  observed: NO_OBSERVED,
+  exportPages: () => exportPages(createObservationCache()),
+  importPages: () => ({ ok: false, error: "admin is not enabled on this VexaProvider" }),
+  canSave: false,
+  save: () => Promise.resolve({ ok: false, error: "admin is not enabled on this VexaProvider" }),
+  clear: () => undefined,
+};
+
+function useCacheVersion(cache: ObservationCache): number {
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+    const bump = () => setVersion((current) => current + 1);
+    const unsubscribe = cache.subscribe(bump);
+    bump();
+    return unsubscribe;
+  }, [cache]);
+  return version;
+}
+
+function useVexaAdminValue(api: string, admin: AdminOptions | null, runtime: AdminRuntime): VexaAdminValue {
+  const enabled = admin !== null;
+  const canSave = usePagesFileSync(api, admin, runtime);
+  const optionsRef = useRef(admin);
+  optionsRef.current = admin;
+  const [progress, setProgress] = useState<DiscoveryProgress>(IDLE_DISCOVERY);
+  useAutoDiscovery(admin, runtime, setProgress);
+  const version = useCacheVersion(runtime.cache);
+  const discover = useCallback(
+    async (options?: DiscoverOptions) => {
+      const outcome = await discoverThroughFrame(runtime, optionsRef.current ?? DEFAULT_ADMIN, {
+        limit: options?.limit,
+        skip: options?.skip,
+        onProgress: (update) => {
+          setProgress(update);
+          options?.onProgress?.(update);
+        },
+      });
+      if (outcome.ok) return outcome.progress;
+      const failed: DiscoveryProgress = { status: "failed", visited: runtime.cache.observed(), pending: 0, errors: [{ path: currentPage().path, error: "DISCOVERY_UNAVAILABLE" }] };
+      setProgress(failed);
+      return failed;
+    },
+    [runtime],
+  );
+  const clear = useCallback(() => {
+    runtime.cache.clear();
+    runtime.discoveredAt = null;
+    setProgress(IDLE_DISCOVERY);
+  }, [runtime]);
+  return useMemo<VexaAdminValue>(() => {
+    if (!enabled) return DISABLED_ADMIN;
+    return {
+      enabled,
+      discover,
+      progress,
+      blocked: runtime.blocked,
+      routes: runtime.cache.routes(),
+      observed: runtime.cache.observed(),
+      exportPages: () => exportPages(runtime.cache),
+      importPages: (data) => importPages(runtime.cache, data),
+      canSave,
+      save: () => savePagesFile(api, exportPages(runtime.cache)),
+      clear,
+    };
+  }, [api, enabled, discover, progress, runtime, clear, version, canSave]);
+}
+
+function useMergedTools(hostTools: Record<string, HostTool>, adminTools: Record<string, HostTool>): Record<string, HostTool> {
+  return useMemo(() => {
+    if (adminTools === NO_TOOLS) return hostTools;
+    return { ...hostTools, ...adminTools };
+  }, [hostTools, adminTools]);
+}
 
 export function VexaProvider<S extends ContextSchema>({
   api = "/api/chat",
@@ -178,7 +550,8 @@ export function VexaProvider<S extends ContextSchema>({
   format,
   functions = NO_FUNCTIONS,
   theme,
-  tools = NO_TOOLS,
+  tools: hostTools = NO_TOOLS,
+  admin,
   context,
   contextSchema,
   onToolResult,
@@ -187,14 +560,38 @@ export function VexaProvider<S extends ContextSchema>({
   if (context && !contextSchema) {
     throw new Error("VexaProvider: contextSchema is required when context is provided");
   }
-  assertToolNames(tools);
+  assertToolNames(hostTools);
+  const adminOptions = adminOptionsOf(admin, useInDiscoveryFrame());
 
   const [pending, setPending] = useState<PendingConfirmation[]>([]);
   const [chatMounted, setChatMounted] = useState(false);
   const themeElement = useRef<HTMLDivElement>(null);
   const resolvers = useRef(new Map<string, (approved: boolean) => void>());
   const chatSender = useRef<((text: string) => void) | null>(null);
-  const toolsRef = useRef(tools);
+  const toolsRef = useRef(hostTools);
+
+  const formatter = useMemo(() => createFormatter(format), [format]);
+
+  const readContext = useCallback(async (): Promise<Record<string, unknown>> => {
+    if (!context || !contextSchema) return {};
+    const result = await validateWith(contextSchema as ContextSchema, context());
+    if (result.ok) return result.value;
+    console.warn("VexaProvider: context failed contextSchema validation", result.error);
+    return {};
+  }, [context, contextSchema]);
+
+  const requestConfirmation = useCallback<ConfirmRequest>((name, input, description, steps) => {
+    const id = crypto.randomUUID();
+    return new Promise<boolean>((resolve) => {
+      resolvers.current.set(id, resolve);
+      setPending((current) => [...current, steps ? { id, name, input, description, steps } : { id, name, input, description }]);
+    });
+  }, []);
+
+  const adminRuntime = useAdminRuntime(adminOptions);
+  const adminTools = useAdminTools(adminOptions, adminRuntime, requestConfirmation);
+  const adminValue = useVexaAdminValue(api, adminOptions, adminRuntime);
+  const tools = useMergedTools(hostTools, adminTools);
   toolsRef.current = tools;
 
   const [schemas, setSchemas] = useState<HostToolDescriptor[]>([]);
@@ -207,23 +604,6 @@ export function VexaProvider<S extends ContextSchema>({
       active = false;
     };
   }, [tools]);
-  const formatter = useMemo(() => createFormatter(format), [format]);
-
-  const readContext = useCallback(async (): Promise<Record<string, unknown>> => {
-    if (!context || !contextSchema) return {};
-    const result = await validateWith(contextSchema as ContextSchema, context());
-    if (result.ok) return result.value;
-    console.warn("VexaProvider: context failed contextSchema validation", result.error);
-    return {};
-  }, [context, contextSchema]);
-
-  const requestConfirmation = useCallback((name: string, input: unknown, description: string) => {
-    const id = crypto.randomUUID();
-    return new Promise<boolean>((resolve) => {
-      resolvers.current.set(id, resolve);
-      setPending((current) => [...current, { id, name, input, description }]);
-    });
-  }, []);
 
   const resolveConfirmation = useCallback((id: string, approved: boolean) => {
     resolvers.current.get(id)?.(approved);
@@ -256,6 +636,7 @@ export function VexaProvider<S extends ContextSchema>({
   const value = useMemo<VexaHostValue>(
     () => ({
       api,
+      admin: adminValue,
       chat,
       formatter,
       functions,
@@ -276,7 +657,7 @@ export function VexaProvider<S extends ContextSchema>({
         setChatMounted(send !== null);
       },
     }),
-    [api, chat, formatter, functions, tools, schemas, readContext, runTool, pending, resolveConfirmation],
+    [api, adminValue, chat, formatter, functions, tools, schemas, readContext, runTool, pending, resolveConfirmation],
   );
 
   const mode = theme?.mode ?? "light";
@@ -311,7 +692,7 @@ function ConfirmationTray({
   onDecide: (id: string, approved: boolean) => void;
 }) {
   return (
-    <div className="fixed bottom-4 right-4 z-[60] flex w-[min(100vw-2rem,22rem)] flex-col gap-2">
+    <div className="fixed bottom-4 right-4 z-[60] flex w-[min(100vw-2rem,22rem)] flex-col gap-2" data-vexa-ignore="">
       {pending.map((item) => (
         <div
           key={item.id}
@@ -319,8 +700,7 @@ function ConfirmationTray({
           aria-label={labels.runOnPage(item.name)}
           className="rounded-xl border border-border bg-card p-3 text-sm text-foreground shadow-[0_18px_40px_-16px_var(--vexa-glow)]"
         >
-          <p className="font-medium">{labels.runOnPage(item.name)}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{item.description}</p>
+          <ConfirmationSummary item={item} labels={labels} />
           <div className="mt-2.5 flex justify-end gap-2">
             <button
               type="button"
@@ -340,6 +720,29 @@ function ConfirmationTray({
         </div>
       ))}
     </div>
+  );
+}
+
+export function ConfirmationSummary({ item, labels }: { item: PendingConfirmation; labels: ChatLabels }) {
+  if (!item.steps) {
+    return (
+      <>
+        <p className="font-medium">{labels.runOnPage(item.name)}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{item.description}</p>
+      </>
+    );
+  }
+  return (
+    <>
+      <p className="font-medium">{labels.runSteps(item.steps.length)}</p>
+      <ol className="mt-1 flex list-decimal flex-col gap-0.5 pl-4 text-xs text-muted-foreground">
+        {item.steps.map((step, index) => (
+          <li key={index} className="wrap-anywhere">
+            {step}
+          </li>
+        ))}
+      </ol>
+    </>
   );
 }
 
@@ -363,4 +766,9 @@ export function useVexaHost() {
     sendToChat: (text: string) => host?.sendToChat(text) ?? false,
     tools: host?.schemas ?? [],
   };
+}
+
+/** Page discovery and the observation cache behind `admin`: `discover()` walks the app's links read-only; `routes` and `observed` are what the model can see. */
+export function useVexaAdmin(): VexaAdminValue {
+  return useVexaHostContext()?.admin ?? DISABLED_ADMIN;
 }

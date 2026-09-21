@@ -29,6 +29,7 @@ const spec: Spec = {
 
 export const scenario: Scenario = {
   id: "server-tools",
+  measures: "steering",
   title: "Read tools ground the answer in real numbers",
   controlPath: `user asks a count+total question → get_orders (status=${STATUS}, city=${CITY}) → answer matches data.ts`,
   page: "/orders",

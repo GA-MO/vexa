@@ -65,6 +65,7 @@ const TYPED_VALUES = { name: "Nam Srisuk", agree: false, notify: true, plan: "pr
 
 export const scenario: Scenario = {
   id: "bound-inputs",
+  measures: "runtime",
   title: "Typed values survive a spec patch",
   controlPath: "model-sent /ui/* defaults → user types/toggles/picks → data-spec patch → /ui/* unchanged",
   page: "/guides/bound-inputs",

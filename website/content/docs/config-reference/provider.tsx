@@ -67,6 +67,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       context={() => ({ path: window.location.pathname, selectedOrderId: null })}
       // Every host tool result, from the model or a button, for logging.
       onToolResult={(name, result) => console.info(name, result)}
+      // Drive the page through its accessibility tree (admin_observe / admin_run / admin_discover); needs `admin` on the handler too. `navigate` covers paths with no link on the page; `confirm` is "page" (default: the app's own dialogs are the approval, the model never presses them), "mutating" (a Vexa card before the first mutating step), "all", "none" or a predicate; `discover` is "auto" (default: the app's pages are walked in a hidden frame after load and kept per user for a day), "model" (only when the model asks) or "off", or an object with `skip`, `limit`, `ttlMs`; `scope` is the signed-in user's id so the discovered pages are stored for them alone (without it: per tab); `version` is a build id that invalidates an older discovery; `passive: false` stops remembering visited pages; `pages` takes a parsed pages file for hosts that ship one.
+      admin={{ navigate: (path) => window.history.pushState(null, "", path), discover: { skip: (path) => path.startsWith("/internal") }, scope: "user-42", version: "2026-09-21" }}
     >
       {children}
       <VexaChatOverlay />

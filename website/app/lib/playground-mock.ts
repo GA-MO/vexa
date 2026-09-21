@@ -15,7 +15,8 @@ const TURNS: MockTurn[] = COMPOSED_EXAMPLES.map((example) => ({
 }));
 
 /** The composed examples double as the playground's scripted replies on a static host: each suggestion plays its example. */
-export const PLAYGROUND_MOCK_SUGGESTIONS: readonly ChatSuggestion[] = COMPOSED_EXAMPLES.map((example) => ({ label: example.title, prompt: example.prompt }));
+/** One suggestion per composed example, in both builds: the mock replays the example's spec for exactly these prompts, and a real model answers them as free-form requests. */
+export const PLAYGROUND_SUGGESTIONS: readonly ChatSuggestion[] = COMPOSED_EXAMPLES.map((example) => ({ label: example.title, prompt: example.prompt }));
 
 const PERSONA = "You are the Vexa playground assistant.";
 

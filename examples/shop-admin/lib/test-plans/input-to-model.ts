@@ -36,6 +36,7 @@ const FORWARDED_TEXT = forwardedActionText("book_room", { room: ROOM, headcount:
 
 export const scenario: Scenario = {
   id: "input-to-model",
+  measures: "steering",
   title: "A typed booking form reaches the model and the server tool",
   controlPath: "type /ui/room + /ui/headcount → press Book → runTool unknown to client → sendToChat → model calls book_room with the typed values",
   page: "/guides/input-to-model",

@@ -12,7 +12,7 @@ A host tool is a function that runs in the browser: navigate, scroll to a sectio
 | the model, as a tool call | "Take me to the catalog" becomes a call to `navigate` | model decides when |
 | a button or `watch` in a spec | `{ "action": "runTool", "params": { "name": "navigate", "input": { "to": "/catalog" } } }` | the user decides when |
 
-There is no separate concept for "page actions" or "events". An event is a tool that returns `{ ok: true }` and nothing else.
+There is no separate concept for "page actions" or "events". An event is a tool that returns `{ ok: true }` and nothing else. For the screens you do not want to write a tool for, [Drive the page](/docs/host/admin) lets the model operate any accessible control through two generic tools.
 
 ## Declare a tool
 
@@ -131,6 +131,7 @@ await runTool("set_theme", { theme: "dark" });
 ## Related
 
 - [runTool](/docs/host/runtool): calling tools from specs
+- [Drive the page](/docs/host/admin): generic `admin_observe` / `admin_run` for the screens without a dedicated tool
 - [Provider](/docs/host/provider): registering tools and context
 - [Security](/docs/security): why tiers live on the server
 - [Best practices](/docs/host/best-practices): tool description wording that made a small model call these reliably

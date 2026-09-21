@@ -22,6 +22,7 @@ const FORWARDED_TEXT = forwardedActionText("get_order", { id: ORDER_ID });
 
 export const scenario: Scenario = {
   id: "host-to-chat",
+  measures: "steering",
   title: "App UI asks the chat about an order",
   controlPath: "app Button → useVexaHost().runTool (unknown to the client) → sendToChat → user turn → server tool",
   page: `/orders/${ORDER_ID}`,

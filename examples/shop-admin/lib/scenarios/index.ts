@@ -26,6 +26,22 @@ import { scenario as multiStep } from "@/lib/test-plans/multi-step";
 import { scenario as patchAfterInput } from "@/lib/test-plans/patch-after-input";
 import { scenario as narrowPanel } from "@/lib/test-plans/narrow-panel";
 import { scenario as keyboard } from "@/lib/test-plans/keyboard";
+import { scenario as adminObserve } from "@/lib/test-plans/admin-observe";
+import { scenario as adminSettings } from "@/lib/test-plans/admin-settings";
+import { scenario as adminFindProduct } from "@/lib/test-plans/admin-find-product";
+import { scenario as adminNotFound } from "@/lib/test-plans/admin-not-found";
+import { scenario as adminAmbiguous } from "@/lib/test-plans/admin-ambiguous";
+import { scenario as adminCreateProduct } from "@/lib/test-plans/admin-create-product";
+import { scenario as adminEditProduct } from "@/lib/test-plans/admin-edit-product";
+import { scenario as adminDeleteProduct } from "@/lib/test-plans/admin-delete-product";
+import { scenario as adminDeleteDeclined } from "@/lib/test-plans/admin-delete-declined";
+import { scenario as adminMutatingPolicy } from "@/lib/test-plans/admin-mutating-policy";
+import { scenario as adminStale } from "@/lib/test-plans/admin-stale";
+import { scenario as adminCrossPage } from "@/lib/test-plans/admin-cross-page";
+import { scenario as adminNotObserved } from "@/lib/test-plans/admin-not-observed";
+import { scenario as adminSeeded } from "@/lib/test-plans/admin-seeded";
+import { scenario as adminPassive } from "@/lib/test-plans/admin-passive";
+import { scenario as adminDiscover } from "@/lib/test-plans/admin-discover";
 
 export const SCENARIOS: Scenario[] = [
   chatElements,
@@ -55,6 +71,22 @@ export const SCENARIOS: Scenario[] = [
   patchAfterInput,
   narrowPanel,
   keyboard,
+  adminObserve,
+  adminSettings,
+  adminFindProduct,
+  adminNotFound,
+  adminAmbiguous,
+  adminCreateProduct,
+  adminEditProduct,
+  adminDeleteProduct,
+  adminDeleteDeclined,
+  adminMutatingPolicy,
+  adminStale,
+  adminCrossPage,
+  adminNotObserved,
+  adminDiscover,
+  adminSeeded,
+  adminPassive,
 ];
 
 export function findScenario(id: string): Scenario | undefined {
