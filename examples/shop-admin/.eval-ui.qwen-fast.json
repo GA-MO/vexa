@@ -1,0 +1,2857 @@
+{
+  "modes": {
+    "on": {
+      "ranAt": "2026-09-21T09:15:03.475Z",
+      "model": "server default",
+      "cases": {
+        "pending-orders": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "set_filter"
+            ],
+            "text": "I've opened the orders page filtered to **pending** — 4 orders match:\n\n| Order | Customer | City | Total (฿) |\n|---|---|---|---|\n| C-1042 | Napat Srisuwan | Bangkok | 2,070 |\n| C-1039 | Kanya Thongdee | Bangkok | 1,160 |\n| C-1031 | Sara Kim | Chiang Mai | 1,960 |\n| C-1023 | Oliver Grant | Khon Kaen | 320 |\n\nWant me to open any of these, or mark one as paid/shipped?",
+            "latencyMs": 5542,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "set_filter"
+            ],
+            "text": "Here are the 4 pending orders — I've opened the orders page with the pending filter applied:\n\n| Order | Customer | City | Total |\n|---|---|---|---|\n| C-1042 | Napat Srisuwan | Bangkok | ฿2,070 |\n| C-1039 | Kanya Thongdee | Bangkok | ฿1,160 |\n| C-1031 | Sara Kim | Chiang Mai | ฿1,960 |\n| C-1023 | Oliver Grant | Khon Kaen | ฿320 |\n\nWant me to open any of these, or update one to paid?",
+            "latencyMs": 4897,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "city-chart": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": false,
+            "specIssues": [
+              "/elements/chart/children Invalid input: expected array, received undefined",
+              "/elements/note/children Invalid input: expected array, received undefined"
+            ],
+            "components": [
+              "Card",
+              "BarChart",
+              "Text"
+            ],
+            "elementCount": 3,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "set_filter",
+              "set_filter",
+              "set_filter",
+              "set_filter"
+            ],
+            "text": "The data tool is being finicky, so let me count orders per city using the orders page filters instead.\n\n\nBangkok leads with 10 orders, well ahead of Chiang Mai and Phuket (5 each) and Khon Kaen (4). Here's the breakdown as a chart:",
+            "latencyMs": 78905,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Orders by city",
+                    "description": "All 24 orders on file, newest page load counts"
+                  },
+                  "children": [
+                    "chart",
+                    "note"
+                  ]
+                },
+                "chart": {
+                  "type": "BarChart",
+                  "props": {
+                    "labels": [
+                      "Bangkok",
+                      "Chiang Mai",
+                      "Phuket",
+                      "Khon Kaen"
+                    ],
+                    "series": [
+                      {
+                        "name": "Orders",
+                        "values": [
+                          10,
+                          5,
+                          5,
+                          4
+                        ]
+                      }
+                    ],
+                    "horizontal": true,
+                    "showValues": true,
+                    "height": "md"
+                  }
+                },
+                "note": {
+                  "type": "Text",
+                  "props": {
+                    "content": "Bangkok has the most orders — twice as many as Chiang Mai or Phuket combined-per-city, and its 10 orders total ฿16,440.",
+                    "muted": true
+                  }
+                }
+              }
+            },
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "invalid spec: /elements/chart/children Invalid input: expected array, received undefined"
+            ],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "",
+            "latencyMs": 13929,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "order-summary": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Stack",
+              "Card",
+              "Badge",
+              "KeyValue",
+              "LineItems"
+            ],
+            "elementCount": 6,
+            "tools": [
+              "get_order"
+            ],
+            "text": "I'll pull up order C-1042 for you.\n\n\nHere's the summary of order C-1042.\n\n\n\nQuick recap: **C-1042** is a pending order from Napat Srisuwan in Bangkok, placed yesterday (Sep 20) — a ceramic pour-over set and 2× single-origin beans 250g, totaling ฿2,070 with free shipping.",
+            "latencyMs": 16908,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Stack",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "header-card",
+                    "items-card"
+                  ]
+                },
+                "header-card": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Order C-1042",
+                    "description": "Placed 2026-09-20 · Status: pending"
+                  },
+                  "children": [
+                    "status-badge",
+                    "details"
+                  ]
+                },
+                "status-badge": {
+                  "type": "Badge",
+                  "props": {
+                    "label": "Pending",
+                    "tone": "warning"
+                  },
+                  "children": []
+                },
+                "details": {
+                  "type": "KeyValue",
+                  "props": {
+                    "pairs": [
+                      {
+                        "label": "Customer",
+                        "value": "Napat Srisuwan"
+                      },
+                      {
+                        "label": "City",
+                        "value": "Bangkok"
+                      },
+                      {
+                        "label": "Items",
+                        "value": "3 units (2 line items)"
+                      },
+                      {
+                        "label": "Total",
+                        "value": "฿2,070"
+                      }
+                    ],
+                    "size": "md"
+                  },
+                  "children": []
+                },
+                "items-card": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Line items"
+                  },
+                  "children": [
+                    "line-items"
+                  ]
+                },
+                "line-items": {
+                  "type": "LineItems",
+                  "props": {
+                    "items": [
+                      {
+                        "name": "Ceramic pour-over set",
+                        "qty": 1,
+                        "amount": 1290
+                      },
+                      {
+                        "name": "Single-origin beans 250g",
+                        "qty": 2,
+                        "amount": 390
+                      }
+                    ],
+                    "summary": [
+                      {
+                        "label": "Subtotal",
+                        "amount": 2070
+                      },
+                      {
+                        "label": "Shipping",
+                        "amount": 0
+                      },
+                      {
+                        "label": "Total",
+                        "amount": 2070,
+                        "emphasis": "total"
+                      }
+                    ],
+                    "currency": "฿"
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_order"
+            ],
+            "text": "I'll pull up order C-1042 for you.\n\n\nHere's what order C-1042 looks like:\n\n**C-1042 — Napat Srisuwan (Bangkok)** · status: **pending** · placed 2026-09-20\n\n| Item | Qty | Price | Line total |\n|---|---|---|---|\n| Ceramic pour-over set | 1 | ฿1,290 | ฿1,290 |\n| Single-origin beans 250g | 2 | ฿390 | ฿780 |\n\n- Subtotal: ฿2,070 · Shipping: free · **Total: ฿2,070**\n- Timeline so far: one event, \"Order placed\" with 2 line items on 2026-09-20.\n\nThe order is still unpaid/uncancelled — let me know if you'd like to mark it paid or shipped, or dig into anything else about it.",
+            "latencyMs": 7210,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "note-form": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": false,
+            "specIssues": [
+              "/elements/note-input/children Invalid input: expected array, received undefined",
+              "/elements/add-btn/children Invalid input: expected array, received undefined"
+            ],
+            "components": [
+              "Card",
+              "Input",
+              "Button"
+            ],
+            "elementCount": 3,
+            "tools": [],
+            "text": "Here's a compact note form for order C-1042 — type your note and press \"Add note\".",
+            "latencyMs": 7877,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Add a note to C-1042",
+                    "description": "Internal note visible to you and the supplier."
+                  },
+                  "children": [
+                    "note-input",
+                    "add-btn"
+                  ]
+                },
+                "note-input": {
+                  "type": "Input",
+                  "props": {
+                    "label": "Note",
+                    "name": "orderNote",
+                    "inputType": "textarea",
+                    "placeholder": "e.g. Customer requested extra packaging for gift delivery",
+                    "value": {
+                      "$bindState": "/ui/orderNote"
+                    },
+                    "checks": [
+                      {
+                        "type": "required",
+                        "message": "Please enter a note"
+                      },
+                      {
+                        "type": "minLength",
+                        "args": {
+                          "min": 3
+                        },
+                        "message": "Note should be at least 3 characters"
+                      }
+                    ]
+                  }
+                },
+                "add-btn": {
+                  "type": "Button",
+                  "props": {
+                    "label": "Add note",
+                    "variant": "primary"
+                  },
+                  "on": {
+                    "press": {
+                      "action": "toast",
+                      "params": {
+                        "message": "Note added to C-1042"
+                      }
+                    }
+                  }
+                }
+              },
+              "state": {
+                "ui": {
+                  "orderNote": ""
+                }
+              }
+            },
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "invalid spec: /elements/note-input/children Invalid input: expected array, received undefined"
+            ],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Card",
+              "Input",
+              "Row",
+              "Button"
+            ],
+            "elementCount": 4,
+            "tools": [],
+            "text": "Here's a compact note form for order C-1042 — type your note and press \"Add note\".\n\n\n\nThe note field validates that it's not empty and at least 5 characters before the button confirms.",
+            "latencyMs": 9820,
+            "spec": {
+              "root": "note-form",
+              "elements": {
+                "note-form": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Add a note to C-1042",
+                    "description": "Internal note attached to this order"
+                  },
+                  "children": [
+                    "note-input",
+                    "note-actions"
+                  ]
+                },
+                "note-input": {
+                  "type": "Input",
+                  "props": {
+                    "label": "Note",
+                    "name": "orderNote",
+                    "inputType": "textarea",
+                    "placeholder": "e.g. Customer requested extra grinding…",
+                    "checks": [
+                      {
+                        "type": "required",
+                        "message": "Please enter a note"
+                      },
+                      {
+                        "type": "minLength",
+                        "message": "Note should be at least 5 characters",
+                        "args": {
+                          "min": 5
+                        }
+                      }
+                    ]
+                  },
+                  "children": []
+                },
+                "note-actions": {
+                  "type": "Row",
+                  "props": {
+                    "gap": "sm",
+                    "justify": "end"
+                  },
+                  "children": [
+                    "save-note",
+                    "clear-note"
+                  ]
+                },
+                "save-note": {
+                  "type": "Button",
+                  "props": {
+                    "label": "Add note",
+                    "variant": "primary"
+                  },
+                  "on": {
+                    "press": {
+                      "action": "toast",
+                      "params": {
+                        "message": "Note added to order C-1042"
+                      }
+                    }
+                  },
+                  "children": []
+                }
+              },
+              "state": {
+                "form": {
+                  "orderNote": ""
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ],
+        "revenue-by-status": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": false,
+            "specIssues": [
+              "/elements/m-total/children Invalid input: expected array, received undefined",
+              "/elements/m-count/children Invalid input: expected array, received undefined",
+              "/elements/m-avg/children Invalid input: expected array, received undefined"
+            ],
+            "components": [
+              "Stack",
+              "Heading",
+              "BarChart",
+              "Grid",
+              "Metric",
+              "KeyValue"
+            ],
+            "elementCount": 8,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "admin_observe",
+              "admin_run"
+            ],
+            "text": "Here's revenue by status across all 24 orders on the Orders page (order totals as listed; refunded amounts are gross, not netted back).\n\n\n\nHighlights: delivered orders dominate at $16,850 (11 orders), followed by shipped $7,170 (4), pending $5,510 (4), paid $4,150 (3), and $2,590 across 2 refunded orders. Note the data tools errored, so these figures come from reading the full 24-row orders table directly.",
+            "latencyMs": 52542,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Stack",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "heading",
+                    "chart",
+                    "metrics",
+                    "table-note"
+                  ]
+                },
+                "heading": {
+                  "type": "Heading",
+                  "props": {
+                    "text": "Revenue by order status",
+                    "level": "2"
+                  },
+                  "children": []
+                },
+                "chart": {
+                  "type": "BarChart",
+                  "props": {
+                    "title": "Gross order value by status (USD)",
+                    "labels": [
+                      "Delivered",
+                      "Shipped",
+                      "Pending",
+                      "Paid",
+                      "Refunded"
+                    ],
+                    "series": [
+                      {
+                        "name": "Revenue",
+                        "values": [
+                          16850,
+                          7170,
+                          5510,
+                          4150,
+                          2590
+                        ]
+                      }
+                    ],
+                    "horizontal": true,
+                    "format": "currency",
+                    "showValues": true
+                  },
+                  "children": []
+                },
+                "metrics": {
+                  "type": "Grid",
+                  "props": {
+                    "columns": "3",
+                    "gap": "sm"
+                  },
+                  "children": [
+                    "m-total",
+                    "m-count",
+                    "m-avg"
+                  ]
+                },
+                "m-total": {
+                  "type": "Metric",
+                  "props": {
+                    "label": "Total gross revenue",
+                    "value": "$36,270",
+                    "detail": "Across 24 orders"
+                  }
+                },
+                "m-count": {
+                  "type": "Metric",
+                  "props": {
+                    "label": "Orders with money in play",
+                    "value": "21",
+                    "detail": "Excludes 3 refunded orders"
+                  }
+                },
+                "m-avg": {
+                  "type": "Metric",
+                  "props": {
+                    "label": "Largest bucket",
+                    "value": "Delivered",
+                    "detail": "$16,850 · 46% of gross"
+                  }
+                },
+                "table-note": {
+                  "type": "KeyValue",
+                  "props": {
+                    "pairs": [
+                      {
+                        "label": "Delivered",
+                        "value": "$16,850 · 11 orders"
+                      },
+                      {
+                        "label": "Shipped",
+                        "value": "$7,170 · 4 orders"
+                      },
+                      {
+                        "label": "Pending",
+                        "value": "$5,510 · 4 orders"
+                      },
+                      {
+                        "label": "Paid",
+                        "value": "$4,150 · 3 orders"
+                      },
+                      {
+                        "label": "Refunded",
+                        "value": "$2,590 · 2 orders (C-1035, C-1026)"
+                      }
+                    ],
+                    "size": "md"
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "invalid spec: /elements/m-total/children Invalid input: expected array, received undefined",
+              "delivered shows 16850, data says 14930"
+            ],
+            "correctness": [
+              "delivered shows 16850, data says 14930"
+            ]
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "",
+            "latencyMs": 16247,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "chiang-mai-orders": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "set_filter",
+              "set_filter"
+            ],
+            "text": "I've filtered the orders table to Chiang Mai — 5 orders match:\n\n| Order | Customer | Status | Total |\n|---|---|---|---|\n| C-1041 | Ploy Chaiyaporn | paid | ฿1,020 |\n| C-1036 | Arthit Wongsa | delivered | ฿990 |\n| C-1031 | Sara Kim | pending | ฿1,960 |\n| C-1026 | Dao Phromma | refunded | ฿1,890 |\n| C-1021 | Nok Sirikarn | delivered | ฿1,120 |",
+            "latencyMs": 7159,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "set_filter",
+              "set_filter",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "admin_discover",
+              "admin_observe",
+              "admin_run"
+            ],
+            "text": "Here are the 5 Chiang Mai orders — the table on /orders is now filtered to them:\n\n| Order | Customer | Status | Placed | Total |\n|---|---|---|---|---|\n| C-1041 | Ploy Chaiyaporn | paid | Sep 20 | $1,020.00 |\n| C-1036 | Arthit Wongsa | delivered | Sep 16 | $990.00 |\n| C-1031 | Sara Kim | pending | Sep 11 | $1,960.00 |\n| C-1026 | Dao Phromma | refunded | Sep 5 | $1,890.00 |\n| C-1021 | Nok Sirikarn | delivered | Aug 26 | $1,120.00 |\n\nCombined total: $6,980.00 (or $5,090.00 excluding the refunded C-1026).",
+            "latencyMs": 28981,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "show-and-open": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Stack",
+              "Heading",
+              "Table",
+              "Card",
+              "LineItems"
+            ],
+            "elementCount": 5,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "set_filter",
+              "open_order"
+            ],
+            "text": "Found 4 pending orders and opened the first one (C-1042) on the page.\n\n\n\nThe table above lists all four pending orders; the page is now showing C-1042's detail with its two line items.",
+            "latencyMs": 22617,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Stack",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "header",
+                    "table",
+                    "opened"
+                  ]
+                },
+                "header": {
+                  "type": "Heading",
+                  "props": {
+                    "text": "Pending orders (4)",
+                    "level": "2"
+                  },
+                  "children": []
+                },
+                "table": {
+                  "type": "Table",
+                  "props": {
+                    "columns": [
+                      {
+                        "key": "id",
+                        "label": "Order"
+                      },
+                      {
+                        "key": "customer",
+                        "label": "Customer"
+                      },
+                      {
+                        "key": "city",
+                        "label": "City"
+                      },
+                      {
+                        "key": "total",
+                        "label": "Total (THB)"
+                      }
+                    ],
+                    "rows": [
+                      {
+                        "id": "C-1042",
+                        "customer": "Napat Srisuwan",
+                        "city": "Bangkok",
+                        "total": 2070
+                      },
+                      {
+                        "id": "C-1039",
+                        "customer": "Kanya Thongdee",
+                        "city": "Bangkok",
+                        "total": 1160
+                      },
+                      {
+                        "id": "C-1031",
+                        "customer": "Sara Kim",
+                        "city": "Chiang Mai",
+                        "total": 1960
+                      },
+                      {
+                        "id": "C-1023",
+                        "customer": "Oliver Grant",
+                        "city": "Khon Kaen",
+                        "total": 320
+                      }
+                    ]
+                  },
+                  "children": []
+                },
+                "opened": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Opened: C-1042 — Napat Srisuwan (Bangkok)",
+                    "description": "Placed 2026-09-20, pending, total 2,070 THB"
+                  },
+                  "children": [
+                    "opened-items"
+                  ]
+                },
+                "opened-items": {
+                  "type": "LineItems",
+                  "props": {
+                    "items": [
+                      {
+                        "name": "Ceramic pour-over set",
+                        "qty": 1,
+                        "amount": 1290
+                      },
+                      {
+                        "name": "Single-origin beans 250g",
+                        "qty": 2,
+                        "amount": 780
+                      }
+                    ],
+                    "summary": [
+                      {
+                        "label": "Total",
+                        "amount": 2070,
+                        "emphasis": "total"
+                      }
+                    ],
+                    "currency": "฿"
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Card",
+              "Table",
+              "Text"
+            ],
+            "elementCount": 3,
+            "tools": [
+              "set_filter",
+              "open_order"
+            ],
+            "text": "Here are the 4 pending orders; I've also opened **C-1042** (Napat Srisuwan, Bangkok) on the page for you.",
+            "latencyMs": 9252,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Pending orders",
+                    "description": "4 orders awaiting payment — newest first"
+                  },
+                  "children": [
+                    "table",
+                    "note"
+                  ]
+                },
+                "table": {
+                  "type": "Table",
+                  "props": {
+                    "columns": [
+                      {
+                        "key": "id",
+                        "label": "Order"
+                      },
+                      {
+                        "key": "customer",
+                        "label": "Customer"
+                      },
+                      {
+                        "key": "city",
+                        "label": "City"
+                      },
+                      {
+                        "key": "total",
+                        "label": "Total (THB)"
+                      }
+                    ],
+                    "rows": [
+                      {
+                        "id": "C-1042",
+                        "customer": "Napat Srisuwan",
+                        "city": "Bangkok",
+                        "total": "2,070"
+                      },
+                      {
+                        "id": "C-1039",
+                        "customer": "Kanya Thongdee",
+                        "city": "Bangkok",
+                        "total": "1,160"
+                      },
+                      {
+                        "id": "C-1031",
+                        "customer": "Sara Kim",
+                        "city": "Chiang Mai",
+                        "total": "1,960"
+                      },
+                      {
+                        "id": "C-1023",
+                        "customer": "Oliver Grant",
+                        "city": "Khon Kaen",
+                        "total": "320"
+                      }
+                    ]
+                  },
+                  "children": []
+                },
+                "note": {
+                  "type": "Text",
+                  "props": {
+                    "content": "Opened C-1042 on the page: Ceramic pour-over set ×1 (฿1,290) + Single-origin beans 250g ×2 (฿390 each), placed 2026-09-20.",
+                    "muted": true
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ],
+        "settings-question": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "admin_observe"
+            ],
+            "text": "I'll take a look at your settings page to see what's available.\n\n\nHere's what you can change on the Settings page:\n\n**Theme** — switch between light and dark for the whole admin.\n\n**Locale and currency** — pick a locale (en-US or de-DE) and a currency (USD or EUR); this affects how every number on screen is displayed.\n\n**Chat** — choose how my steps are shown: collapsible or hidden.\n\n**Assistant → Host tools** — turn my ability to operate the admin pages (navigate, filter, open orders, etc.) on or off. It's currently on.\n\nWant me to change any of these for you? For example, I can switch you to dark mode or set the locale to de-DE with EUR right away.",
+            "latencyMs": 9015,
+            "spec": null,
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "admin_observe"
+            ],
+            "text": "Here's what you can change on the Settings page:\n\n1. **Theme** — light or dark (currently light).\n2. **Locale and currency** — locale en-US or de-DE (currently en-US), currency USD or EUR (currently USD). These affect how every number on screen is displayed.\n3. **Chat** — how assistant steps are shown: collapsible or hidden (currently collapsible).\n4. **Assistant → Host tools** — turn my page-control tools on or off (currently on).\n\nJust tell me what you'd like, e.g. \"switch to dark mode\" or \"set locale to de-DE with EUR\", and I'll do it for you.",
+            "latencyMs": 6624,
+            "spec": null,
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ],
+        "add-product": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "admin_observe",
+              "admin_run",
+              "admin_run",
+              "admin_run"
+            ],
+            "text": "I'll add the Winter mug on the products page. Let me look at the page first.\n\n\nDone — Winter mug (SKU WM-1, $14, Merch, active) is created, and the products table now shows 10 rows.",
+            "latencyMs": 12834,
+            "spec": null,
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "admin_observe",
+              "admin_run",
+              "admin_run",
+              "admin_run"
+            ],
+            "text": "Done — Winter mug (SKU WM-1, $14.00, Merch, active) has been created, and the products table now lists 10 products.",
+            "latencyMs": 14354,
+            "spec": null,
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ],
+        "week-dashboard": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "set_filter",
+              "select_order",
+              "select_order",
+              "set_filter",
+              "set_filter",
+              "set_filter"
+            ],
+            "text": "I'll pull this week's orders to build the dashboard with real numbers.",
+            "latencyMs": 27904,
+            "spec": null,
+            "errors": [
+              "Stopped after 6 round trips"
+            ],
+            "pass": false,
+            "failures": [
+              "no spec",
+              "Stopped after 6 round trips"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "I'll pull this week's order data first, then build the dashboard.",
+            "latencyMs": 11507,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ]
+      }
+    },
+    "off": {
+      "ranAt": "2026-09-21T09:22:11.640Z",
+      "model": "server default",
+      "cases": {
+        "pending-orders": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "set_filter"
+            ],
+            "text": "I'll filter the orders table to show pending orders.\n\n\nThere are 4 pending orders, now shown in the filtered table on /orders:\n\n| Order | Customer | City | Total (฿) |\n|---|---|---|---|\n| C-1042 | Napat Srisuwan | Bangkok | 2,070 |\n| C-1039 | Kanya Thongdee | Bangkok | 1,160 |\n| C-1031 | Sara Kim | Chiang Mai | 1,960 |\n| C-1023 | Oliver Grant | Khon Kaen | 320 |\n\nWant me to open any of these for item-level details?",
+            "latencyMs": 6220,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "set_filter"
+            ],
+            "text": "I'll filter the orders table to show pending orders.\n\n\nHere are the 4 pending orders now shown in the filtered table on /orders:\n\n| Order | Customer | City | Total (฿) |\n|---|---|---|---|\n| C-1042 | Napat Srisuwan | Bangkok | 2,070 |\n| C-1039 | Kanya Thongdee | Bangkok | 1,160 |\n| C-1031 | Sara Kim | Chiang Mai | 1,960 |\n| C-1023 | Oliver Grant | Khon Kaen | 320 |\n\nLet me know if you'd like to open any of these or mark one as paid/shipped.",
+            "latencyMs": 5532,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "city-chart": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "I'll count orders per city from the order list, then chart it.",
+            "latencyMs": 15050,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "",
+            "latencyMs": 14459,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "order-summary": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Stack",
+              "Card",
+              "Badge",
+              "KeyValue",
+              "LineItems",
+              "Timeline"
+            ],
+            "elementCount": 8,
+            "tools": [
+              "open_order",
+              "spec"
+            ],
+            "text": "I'll open the order to see its details.\n\n\nHere's order **C-1042** at a glance:\n\n- **Customer:** Napat Srisuwan (Bangkok)\n- **Status:** pending\n- **Total:** ฿2,070\n- **Items:** Ceramic pour-over set ×1 (฿1,290), Single-origin beans 250g ×2 (฿390 each)\n- **Timeline:** placed 2026-09-20 09:00 — no payment or shipping events yet",
+            "latencyMs": 32596,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Stack",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "header-card",
+                    "items-card",
+                    "timeline-card"
+                  ]
+                },
+                "header-card": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Order C-1042",
+                    "description": "Napat Srisuwan · Bangkok"
+                  },
+                  "children": [
+                    "status-badge",
+                    "kv"
+                  ]
+                },
+                "status-badge": {
+                  "type": "Badge",
+                  "props": {
+                    "label": "Pending",
+                    "tone": "warning"
+                  },
+                  "children": []
+                },
+                "kv": {
+                  "type": "KeyValue",
+                  "props": {
+                    "pairs": [
+                      {
+                        "label": "Customer",
+                        "value": "Napat Srisuwan"
+                      },
+                      {
+                        "label": "City",
+                        "value": "Bangkok"
+                      },
+                      {
+                        "label": "Total",
+                        "value": "฿2,070"
+                      },
+                      {
+                        "label": "Placed",
+                        "value": "20 Sep 2026, 09:00"
+                      }
+                    ],
+                    "size": "md"
+                  },
+                  "children": []
+                },
+                "items-card": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Items (2 lines)"
+                  },
+                  "children": [
+                    "line-items"
+                  ]
+                },
+                "line-items": {
+                  "type": "LineItems",
+                  "props": {
+                    "items": [
+                      {
+                        "name": "Ceramic pour-over set",
+                        "qty": 1,
+                        "amount": 1290
+                      },
+                      {
+                        "name": "Single-origin beans 250g",
+                        "qty": 2,
+                        "amount": 390
+                      }
+                    ],
+                    "summary": [
+                      {
+                        "label": "Total",
+                        "amount": 2070,
+                        "emphasis": "total"
+                      }
+                    ],
+                    "currency": "฿"
+                  },
+                  "children": []
+                },
+                "timeline-card": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Timeline"
+                  },
+                  "children": [
+                    "timeline"
+                  ]
+                },
+                "timeline": {
+                  "type": "Timeline",
+                  "props": {
+                    "items": [
+                      {
+                        "title": "Order placed",
+                        "detail": "2 line items",
+                        "time": "20 Sep 2026, 09:00"
+                      }
+                    ]
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Stack",
+              "Card",
+              "Row",
+              "Badge",
+              "Text",
+              "KeyValue",
+              "LineItems"
+            ],
+            "elementCount": 8,
+            "tools": [
+              "get_order"
+            ],
+            "text": "Here's the summary of order C-1042:\n\n\n\nThe order is still pending — placed yesterday by Napat Srisuwan in Bangkok for ฿2,070 with no shipping charge. Let me know if you'd like to update its status or dig into anything else.",
+            "latencyMs": 14855,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Stack",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "header-card",
+                    "items-card"
+                  ]
+                },
+                "header-card": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Order C-1042"
+                  },
+                  "children": [
+                    "status-row",
+                    "details"
+                  ]
+                },
+                "status-row": {
+                  "type": "Row",
+                  "props": {
+                    "gap": "sm",
+                    "align": "center"
+                  },
+                  "children": [
+                    "badge",
+                    "placed"
+                  ]
+                },
+                "badge": {
+                  "type": "Badge",
+                  "props": {
+                    "label": "Pending",
+                    "tone": "warning"
+                  },
+                  "children": []
+                },
+                "placed": {
+                  "type": "Text",
+                  "props": {
+                    "content": "Placed 2026-09-20",
+                    "muted": true
+                  },
+                  "children": []
+                },
+                "details": {
+                  "type": "KeyValue",
+                  "props": {
+                    "pairs": [
+                      {
+                        "label": "Customer",
+                        "value": "Napat Srisuwan"
+                      },
+                      {
+                        "label": "City",
+                        "value": "Bangkok"
+                      },
+                      {
+                        "label": "Items",
+                        "value": "3 units · 2 line items"
+                      },
+                      {
+                        "label": "Total",
+                        "value": "฿2,070 (free shipping)"
+                      }
+                    ],
+                    "size": "md"
+                  },
+                  "children": []
+                },
+                "items-card": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Line items"
+                  },
+                  "children": [
+                    "line-items"
+                  ]
+                },
+                "line-items": {
+                  "type": "LineItems",
+                  "props": {
+                    "items": [
+                      {
+                        "name": "Ceramic pour-over set",
+                        "qty": 1,
+                        "amount": 1290
+                      },
+                      {
+                        "name": "Single-origin beans 250g",
+                        "qty": 2,
+                        "amount": 780
+                      }
+                    ],
+                    "summary": [
+                      {
+                        "label": "Subtotal",
+                        "amount": 2070
+                      },
+                      {
+                        "label": "Shipping",
+                        "amount": 0
+                      },
+                      {
+                        "label": "Total",
+                        "amount": 2070,
+                        "emphasis": "total"
+                      }
+                    ],
+                    "currency": "฿"
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ],
+        "note-form": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": false,
+            "specIssues": [
+              "/elements/note-input/children Invalid input: expected array, received undefined"
+            ],
+            "components": [
+              "Card",
+              "Input",
+              "Button",
+              "Text"
+            ],
+            "elementCount": 4,
+            "tools": [],
+            "text": "Here's a compact note form for order C-1042 — type your note and press the button to save it.",
+            "latencyMs": 10439,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Add note to order C-1042",
+                    "description": "Internal note visible to the shop team only"
+                  },
+                  "children": [
+                    "note-input",
+                    "save-btn",
+                    "saved-msg"
+                  ]
+                },
+                "note-input": {
+                  "type": "Input",
+                  "props": {
+                    "label": "Note",
+                    "name": "note",
+                    "placeholder": "e.g. Customer requested extra filters",
+                    "inputType": "textarea",
+                    "checks": [
+                      {
+                        "type": "required",
+                        "message": "Please enter a note"
+                      },
+                      {
+                        "type": "maxLength",
+                        "message": "Keep it under 200 characters",
+                        "args": {
+                          "max": 200
+                        }
+                      }
+                    ],
+                    "validateOn": "change"
+                  }
+                },
+                "save-btn": {
+                  "type": "Button",
+                  "props": {
+                    "label": "Save note",
+                    "variant": "primary"
+                  },
+                  "on": {
+                    "press": {
+                      "action": "toast",
+                      "params": {
+                        "statePath": "/toast",
+                        "value": "Note saved for C-1042"
+                      }
+                    }
+                  },
+                  "children": []
+                },
+                "saved-msg": {
+                  "type": "Text",
+                  "props": {
+                    "content": "Note saved.",
+                    "muted": true
+                  },
+                  "visible": {
+                    "$state": "/toast"
+                  },
+                  "children": []
+                }
+              },
+              "state": {
+                "form": {
+                  "note": ""
+                }
+              },
+              "toast": ""
+            },
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "invalid spec: /elements/note-input/children Invalid input: expected array, received undefined"
+            ],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Card",
+              "Input",
+              "Button",
+              "Text"
+            ],
+            "elementCount": 4,
+            "tools": [
+              "get_order"
+            ],
+            "text": "I'll add a compact note form for order C-1042 — a text area plus a button that saves the note into the page state (there's no tool to write notes to an order, so this captures the text locally for you to copy or confirm).\n\n\n\n\nThe form has a multi-line note field bound to page state and a **Save note** button; once saved, the note text appears below as confirmation. Note that no backend tool exists for writing order notes, so this stores the note in the admin UI only — tell me if you'd like it worded differently or prefilled with something.",
+            "latencyMs": 15724,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Add note to C-1042",
+                    "description": "Pending order for Napat Srisuwan (Bangkok) — total 2,070"
+                  },
+                  "children": [
+                    "note-input",
+                    "save-btn",
+                    "saved-msg"
+                  ]
+                },
+                "note-input": {
+                  "type": "Input",
+                  "props": {
+                    "label": "Note",
+                    "name": "orderNote",
+                    "inputType": "textarea",
+                    "placeholder": "e.g. Customer asked to hold shipment until Friday",
+                    "value": {
+                      "$bindState": "/ui/orderNote"
+                    }
+                  },
+                  "children": []
+                },
+                "save-btn": {
+                  "type": "Button",
+                  "props": {
+                    "label": "Save note",
+                    "variant": "primary"
+                  },
+                  "on": {
+                    "press": {
+                      "action": "setState",
+                      "params": {
+                        "statePath": "/ui/savedNote",
+                        "value": {
+                          "$state": "/ui/orderNote"
+                        }
+                      }
+                    }
+                  },
+                  "children": []
+                },
+                "saved-msg": {
+                  "type": "Text",
+                  "props": {
+                    "content": {
+                      "$template": "Note saved: ${/ui/savedNote}"
+                    },
+                    "muted": true
+                  },
+                  "visible": {
+                    "$state": "/ui/savedNote"
+                  },
+                  "children": []
+                }
+              },
+              "state": {
+                "ui": {
+                  "orderNote": "",
+                  "savedNote": ""
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ],
+        "revenue-by-status": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "",
+            "latencyMs": 12778,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "I'll pull the orders and total up revenue by status.",
+            "latencyMs": 10783,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "chiang-mai-orders": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Card",
+              "Table",
+              "Row"
+            ],
+            "elementCount": 3,
+            "tools": [
+              "set_filter"
+            ],
+            "text": "Filtered the orders table to Chiang Mai — 5 orders match.",
+            "latencyMs": 9917,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Chiang Mai orders",
+                    "description": "5 orders as of 2026-09-21"
+                  },
+                  "children": [
+                    "tbl",
+                    "sum"
+                  ]
+                },
+                "tbl": {
+                  "type": "Table",
+                  "props": {
+                    "columns": [
+                      {
+                        "key": "id",
+                        "label": "Order"
+                      },
+                      {
+                        "key": "customer",
+                        "label": "Customer"
+                      },
+                      {
+                        "key": "status",
+                        "label": "Status"
+                      },
+                      {
+                        "key": "total",
+                        "label": "Total (THB)"
+                      }
+                    ],
+                    "rows": [
+                      {
+                        "id": "C-1041",
+                        "customer": "Ploy Chaiyaporn",
+                        "status": "paid",
+                        "total": 1020
+                      },
+                      {
+                        "id": "C-1036",
+                        "customer": "Arthit Wongsa",
+                        "status": "delivered",
+                        "total": 990
+                      },
+                      {
+                        "id": "C-1031",
+                        "customer": "Sara Kim",
+                        "status": "pending",
+                        "total": 1960
+                      },
+                      {
+                        "id": "C-1026",
+                        "customer": "Dao Phromma",
+                        "status": "refunded",
+                        "total": 1890
+                      },
+                      {
+                        "id": "C-1021",
+                        "customer": "Nok Sirikarn",
+                        "status": "delivered",
+                        "total": 1120
+                      }
+                    ]
+                  },
+                  "children": []
+                },
+                "sum": {
+                  "type": "Row",
+                  "props": {
+                    "gap": "lg",
+                    "align": "center",
+                    "wrap": true
+                  },
+                  "children": [
+                    "m1",
+                    "m2",
+                    "m3"
+                  ]
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Card",
+              "Table"
+            ],
+            "elementCount": 2,
+            "tools": [
+              "set_filter"
+            ],
+            "text": "I'll filter the orders table to Chiang Mai for you.\n\n\nHere are the 5 Chiang Mai orders now shown in the table:\n\n\n\nTotals range from 990 (Arthit Wongsa) to 1,960 (Sara Kim); two orders are delivered, and one was refunded.",
+            "latencyMs": 6515,
+            "spec": {
+              "root": "cm-orders",
+              "elements": {
+                "cm-orders": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Chiang Mai orders",
+                    "description": "5 orders, newest first"
+                  },
+                  "children": [
+                    "table"
+                  ]
+                },
+                "table": {
+                  "type": "Table",
+                  "props": {
+                    "columns": [
+                      {
+                        "key": "id",
+                        "label": "Order"
+                      },
+                      {
+                        "key": "customer",
+                        "label": "Customer"
+                      },
+                      {
+                        "key": "status",
+                        "label": "Status"
+                      },
+                      {
+                        "key": "total",
+                        "label": "Total"
+                      }
+                    ],
+                    "rows": [
+                      {
+                        "id": "C-1041",
+                        "customer": "Ploy Chaiyaporn",
+                        "status": "paid",
+                        "total": "1,020"
+                      },
+                      {
+                        "id": "C-1036",
+                        "customer": "Arthit Wongsa",
+                        "status": "delivered",
+                        "total": "990"
+                      },
+                      {
+                        "id": "C-1031",
+                        "customer": "Sara Kim",
+                        "status": "pending",
+                        "total": "1,960"
+                      },
+                      {
+                        "id": "C-1026",
+                        "customer": "Dao Phromma",
+                        "status": "refunded",
+                        "total": "1,890"
+                      },
+                      {
+                        "id": "C-1021",
+                        "customer": "Nok Sirikarn",
+                        "status": "delivered",
+                        "total": "1,120"
+                      }
+                    ]
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ],
+        "show-and-open": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Stack",
+              "Heading",
+              "Table",
+              "Card",
+              "LineItems",
+              "Badge"
+            ],
+            "elementCount": 6,
+            "tools": [
+              "set_filter",
+              "open_order"
+            ],
+            "text": "Here are the 4 pending orders; I've opened C-1042 on the page for you.",
+            "latencyMs": 15130,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Stack",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "header",
+                    "table",
+                    "opened"
+                  ]
+                },
+                "header": {
+                  "type": "Heading",
+                  "props": {
+                    "text": "Pending orders (4)",
+                    "level": "2"
+                  },
+                  "children": []
+                },
+                "table": {
+                  "type": "Table",
+                  "props": {
+                    "columns": [
+                      {
+                        "key": "id",
+                        "label": "Order"
+                      },
+                      {
+                        "key": "customer",
+                        "label": "Customer"
+                      },
+                      {
+                        "key": "city",
+                        "label": "City"
+                      },
+                      {
+                        "key": "total",
+                        "label": "Total (฿)"
+                      }
+                    ],
+                    "rows": [
+                      {
+                        "id": "C-1042",
+                        "customer": "Napat Srisuwan",
+                        "city": "Bangkok",
+                        "total": "2,070"
+                      },
+                      {
+                        "id": "C-1039",
+                        "customer": "Kanya Thongdee",
+                        "city": "Bangkok",
+                        "total": "1,160"
+                      },
+                      {
+                        "id": "C-1031",
+                        "customer": "Sara Kim",
+                        "city": "Chiang Mai",
+                        "total": "1,960"
+                      },
+                      {
+                        "id": "C-1023",
+                        "customer": "Oliver Grant",
+                        "city": "Khon Kaen",
+                        "total": "320"
+                      }
+                    ]
+                  },
+                  "children": []
+                },
+                "opened": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Opened: C-1042 — Napat Srisuwan (Bangkok)",
+                    "description": "Placed 2026-09-20, pending"
+                  },
+                  "children": [
+                    "items",
+                    "total-line"
+                  ]
+                },
+                "items": {
+                  "type": "LineItems",
+                  "props": {
+                    "items": [
+                      {
+                        "name": "Ceramic pour-over set",
+                        "qty": 1,
+                        "amount": 1290
+                      },
+                      {
+                        "name": "Single-origin beans 250g",
+                        "qty": 2,
+                        "amount": 780
+                      }
+                    ],
+                    "summary": [
+                      {
+                        "label": "Total",
+                        "amount": 2070,
+                        "emphasis": "total"
+                      }
+                    ],
+                    "currency": "฿"
+                  },
+                  "children": []
+                },
+                "total-line": {
+                  "type": "Badge",
+                  "props": {
+                    "label": "Pending",
+                    "tone": "warning"
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "",
+            "latencyMs": 10590,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          }
+        ],
+        "settings-question": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "navigate"
+            ],
+            "text": "I can see you're on the settings page, but I don't have a tool that reads what's actually rendered there — let me check the app's guides for what the settings page covers.\n\n\nHere's what you can change from Settings, based on the controls I do have:\n\n- **Theme** — switch the admin between light and dark.\n- **Locale & currency** — pick `en-US` or `de-DE` with USD, or `de-DE` with EUR; this affects how every number on screen is formatted.\n\nTwo things worth flagging honestly: I have no tool that reads your account details (notification preferences, store profile, tax settings and the like), so if those appear on the page I can't inspect or change them for you — you'd edit them directly. And my other capabilities aren't on this page at all: reserving private tasting rooms (A or B, up to 20 guests) and order work such as status changes and refunds happen from the orders screens.\n\nWant me to flip the theme or change the locale/currency?",
+            "latencyMs": 7925,
+            "spec": null,
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "navigate"
+            ],
+            "text": "You're on the Settings page. From here you can adjust two things I'm able to change for you:\n\n- **Theme** — switch the admin between light and dark.\n- **Locale & currency** — pick the display language (English US or German) and the currency every number on screen shows in (USD or EUR).\n\nIf you'd like, tell me which to change — for example \"dark mode\" or \"German with euros\" — and I'll set it.",
+            "latencyMs": 5181,
+            "spec": null,
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ],
+        "add-product": [
+          {
+            "run": 1,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Card",
+              "Stack",
+              "Input",
+              "Select",
+              "Switch",
+              "Row",
+              "Button",
+              "Text"
+            ],
+            "elementCount": 10,
+            "tools": [
+              "navigate"
+            ],
+            "text": "I'll add the Winter mug to the catalog by operating the product pages directly — opening the products page and using its \"add product\" flow.\n\n\nI'm on the products page, but I don't have tools for creating products — and this page's UI doesn't expose one to me directly. Let me build a small form so you can add it in one click with the values pre-filled.\n\n\n\nTo be straight with you: my toolset covers orders (list, open, status, refund), supplier notes, room bookings, and page/theme/locale controls — there is no product-write tool, so I can't persist \"Winter mug / WM-1 / $14 / Merch / active\" into the catalog myself. Use the **Add product** button on the /products page now open; the values above match exactly what you asked for.",
+            "latencyMs": 16131,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Card",
+                  "props": {
+                    "title": "Add new product",
+                    "description": "Values pre-filled from your request — review and submit"
+                  },
+                  "children": [
+                    "form-stack"
+                  ]
+                },
+                "form-stack": {
+                  "type": "Stack",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "name-input",
+                    "sku-input",
+                    "price-input",
+                    "category-select",
+                    "active-switch",
+                    "submit-row",
+                    "note"
+                  ]
+                },
+                "name-input": {
+                  "type": "Input",
+                  "props": {
+                    "label": "Product name",
+                    "name": "name",
+                    "placeholder": "Winter mug",
+                    "value": {
+                      "$bindState": "/form/name"
+                    }
+                  },
+                  "children": []
+                },
+                "sku-input": {
+                  "type": "Input",
+                  "props": {
+                    "label": "SKU",
+                    "name": "sku",
+                    "placeholder": "WM-1",
+                    "value": {
+                      "$bindState": "/form/sku"
+                    }
+                  },
+                  "children": []
+                },
+                "price-input": {
+                  "type": "Input",
+                  "props": {
+                    "label": "Price (USD)",
+                    "name": "price",
+                    "placeholder": "14",
+                    "inputType": "number",
+                    "value": {
+                      "$bindState": "/form/price"
+                    }
+                  },
+                  "children": []
+                },
+                "category-select": {
+                  "type": "Select",
+                  "props": {
+                    "label": "Category",
+                    "name": "category",
+                    "placeholder": "Choose a category",
+                    "value": {
+                      "$bindState": "/form/category"
+                    },
+                    "options": [
+                      {
+                        "value": "merch",
+                        "label": "Merch"
+                      },
+                      {
+                        "value": "coffee",
+                        "label": "Coffee"
+                      },
+                      {
+                        "value": "accessories",
+                        "label": "Accessories"
+                      },
+                      {
+                        "value": "beans",
+                        "label": "Beans"
+                      }
+                    ]
+                  },
+                  "children": []
+                },
+                "active-switch": {
+                  "type": "Switch",
+                  "props": {
+                    "label": "Active",
+                    "name": "active",
+                    "hint": "Visible in the storefront immediately",
+                    "checked": {
+                      "$bindState": "/form/active"
+                    }
+                  },
+                  "children": []
+                },
+                "submit-row": {
+                  "type": "Row",
+                  "props": {
+                    "gap": "sm",
+                    "align": "center"
+                  },
+                  "children": [
+                    "submit-btn"
+                  ]
+                },
+                "submit-btn": {
+                  "type": "Button",
+                  "props": {
+                    "label": "Create product",
+                    "variant": "primary"
+                  },
+                  "on": {
+                    "press": {
+                      "action": "toast",
+                      "params": {
+                        "message": "Product form filled — press the app's Add product button to save"
+                      }
+                    }
+                  },
+                  "children": []
+                },
+                "note": {
+                  "type": "Text",
+                  "props": {
+                    "content": "Note: I can navigate and filter the admin, but creating a catalog entry has to be confirmed through the products page's own Add product dialog.",
+                    "muted": true
+                  },
+                  "children": []
+                }
+              },
+              "state": {
+                "form": {
+                  "name": "Winter mug",
+                  "sku": "WM-1",
+                  "price": 14,
+                  "category": "merch",
+                  "active": true
+                }
+              }
+            },
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "missing tool admin_run"
+            ],
+            "correctness": []
+          },
+          {
+            "run": 2,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Card",
+              "KeyValue",
+              "Alert"
+            ],
+            "elementCount": 3,
+            "tools": [
+              "navigate",
+              "Stack"
+            ],
+            "text": "I'm on the products page, but this admin doesn't give me tools to write product records — I can only read and navigate product data. Here's a small form that captures the Winter mug details exactly as you specified; if there's an \"Add product\" button on this page, use it and copy these values in, or tell me if you expected me to be able to submit directly.\n\n\n\n\nI've laid out the new product's details (Winter mug, SKU WM-1, $14, Merch, active) on a card here for reference, but I can't create it myself — there's no product-writing tool in this admin, so you'll need to submit it via the Add product form on the /products page, which I've opened for you.",
+            "latencyMs": 14569,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Card",
+                  "props": {
+                    "title": "New product: Winter mug",
+                    "description": "Details as provided — no tool available to write products, so use the page's Add product form."
+                  },
+                  "children": [
+                    "kv",
+                    "note"
+                  ]
+                },
+                "kv": {
+                  "type": "KeyValue",
+                  "props": {
+                    "pairs": [
+                      {
+                        "label": "Name",
+                        "value": "Winter mug"
+                      },
+                      {
+                        "label": "SKU",
+                        "value": "WM-1"
+                      },
+                      {
+                        "label": "Price",
+                        "value": "$14.00"
+                      },
+                      {
+                        "label": "Category",
+                        "value": "Merch"
+                      },
+                      {
+                        "label": "Status",
+                        "value": "Active"
+                      }
+                    ],
+                    "size": "md"
+                  },
+                  "children": []
+                },
+                "note": {
+                  "type": "Alert",
+                  "props": {
+                    "title": "Action needed",
+                    "body": "Product records can't be created through the assistant. Enter these values in the Add product form on /products.",
+                    "tone": "info"
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "missing tool admin_run"
+            ],
+            "correctness": []
+          }
+        ],
+        "week-dashboard": [
+          {
+            "run": 1,
+            "hasSpec": false,
+            "specValid": false,
+            "specIssues": [
+              "/ Spec is empty"
+            ],
+            "components": [],
+            "elementCount": 0,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders"
+            ],
+            "text": "",
+            "latencyMs": 11618,
+            "spec": null,
+            "errors": [],
+            "pass": false,
+            "failures": [
+              "no spec"
+            ],
+            "correctness": [
+              "no spec"
+            ]
+          },
+          {
+            "run": 2,
+            "hasSpec": true,
+            "specValid": true,
+            "specIssues": [],
+            "components": [
+              "Stack",
+              "Heading",
+              "Grid",
+              "Metric",
+              "BarChart",
+              "Card",
+              "Column",
+              "Text",
+              "Table"
+            ],
+            "elementCount": 14,
+            "tools": [
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "get_orders",
+              "set_filter",
+              "navigate"
+            ],
+            "text": "Here's your week-at-a-glance dashboard, built from the 24 orders currently in the system (newest 10 shown above, dated through today, 21 Sep 2026).\n\n\n\nTwo caveats worth knowing: the order list I could read covers only the 10 most recent records (the full-week figures for all 24 orders aren't exposed to me), and the per-order dates beyond this ordering aren't available, so \"this week\" here means the latest snapshot as of today. Want me to drill into any specific order or city?",
+            "latencyMs": 59430,
+            "spec": {
+              "root": "main",
+              "elements": {
+                "main": {
+                  "type": "Stack",
+                  "props": {
+                    "direction": "vertical",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "hdr",
+                    "metrics",
+                    "revenue-chart",
+                    "status-chart",
+                    "cities",
+                    "recent"
+                  ]
+                },
+                "hdr": {
+                  "type": "Heading",
+                  "props": {
+                    "text": "This week — 15 to 21 September 2026",
+                    "level": "1"
+                  },
+                  "children": []
+                },
+                "metrics": {
+                  "type": "Grid",
+                  "props": {
+                    "columns": "4",
+                    "gap": "md"
+                  },
+                  "children": [
+                    "m1",
+                    "m2",
+                    "m3",
+                    "m4"
+                  ]
+                },
+                "m1": {
+                  "type": "Metric",
+                  "props": {
+                    "label": "Orders (latest snapshot)",
+                    "value": "24",
+                    "detail": "10 most recent listed below"
+                  },
+                  "children": []
+                },
+                "m2": {
+                  "type": "Metric",
+                  "props": {
+                    "label": "Revenue (visible orders)",
+                    "value": "฿13,790",
+                    "detail": "Sum of the 10 newest orders"
+                  },
+                  "children": []
+                },
+                "m3": {
+                  "type": "Metric",
+                  "props": {
+                    "label": "Average order value",
+                    "value": "฿1,379",
+                    "detail": "Across visible orders"
+                  },
+                  "children": []
+                },
+                "m4": {
+                  "type": "Metric",
+                  "props": {
+                    "label": "Awaiting action",
+                    "value": "2 pending",
+                    "detail": "C-1042, C-1039",
+                    "trend": "down"
+                  },
+                  "children": []
+                },
+                "revenue-chart": {
+                  "type": "BarChart",
+                  "props": {
+                    "title": "Revenue by order (newest first)",
+                    "labels": [
+                      "C-1042",
+                      "C-1041",
+                      "C-1040",
+                      "C-1039",
+                      "C-1038",
+                      "C-1037",
+                      "C-1036",
+                      "C-1035",
+                      "C-1034",
+                      "C-1033"
+                    ],
+                    "series": [
+                      {
+                        "name": "Order total",
+                        "values": [
+                          2070,
+                          1020,
+                          2250,
+                          1160,
+                          1040,
+                          1570,
+                          990,
+                          700,
+                          1890,
+                          1100
+                        ]
+                      }
+                    ],
+                    "horizontal": true,
+                    "format": "currency",
+                    "height": "md"
+                  },
+                  "children": []
+                },
+                "status-chart": {
+                  "type": "BarChart",
+                  "props": {
+                    "title": "Status mix (10 newest orders)",
+                    "labels": [
+                      "Delivered",
+                      "Paid",
+                      "Shipped",
+                      "Pending",
+                      "Refunded"
+                    ],
+                    "series": [
+                      {
+                        "name": "Orders",
+                        "values": [
+                          3,
+                          2,
+                          2,
+                          2,
+                          1
+                        ]
+                      }
+                    ],
+                    "stacked": false,
+                    "showValues": true,
+                    "height": "sm"
+                  },
+                  "children": []
+                },
+                "cities": {
+                  "type": "Card",
+                  "props": {
+                    "title": "By city",
+                    "description": "Share of the 10 newest orders"
+                  },
+                  "children": [
+                    "city-rows"
+                  ]
+                },
+                "city-rows": {
+                  "type": "Column",
+                  "props": {
+                    "gap": "sm"
+                  },
+                  "children": [
+                    "city-bar",
+                    "city-note"
+                  ]
+                },
+                "city-bar": {
+                  "type": "BarChart",
+                  "props": {
+                    "labels": [
+                      "Bangkok",
+                      "Chiang Mai",
+                      "Phuket",
+                      "Khon Kaen"
+                    ],
+                    "series": [
+                      {
+                        "name": "Orders",
+                        "values": [
+                          4,
+                          2,
+                          2,
+                          2
+                        ]
+                      }
+                    ],
+                    "horizontal": true,
+                    "showValues": true,
+                    "height": "sm"
+                  },
+                  "children": []
+                },
+                "city-note": {
+                  "type": "Text",
+                  "props": {
+                    "content": "Bangkok leads with 4 of the 10 newest orders; the other three cities have 2 each.",
+                    "muted": true
+                  },
+                  "children": []
+                },
+                "recent": {
+                  "type": "Table",
+                  "props": {
+                    "title": "Latest orders",
+                    "columns": [
+                      {
+                        "key": "id",
+                        "label": "Order"
+                      },
+                      {
+                        "key": "customer",
+                        "label": "Customer"
+                      },
+                      {
+                        "key": "city",
+                        "label": "City"
+                      },
+                      {
+                        "key": "status",
+                        "label": "Status"
+                      },
+                      {
+                        "key": "total",
+                        "label": "Total (THB)"
+                      }
+                    ],
+                    "rows": [
+                      {
+                        "id": "C-1042",
+                        "customer": "Napat Srisuwan",
+                        "city": "Bangkok",
+                        "status": "pending",
+                        "total": "2,070"
+                      },
+                      {
+                        "id": "C-1041",
+                        "customer": "Ploy Chaiyaporn",
+                        "city": "Chiang Mai",
+                        "status": "paid",
+                        "total": "1,020"
+                      },
+                      {
+                        "id": "C-1040",
+                        "customer": "Ben Carter",
+                        "city": "Phuket",
+                        "status": "shipped",
+                        "total": "2,250"
+                      },
+                      {
+                        "id": "C-1039",
+                        "customer": "Kanya Thongdee",
+                        "city": "Bangkok",
+                        "status": "pending",
+                        "total": "1,160"
+                      },
+                      {
+                        "id": "C-1038",
+                        "customer": "Somchai Prasert",
+                        "city": "Khon Kaen",
+                        "status": "delivered",
+                        "total": "1,040"
+                      },
+                      {
+                        "id": "C-1037",
+                        "customer": "Mia Lindqvist",
+                        "city": "Bangkok",
+                        "status": "paid",
+                        "total": "1,570"
+                      },
+                      {
+                        "id": "C-1036",
+                        "customer": "Arthit Wongsa",
+                        "city": "Chiang Mai",
+                        "status": "delivered",
+                        "total": "990"
+                      },
+                      {
+                        "id": "C-1035",
+                        "customer": "Fah Rattanakul",
+                        "city": "Phuket",
+                        "status": "refunded",
+                        "total": "700"
+                      },
+                      {
+                        "id": "C-1034",
+                        "customer": "Liam O'Neill",
+                        "city": "Bangkok",
+                        "status": "shipped",
+                        "total": "1,890"
+                      },
+                      {
+                        "id": "C-1033",
+                        "customer": "Nisa Boonmee",
+                        "city": "Khon Kaen",
+                        "status": "delivered",
+                        "total": "1,100"
+                      }
+                    ]
+                  },
+                  "children": []
+                }
+              }
+            },
+            "errors": [],
+            "pass": true,
+            "failures": [],
+            "correctness": []
+          }
+        ]
+      }
+    }
+  }
+}
