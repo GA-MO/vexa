@@ -1911,7 +1911,7 @@ function thinLabels(count: number, maxLabels: number): Set<number> {
   const picked: number[] = [];
   for (let i = 0; i < count - 1; i += step) picked.push(i);
   const last = count - 1;
-  if ((picked[picked.length - 1] ?? -Infinity) >= last - step / 2) picked.pop();
+  if ((picked[picked.length - 1] ?? -Infinity) > last - step) picked.pop();
   picked.push(last);
   return new Set(picked);
 }

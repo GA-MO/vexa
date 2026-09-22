@@ -78,6 +78,10 @@ const LAYOUT_FRAME: Record<VexaChatLayout, string> = {
 
 export type VexaChatProps = {
   api?: string;
+  /** Identity of the conversation: changing it swaps `useChat` to a separate message list. */
+  id?: string;
+  /** Messages to start from, for example a thread restored from the host's own store. */
+  initialMessages?: VexaMessage[];
   title?: string;
   subtitle?: string;
   layout?: VexaChatLayout;
@@ -128,6 +132,8 @@ type CheckpointRecord = {
 
 export function VexaChat({
   api,
+  id,
+  initialMessages,
   title: titleProp,
   subtitle: subtitleProp,
   layout = "panel",
@@ -204,6 +210,8 @@ export function VexaChat({
     addToolApprovalResponse,
     addToolOutput,
   } = useChat<VexaMessage>({
+    id,
+    messages: initialMessages,
     transport,
     experimental_throttle: STREAM_THROTTLE_MS,
     sendAutomaticallyWhen: (options) =>
