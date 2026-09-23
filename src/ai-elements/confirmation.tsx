@@ -73,7 +73,13 @@ export const Confirmation = ({
 
   return (
     <ConfirmationContext.Provider value={contextValue}>
-      <Alert className={cn("flex flex-col gap-2", className)} {...props} />
+      <Alert
+        className={cn(
+          "flex flex-col gap-2.5 rounded-2xl border-border/70 p-3.5 shadow-[0_1px_2px_var(--vexa-card-edge),0_14px_34px_-22px_var(--vexa-glow-soft)]",
+          className,
+        )}
+        {...props}
+      />
     </ConfirmationContext.Provider>
   );
 };
@@ -165,6 +171,15 @@ export const ConfirmationActions = ({
 
 export type ConfirmationActionProps = ComponentProps<typeof Button>;
 
-export const ConfirmationAction = (props: ConfirmationActionProps) => (
-  <Button className="h-8 px-3 text-sm" type="button" {...props} />
+const CONFIRM_ACTION = "h-8 rounded-full px-4 text-xs font-medium";
+const CONFIRM_DEFAULT = "bg-foreground text-background hover:bg-foreground/90";
+
+/** The commit button takes the host's text colour, not its brand colour: an approval is neutral, and it matches every theme. */
+export const ConfirmationAction = ({ className, variant, ...props }: ConfirmationActionProps) => (
+  <Button
+    className={cn(CONFIRM_ACTION, (variant ?? "default") === "default" && CONFIRM_DEFAULT, className)}
+    type="button"
+    variant={variant}
+    {...props}
+  />
 );

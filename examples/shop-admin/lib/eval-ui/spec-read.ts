@@ -77,14 +77,18 @@ export function chartSeries(spec: Spec): ChartData[] {
   });
 }
 
-/** Label → value of every Metric and every KeyValue pair. */
+/** Label → value of every Metric, every KeyValue pair and every RankList row. */
 export function labelledValues(spec: Spec): Array<{ label: string; value: string }> {
   const metrics = elementsOfType(spec, ["Metric"]).map((metric) => ({ label: String(propsOf(spec, metric).label ?? ""), value: String(propsOf(spec, metric).value ?? "") }));
   const pairs = elementsOfType(spec, ["KeyValue"]).flatMap((keyValue) => {
     const entries = propsOf(spec, keyValue).pairs;
     return Array.isArray(entries) ? entries.map((pair) => ({ label: String((pair as { label?: unknown }).label ?? ""), value: String((pair as { value?: unknown }).value ?? "") })) : [];
   });
-  return [...metrics, ...pairs];
+  const ranked = elementsOfType(spec, ["RankList"]).flatMap((rankList) => {
+    const items = propsOf(spec, rankList).items;
+    return Array.isArray(items) ? items.map((item) => ({ label: String((item as { label?: unknown }).label ?? ""), value: String((item as { value?: unknown }).value ?? "") })) : [];
+  });
+  return [...metrics, ...pairs, ...ranked];
 }
 
 function stringsIn(value: unknown, out: string[]) {

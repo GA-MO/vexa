@@ -68,6 +68,7 @@
   --vexa-glow-strong: color-mix(in oklab, var(--primary) 80%, transparent);
   --vexa-glow-violet: color-mix(in oklab, var(--brand-violet) 25%, transparent);
   --vexa-shadow: color-mix(in oklab, var(--foreground) 35%, transparent);
+  --vexa-card-edge: color-mix(in oklab, var(--foreground) 6%, transparent);
   --vexa-code-bg: transparent;
   --vexa-code-fg: var(--foreground);
   --vexa-code-comment: var(--muted-foreground);
@@ -79,6 +80,12 @@
   --vexa-code-property: var(--vexa-info);
   --vexa-code-variable: var(--foreground);
   --vexa-code-link: var(--vexa-info);
+}
+
+[data-vexa-theme] *,
+[data-vexa-theme] *::before,
+[data-vexa-theme] *::after {
+  border-color: var(--border);
 }
 
 [data-vexa-theme][data-vexa-glow="off"] {
@@ -103,6 +110,7 @@
   --chart-3: #34d399;
   --chart-4: #fbbf24;
   --chart-5: #fb7185;
+  --vexa-card-edge: color-mix(in oklab, #000 40%, transparent);
 }
 
 [data-vexa-theme].dark {

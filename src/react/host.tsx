@@ -10,8 +10,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { asSchema, type FlexibleSchema, type InferSchema } from "ai";
+import { asSchema, type FlexibleSchema, type InferSchema, type ToolUIPart } from "ai";
 import type { ComputedFunction } from "@json-render/core";
+import type { ComponentRegistry } from "@json-render/react";
+import type { Spec } from "../protocol";
 import {
   DEFAULT_LABELS,
   type ChatComposerOptions,
@@ -107,10 +109,37 @@ export type VexaAdminValue = {
   clear: () => void;
 };
 
+export type SpecNormalizer = (spec: Spec, context: { toolOutputs: Record<string, unknown> }) => Spec;
+
+export type ToolCallDescription = {
+  title: string;
+  question?: string;
+  details?: Array<{ label: string; value: string }>;
+};
+
+/** Turns a tool call into words: `title` states what it does, `question` asks for approval. Tool names and raw input never belong on either. */
+export type DescribeToolCall = (name: string, input: unknown) => ToolCallDescription | null;
+
+export type ApprovalRequest = {
+  tool: string;
+  input: unknown;
+  state: ToolUIPart["state"];
+  approved: boolean | null;
+  approve: () => void;
+  reject: () => void;
+};
+
+/** A host draws the decision itself — its own card, its own wording. Returning null keeps Vexa's approval card. */
+export type RenderApproval = (request: ApprovalRequest) => ReactNode;
+
 export type VexaHostValue = {
   api: string;
   admin: VexaAdminValue;
   chat: VexaChatDefaults;
+  components: ComponentRegistry;
+  normalizeSpec: SpecNormalizer | null;
+  describeToolCall: DescribeToolCall | null;
+  renderApproval: RenderApproval | null;
   formatter: Formatter;
   functions: Record<string, ComputedFunction>;
   tools: Record<string, HostTool>;
@@ -127,6 +156,10 @@ export type VexaHostValue = {
 type VexaProviderBaseProps = {
   api?: string;
   chat?: VexaChatDefaults;
+  components?: ComponentRegistry;
+  normalizeSpec?: SpecNormalizer;
+  describeToolCall?: DescribeToolCall;
+  renderApproval?: RenderApproval;
   format?: Partial<VexaFormat>;
   functions?: Record<string, ComputedFunction>;
   theme?: VexaTheme;
@@ -210,6 +243,7 @@ type ContextProps<S extends ContextSchema> =
 export type VexaProviderProps<S extends ContextSchema = ContextSchema> = VexaProviderBaseProps & ContextProps<S>;
 
 const NO_CHAT_DEFAULTS: VexaChatDefaults = {};
+const NO_COMPONENTS: ComponentRegistry = {};
 const NO_FUNCTIONS: Record<string, ComputedFunction> = {};
 const NO_TOOLS: Record<string, HostTool> = {};
 const NO_ADMIN: AdminOptions | null = null;
@@ -547,6 +581,10 @@ function useMergedTools(hostTools: Record<string, HostTool>, adminTools: Record<
 export function VexaProvider<S extends ContextSchema>({
   api = "/api/chat",
   chat = NO_CHAT_DEFAULTS,
+  components = NO_COMPONENTS,
+  normalizeSpec,
+  describeToolCall,
+  renderApproval,
   format,
   functions = NO_FUNCTIONS,
   theme,
@@ -638,6 +676,10 @@ export function VexaProvider<S extends ContextSchema>({
       api,
       admin: adminValue,
       chat,
+      components,
+      normalizeSpec: normalizeSpec ?? null,
+      describeToolCall: describeToolCall ?? null,
+      renderApproval: renderApproval ?? null,
       formatter,
       functions,
       tools,
@@ -657,7 +699,7 @@ export function VexaProvider<S extends ContextSchema>({
         setChatMounted(send !== null);
       },
     }),
-    [api, adminValue, chat, formatter, functions, tools, schemas, readContext, runTool, pending, resolveConfirmation],
+    [api, adminValue, chat, components, normalizeSpec, describeToolCall, renderApproval, formatter, functions, tools, schemas, readContext, runTool, pending, resolveConfirmation],
   );
 
   const mode = theme?.mode ?? "light";

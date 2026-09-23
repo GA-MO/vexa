@@ -33,6 +33,7 @@ import {
   Metric,
   Progress,
   RadioGroup,
+  RankList,
   Rating,
   Row,
   Select,
@@ -73,6 +74,7 @@ export const { registry } = defineRegistry(
       Alert: ({ props }) => <Alert props={props as never} />,
       Separator: () => <Separator />,
       Table: ({ props }) => <Table props={props as never} />,
+      RankList: ({ props }) => <RankList props={props as never} />,
       List: ({ props }) => <List props={props as never} />,
       Button: ({ props, emit }) => (
         <Button props={props as never} emit={emit} />

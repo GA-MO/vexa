@@ -9,6 +9,7 @@ export const CATALOG_TYPES = [
   "Alert",
   "Separator",
   "Table",
+  "RankList",
   "List",
   "Button",
   "Chart",
@@ -48,7 +49,7 @@ export type PrimitiveGroup = { id: string; label: string; sections: string[] };
 export const PRIMITIVE_GROUPS: PrimitiveGroup[] = [
   { id: "layout", label: "Layout", sections: ["card-grid", "column-row", "divider", "separator-button", "tabs", "accordion"] },
   { id: "text", label: "Text & status", sections: ["heading-text", "badge", "alert", "callout", "list", "code"] },
-  { id: "data", label: "Data display", sections: ["metric", "table", "key-value", "line-items", "from-to", "progress", "timeline", "rating"] },
+  { id: "data", label: "Data display", sections: ["metric", "table", "rank-list", "key-value", "line-items", "from-to", "progress", "timeline", "rating"] },
   { id: "charts", label: "Charts", sections: ["bar-chart", "line-chart", "chart"] },
   { id: "inputs", label: "Inputs", sections: ["input-form", "checkbox-switch", "radio-group", "select"] },
   { id: "media", label: "Media & icons", sections: ["icon-icontext", "avatar", "image", "video", "map", "carousel", "carousel-cards"] },

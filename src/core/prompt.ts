@@ -1,4 +1,4 @@
-import { catalog } from "./catalog";
+import { catalog as vexaCatalog, type Catalog } from "./catalog";
 import { standardDirectives } from "@json-render/directives";
 import { fenceAsData } from "./guard";
 import { ADMIN_TOOLS } from "../admin/names";
@@ -18,6 +18,7 @@ export type Persona = string | string[] | ((ctx: PersonaContext) => string | str
 
 export type PromptOptions = {
   persona?: Persona;
+  catalog?: Catalog;
   rules?: string[];
   instructions?: string[];
   tools?: PromptToolInfo;
@@ -34,7 +35,7 @@ const SHARED_INTRO = [
   "Prefer Card + Grid + Metric for dashboards, Chart for trends, Table for tabular data, Timeline for roadmaps, List for steps, Alert for warnings, Callout for key takeaways.",
   "Use Form or Input when you need the user to provide values; Checkbox, Switch, RadioGroup, and Select for choices. Use Tabs to switch related views. Use Code for snippets.",
   "Use Map for locations, Carousel (variant='image' or 'card') for swipeable strips, Accordion for FAQs, Video for demos.",
-  "Use BarChart / LineChart for real charts with axes and multiple series; KeyValue, LineItems, FromTo, IconText, Icon, Divider, Column, Row for compact record layouts.",
+  "Use BarChart / LineChart for real charts with axes and multiple series; RankList to rank one number across named things; KeyValue, LineItems, FromTo, IconText, Icon, Divider, Column, Row for compact record layouts.",
   "Never nest Card inside Card. SpecView itself has no outer card — only use Card when the content needs a titled panel.",
   "Keep generated UI compact — no full-viewport heights. Prefer full-width stacks in chat; avoid half-empty grids.",
   "Size the UI to the question. A question about problems, exceptions or what needs attention gets only those items (a short Table, List or Alert), not every record and not a dashboard; 'show all' or 'list' gets the full table; one figure gets one Metric or a sentence.",
@@ -135,7 +136,7 @@ function assemble(options: PromptOptions, outputRule: string, mode: "inline" | "
     ...personaLines(options.persona, ctx),
     ...SHARED_INTRO,
     outputRule,
-    catalog.prompt({
+    (options.catalog ?? vexaCatalog).prompt({
       mode,
       directives: standardDirectives,
       customRules: [...CATALOG_RULES, ...(options.rules ?? [])],

@@ -84,6 +84,10 @@ DESIGN.md                    design tokens (indigo → violet)
 
 Components that take user input (Input, Select, Checkbox, ...) use `useBoundProp(props.value, bindings?.value)` so `{ $bindState: "/path" }` works.
 
+An approval card never shows a tool name or its raw input: `ToolApproval` renders the host's `describeToolCall(name, input)` when there is one, otherwise the humanized tool name plus the input's top-level scalar fields as label/value rows. Nested values stay in the collapsed tool block. A host that wants to draw the whole decision passes `VexaProvider renderApproval`, which gets the tool, its input, the state and `approve` / `reject`, and falls back to `ToolApproval` when it returns null. Approvals render under the reply text, never inside `ProcessSteps` — collapsing "Thinking" must not hide a decision the user has to make, and the decision reads after the sentence that leads to it.
+
+A **host** component touches none of those five: the host calls `extendCatalog({ components })` for the schema and prompt, passes that catalog to `createVexaHandler({ catalog })`, and passes its renderers to `VexaProvider components`. `VexaProvider normalizeSpec` rewrites a spec before it renders, for a host that wants to enforce its own card contract.
+
 ## UI rules for catalog components
 
 - They live in a chat panel 340 to 600px wide: small padding (`p-3`, `px-3 py-2`), small gaps (Stack md = `gap-3`), `text-sm` body, Heading level 1 = `text-xl`

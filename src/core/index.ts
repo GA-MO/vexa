@@ -1,4 +1,4 @@
-export { catalog, type Catalog } from "./catalog";
+export { catalog, extendCatalog, vexaActions, vexaComponents, type Catalog, type CatalogExtension } from "./catalog";
 export { normalizeSpec } from "./spec";
 export {
   buildAgentInstructions,

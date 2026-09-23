@@ -149,6 +149,49 @@ export const GALLERY_SECTIONS: GallerySection[] = [
     }),
   },
   {
+    id: "rank-list",
+    title: "RankList",
+    component: "RankList",
+    note: "Ranked rows with a proportional bar, the value and its delta.",
+    spec: specFromTree({
+      type: "Card",
+      props: {
+        title: "Overdue receivables by region",
+        description: null,
+        meta: "Sep 1 - Sep 22 - 6 regions",
+        footnote: "Source: finance warehouse - certified - as of Sep 22",
+      },
+      children: [
+        {
+          type: "Metric",
+          props: {
+            label: "Total overdue",
+            value: "70.3M",
+            detail: "vs previous period",
+            trend: "up",
+            tone: "bad",
+            delta: "+12.4%",
+            note: null,
+            size: "lg",
+          },
+        },
+        {
+          type: "RankList",
+          props: {
+            showRank: true,
+            items: [
+              { label: "Bangkok", value: "16.1M", share: 1, delta: "+18.2%", trend: "up", tone: "bad", note: null },
+              { label: "South", value: "13.1M", share: 0.81, delta: "+4.0%", trend: "up", tone: "bad", note: null },
+              { label: "Northeast", value: "13.0M", share: 0.81, delta: "-2.2%", trend: "down", tone: "good", note: null },
+              { label: "Central", value: "9.8M", share: 0.61, delta: "+1.1%", trend: "up", tone: "bad", note: null },
+              { label: "East", value: "9.5M", share: 0.59, delta: "-6.4%", trend: "down", tone: "good", note: null },
+            ],
+          },
+        },
+      ],
+    }),
+  },
+  {
     id: "card-grid",
     title: "Card + Grid + Stack",
     component: "Card, Grid, Stack",

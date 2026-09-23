@@ -25,9 +25,9 @@ import {
   reasoningSeconds as stampedSeconds,
   type VexaMessage,
 } from "vexa/protocol";
-import { DEFAULT_LABELS, type ChatLabels, type ChatStepsDisplay } from "./constants";
+import { DEFAULT_LABELS, humanizeToolName, type ChatLabels, type ChatStepsDisplay } from "./constants";
 import { normalizeSpec } from "vexa/core";
-import { SpecView, parseActionMessage } from "vexa/react";
+import { SpecView, parseActionMessage, useVexaHostContext, type ToolCallDescription } from "vexa/react";
 import { ADMIN_TOOLS, describeSteps, type RunResult, type Step, type TraceItem } from "vexa/admin";
 import { specPartsFor } from "./spec-continuation";
 import {
@@ -82,14 +82,49 @@ import {
   ToolOutput,
 } from "vexa/ai-elements/tool";
 
+const MAX_APPROVAL_DETAILS = 6;
+const MAX_DETAIL_CHARS = 120;
+
+function readableValue(value: unknown): string | null {
+  if (typeof value === "boolean") return value ? "yes" : "no";
+  if (typeof value === "number") return String(value);
+  if (typeof value !== "string" || value.trim().length === 0) return null;
+  return value.length > MAX_DETAIL_CHARS ? `${value.slice(0, MAX_DETAIL_CHARS - 1)}…` : value;
+}
+
+/** What a pending tool call changes, in the words the input already uses. Nested objects stay in the collapsed tool block. */
+function defaultDetails(input: unknown): Array<{ label: string; value: string }> {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) return [];
+  return Object.entries(input as Record<string, unknown>)
+    .map(([key, value]) => ({ label: humanizeToolName(key), value: readableValue(value) }))
+    .filter((detail): detail is { label: string; value: string } => detail.value !== null)
+    .slice(0, MAX_APPROVAL_DETAILS);
+}
+
+function ApprovalDetails({ details }: { details: Array<{ label: string; value: string }> }) {
+  if (details.length === 0) return null;
+  return (
+    <dl className="mt-2 flex flex-col gap-1 text-xs">
+      {details.map((detail) => (
+        <div key={detail.label} className="flex min-w-0 items-baseline justify-between gap-3">
+          <dt className="shrink-0 text-muted-foreground">{detail.label}</dt>
+          <dd className="min-w-0 wrap-anywhere text-right font-medium">{detail.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function ToolApproval({
   part,
   onApproval,
   labels,
+  description,
 }: {
   part: ToolUIPart | DynamicToolUIPart;
   onApproval?: (id: string, approved: boolean) => void;
   labels: ChatLabels;
+  description: ToolCallDescription | null;
 }) {
   const approval =
     "approval" in part
@@ -101,7 +136,10 @@ function ToolApproval({
   return (
     <Confirmation approval={approval} state={part.state}>
       <ConfirmationTitle>
-        <ConfirmationRequest>{labels.approveTool(toolName)}</ConfirmationRequest>
+        <ConfirmationRequest>
+          {description ? (description.question ?? description.title) : labels.approveTool(toolName)}
+          <ApprovalDetails details={description?.details ?? defaultDetails("input" in part ? part.input : null)} />
+        </ConfirmationRequest>
         <ConfirmationAccepted>
           <CheckIcon className="size-4" />
           <span>{labels.approved}</span>
@@ -127,6 +165,10 @@ function ToolApproval({
       </ConfirmationActions>
     </Confirmation>
   );
+}
+
+function awaitsApproval(part: ToolUIPart | DynamicToolUIPart): boolean {
+  return "approval" in part && Boolean(part.approval);
 }
 
 function isRunResult(value: unknown): value is RunResult {
@@ -206,7 +248,7 @@ function ToolPartView({
 
   return (
     <div className="space-y-2" key={`${messageId}-tool-${index}`}>
-      <Tool defaultOpen={part.state !== "output-available"}>
+      <Tool defaultOpen={part.state !== "output-available" && !awaitsApproval(part)}>
         {part.type === "dynamic-tool" ? (
           <ToolHeader
             state={part.state}
@@ -230,12 +272,12 @@ function ToolPartView({
           />
         </ToolContent>
       </Tool>
-      <ToolApproval labels={labels} onApproval={onApproval} part={part} />
     </div>
   );
 }
 
-function HiddenSteps({
+/** Approvals always render beside the reply, never inside the process block: collapsing "Thinking" must not hide a decision. */
+function PendingApprovals({
   toolParts,
   onApproval,
   labels,
@@ -249,10 +291,39 @@ function HiddenSteps({
   return (
     <div className="flex flex-col gap-2">
       {approvals.map((part) => (
-        <ToolApproval key={part.toolCallId} labels={labels} onApproval={onApproval} part={part} />
+        <HiddenApproval key={part.toolCallId} labels={labels} onApproval={onApproval} part={part} />
       ))}
     </div>
   );
+}
+
+function HiddenApproval({
+  part,
+  onApproval,
+  labels,
+}: {
+  part: ToolUIPart | DynamicToolUIPart;
+  onApproval?: (id: string, approved: boolean) => void;
+  labels: ChatLabels;
+}) {
+  const host = useVexaHostContext();
+  const input = "input" in part ? part.input : null;
+  const approval = "approval" in part ? (part.approval as { id: string; approved?: boolean } | undefined) : undefined;
+  const hosted =
+    host?.renderApproval && approval && onApproval
+      ? host.renderApproval({
+          tool: getToolName(part),
+          input,
+          state: part.state,
+          approved: approval.approved ?? null,
+          approve: () => onApproval(approval.id, true),
+          reject: () => onApproval(approval.id, false),
+        })
+      : null;
+  if (hosted) return hosted;
+  const describe = host?.describeToolCall ?? null;
+  const description = describe && input != null ? describe(getToolName(part), input) : null;
+  return <ToolApproval description={description} labels={labels} onApproval={onApproval} part={part} />;
 }
 
 const MS_IN_SECOND = 1000;
@@ -362,10 +433,9 @@ function ProcessSteps({
   reasoningSeconds: ReasoningSeconds;
 }) {
   const [open, setOpen] = useState(false);
-  const awaitingApproval = processParts.some(({ part }) => part.state === "approval-requested");
 
   return (
-    <ChainOfThought onOpenChange={setOpen} open={open || awaitingApproval}>
+    <ChainOfThought onOpenChange={setOpen} open={open}>
       <ChainOfThoughtHeader>
         {processHeader(isStreaming, totalSeconds(reasoningSeconds), processParts.length, labels)}
       </ChainOfThoughtHeader>
@@ -382,7 +452,7 @@ function ProcessSteps({
           ) : (
             <ChainOfThoughtStep
               key={`${message.id}-cot-${index}`}
-              label={getToolName(part)}
+              label={humanizeToolName(getToolName(part))}
               status={FINISHED_TOOL_STATES.has(part.state) ? "complete" : "active"}
             >
               <ToolPartView
@@ -551,10 +621,6 @@ export function AssistantMessage({
           </Sources>
         ) : null}
 
-        {processParts.length > 0 && steps === "hidden" ? (
-          <HiddenSteps labels={labels} onApproval={onApproval} toolParts={toolParts} />
-        ) : null}
-
         {steps === "collapsible" && toolParts.length === 0 && hasReasoning ? (
           <ReasoningBlock labels={labels} parts={message.parts} seconds={reasoningSeconds} />
         ) : null}
@@ -580,6 +646,10 @@ export function AssistantMessage({
 
         {content}
 
+        {toolParts.length > 0 ? (
+          <PendingApprovals labels={labels} onApproval={onApproval} toolParts={toolParts} />
+        ) : null}
+
         {showLoader ? (
           <Shimmer className="text-sm" duration={1.2}>
             {labels.thinking}
@@ -590,31 +660,24 @@ export function AssistantMessage({
   );
 }
 
-function actionValueText(value: unknown): string | null {
-  if (value === null || value === undefined || value === "") return null;
-  if (typeof value === "boolean") return value ? "yes" : "no";
-  if (typeof value === "string" || typeof value === "number") return String(value);
-  return JSON.stringify(value);
-}
-
+/** A button press reads as what the user did, not as the payload it sent: nested values stay out of the bubble. */
 function ActionMessage({ action, labels }: { action: { name: string; input: Record<string, unknown> }; labels: ChatLabels }) {
-  const fields = Object.entries(action.input).flatMap(([key, value]) => {
-    const text = actionValueText(value);
-    return text === null ? [] : [{ key, text }];
-  });
+  const describe = useVexaHostContext()?.describeToolCall ?? null;
+  const description = describe ? describe(action.name, action.input) : null;
+  const fields = description?.details ?? defaultDetails(action.input);
   return (
     <Message from="user">
       <MessageContent className="gap-1.5">
         <span className="flex items-center gap-2 text-sm font-medium">
           <MousePointerClickIcon className="size-4 shrink-0 opacity-80" aria-hidden />
-          <span>{labels.buttonPressed(action.name)}</span>
+          <span>{description ? description.title : labels.buttonPressed(action.name)}</span>
         </span>
         {fields.length > 0 ? (
           <dl className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
             {fields.map((field) => (
-              <div key={field.key} className="flex min-w-0 gap-1 wrap-anywhere">
-                <dt className="shrink-0 opacity-70">{field.key}</dt>
-                <dd className="font-medium">{field.text}</dd>
+              <div key={field.label} className="flex min-w-0 gap-1 wrap-anywhere">
+                <dt className="shrink-0 opacity-70">{field.label}</dt>
+                <dd className="font-medium">{field.value}</dd>
               </div>
             ))}
           </dl>

@@ -155,7 +155,7 @@ export const EVAL_CASES: EvalCase[] = [
   { id: "city-chart", page: "/", prompt: "Which city has the most orders? Show it as a chart", kind: "ui", expect: { components: [CHART] }, verify: verifyCityChart },
   { id: "order-summary", page: "/orders/C-1042", prompt: "Give me a summary of this order", kind: "ui", expect: { components: ["Card|Metric|KeyValue|LineItems"] }, verify: verifyOrderSummary },
   { id: "note-form", page: "/orders/C-1042", prompt: "Make a small form where I can add a note to this order", kind: "ui", expect: { components: ["Input", "Button"] }, verify: verifyNoteForm },
-  { id: "revenue-by-status", page: "/", prompt: "Compare revenue by status", kind: "ui", expect: { components: [CHART] }, verify: verifyRevenueByStatus },
+  { id: "revenue-by-status", page: "/", prompt: "Compare revenue by status", kind: "ui", expect: { components: [`${CHART}|RankList`] }, verify: verifyRevenueByStatus },
   { id: "chiang-mai-orders", page: "/orders", prompt: "List the Chiang Mai orders with their totals", kind: "ui", expect: { components: ["Table"] }, verify: verifyChiangMai },
   { id: "show-and-open", page: "/", prompt: "Show pending orders in the chat and open the first one on the page", kind: "hybrid", expect: { components: ["Table"], tools: ["open_order|admin_run|navigate"] }, verify: verifyPendingTable },
   { id: "settings-question", page: "/settings", prompt: "What can I change on this page?", kind: "question", expect: { mentions: [/theme|locale|currency|steps/i], noSpec: true } },

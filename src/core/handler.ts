@@ -2,6 +2,7 @@ import type { LanguageModel, StopCondition, ToolSet, UIMessage } from "ai";
 import { z } from "zod";
 import { streamAgentChat, type GuardConfig, type HostToolSchema } from "./chat";
 import type { Persona, ToolTier } from "./prompt";
+import type { Catalog } from "./catalog";
 import { prefixedToolName } from "./mcp";
 import type { McpServerConfig } from "./mcp";
 import { isAdminToolName } from "../admin/names";
@@ -44,6 +45,7 @@ export type ModelResolver = (body: ChatBody, req: Request) => LanguageModel | un
 
 export type VexaHandlerConfig<T extends ToolSet = ToolSet> = {
   model?: LanguageModel | ModelResolver;
+  catalog?: Catalog;
   models?: ModelRegistry | (() => ModelRegistry);
   providerOptions?: Record<string, Record<string, unknown>>;
   instructions?: string[];
@@ -245,6 +247,7 @@ export function createVexaHandler<T extends ToolSet>(config: VexaHandlerConfig<T
     try {
       return await streamAgentChat(sanitizeActionMessages(config, body), {
         model: model.model,
+        catalog: config.catalog,
         req,
         providerOptions: config.providerOptions,
         context: body.context,

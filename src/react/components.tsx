@@ -1,7 +1,9 @@
 import { Children, useCallback, useState, type ReactNode } from "react";
 import {
+  ArrowDownRight,
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   Calendar,
   ChartBar,
   Check,
@@ -15,6 +17,7 @@ import {
   List as ListIcon,
   Mail,
   MapPin,
+  Minus,
   Music,
   Package,
   Pencil,
@@ -80,6 +83,8 @@ export function Stack({
 type CardProps = {
   title?: string | null;
   description?: string | null;
+  meta?: string | null;
+  footnote?: string | null;
 };
 
 export function Card({
@@ -90,22 +95,31 @@ export function Card({
   children?: ReactNode;
 }) {
   const hasChildren = Children.toArray(children).length > 0;
+  const hasHeader = Boolean(props.title || props.description || props.meta);
   return (
-    <section className="w-full min-w-0 rounded-xl border border-border/80 bg-card p-3 shadow-[0_10px_30px_-12px_var(--vexa-glow-soft)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-16px_var(--vexa-glow)] @md/vexa:p-4">
-      {(props.title || props.description) && (
-        <header className={cn("space-y-0.5", hasChildren && "mb-3")}>
+    <section className="flex w-full min-w-0 flex-col rounded-2xl border border-border/70 bg-card p-3.5 shadow-[0_1px_2px_var(--vexa-card-edge),0_14px_34px_-22px_var(--vexa-glow-soft)] transition duration-300 hover:border-border hover:shadow-[0_1px_2px_var(--vexa-card-edge),0_22px_46px_-24px_var(--vexa-glow)] @md/vexa:p-4">
+      {hasHeader ? (
+        <header className={cn("flex flex-col gap-0.5", hasChildren && "mb-3")}>
           {props.title ? (
-            <h3 className="text-base font-semibold tracking-tight text-foreground">
+            <h3 className="text-[15px] font-semibold leading-snug tracking-tight text-foreground">
               {props.title}
             </h3>
           ) : null}
+          {props.meta ? (
+            <p className="text-xs tabular-nums text-muted-foreground/90">{props.meta}</p>
+          ) : null}
           {props.description ? (
-            <p className="text-sm text-muted-foreground">{props.description}</p>
+            <p className="text-[13px] leading-relaxed text-muted-foreground">{props.description}</p>
           ) : null}
         </header>
-      )}
+      ) : null}
       {hasChildren ? (
-        <div className="flex w-full min-w-0 flex-col gap-2.5 [&>*]:min-w-0">{children}</div>
+        <div className="flex w-full min-w-0 flex-col gap-3 [&>*]:min-w-0">{children}</div>
+      ) : null}
+      {props.footnote ? (
+        <p className="mt-3 border-t border-border/60 pt-2.5 text-[11px] leading-normal text-muted-foreground/80">
+          {props.footnote}
+        </p>
       ) : null}
     </section>
   );
@@ -184,37 +198,107 @@ export function Text({ props }: { props: TextProps }) {
   );
 }
 
+type MetricTrend = "up" | "down" | "neutral";
+type MetricTone = "good" | "bad" | "neutral";
+
 type MetricProps = {
   label: string;
   value: string;
   detail?: string | null;
-  trend?: "up" | "down" | "neutral" | null;
+  trend?: MetricTrend | null;
+  tone?: MetricTone | null;
+  delta?: string | null;
+  note?: string | null;
+  size?: "sm" | "md" | "lg" | null;
 };
 
 const trendClass = {
-  up: "text-success",
-  down: "text-danger",
+  good: "text-success",
+  bad: "text-danger",
   neutral: "text-muted-foreground",
 } as const;
 
-export function Metric({ props }: { props: MetricProps }) {
+const deltaPillClass = {
+  good: "bg-success/12 text-success",
+  bad: "bg-danger/12 text-danger",
+  neutral: "bg-muted text-muted-foreground",
+} as const;
+
+const TrendArrow = { up: ArrowUpRight, down: ArrowDownRight, neutral: Minus } as const;
+
+const TREND_TONE = { up: "good", down: "bad", neutral: "neutral" } as const;
+
+function toneOf(trend: MetricTrend | null | undefined, tone: MetricTone | null | undefined): MetricTone {
+  if (tone) return tone;
+  return TREND_TONE[trend ?? "neutral"];
+}
+
+const metricValueClass = {
+  sm: "text-lg",
+  md: "text-2xl",
+  lg: "text-[1.875rem] @md/vexa:text-[2.125rem]",
+} as const;
+
+export function DeltaPill({
+  delta,
+  trend,
+  tone,
+  size = "md",
+}: {
+  delta: string;
+  trend?: MetricTrend | null;
+  tone?: MetricTone | null;
+  size?: "sm" | "md";
+}) {
+  const Arrow = TrendArrow[trend ?? "neutral"];
   return (
-    <div className="min-w-0 rounded-xl border border-primary/15 bg-gradient-to-br from-card to-primary/5 p-2.5 @md/vexa:p-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground break-words">
-        {props.label}
-      </p>
-      <p className="mt-0.5 text-lg font-semibold text-foreground break-words @md/vexa:text-xl">
-        {props.value}
-      </p>
-      {props.detail ? (
-        <p
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center gap-0.5 rounded-full font-semibold tabular-nums",
+        deltaPillClass[toneOf(trend, tone)],
+        size === "sm" ? "px-1.5 py-0.5 text-[11px]" : "px-2 py-0.5 text-xs",
+      )}
+    >
+      <Arrow size={size === "sm" ? 11 : 13} strokeWidth={2.5} aria-hidden />
+      {delta}
+    </span>
+  );
+}
+
+export function Metric({ props }: { props: MetricProps }) {
+  const size = props.size ?? "md";
+  const hero = size === "lg";
+  return (
+    <div
+      className={cn(
+        "flex min-w-0 flex-col gap-1",
+        !hero && "rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5",
+      )}
+    >
+      <p className="break-words text-xs font-medium text-muted-foreground">{props.label}</p>
+      <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span
           className={cn(
-            "mt-1 text-xs font-medium break-words",
-            props.trend ? trendClass[props.trend] : "text-muted-foreground",
+            "break-words font-semibold leading-none tracking-tight tabular-nums text-foreground",
+            metricValueClass[size],
           )}
         >
-          {props.detail}
-        </p>
+          {props.value}
+        </span>
+        {props.delta ? <DeltaPill delta={props.delta} trend={props.trend} tone={props.tone} /> : null}
+        {props.detail ? (
+          <span
+            className={cn(
+              "break-words text-xs font-medium",
+              props.delta || !props.trend ? "text-muted-foreground" : trendClass[toneOf(props.trend, props.tone)],
+            )}
+          >
+            {props.detail}
+          </span>
+        ) : null}
+      </div>
+      {props.note ? (
+        <p className="break-words text-[11px] leading-normal text-muted-foreground/80">{props.note}</p>
       ) : null}
     </div>
   );
@@ -248,23 +332,43 @@ export function Badge({ props }: { props: BadgeProps }) {
 
 type AlertProps = {
   title?: string | null;
-  body: string;
+  body?: string | null;
   tone?: "info" | "success" | "warning" | "danger" | null;
+  meta?: string | null;
 };
 
 const alertTone = {
-  info: "border-primary/25 bg-primary/10 text-foreground",
-  success: "border-success/30 bg-success/10 text-foreground",
-  warning: "border-warning/30 bg-warning/10 text-foreground",
-  danger: "border-danger/30 bg-danger/10 text-foreground",
+  info: "border-primary/20 bg-primary/[0.06]",
+  success: "border-success/25 bg-success/[0.07]",
+  warning: "border-warning/25 bg-warning/[0.08]",
+  danger: "border-danger/25 bg-danger/[0.07]",
+} as const;
+
+const alertDot = {
+  info: "bg-primary",
+  success: "bg-success",
+  warning: "bg-warning",
+  danger: "bg-danger",
 } as const;
 
 export function Alert({ props }: { props: AlertProps }) {
   const tone = props.tone ?? "info";
   return (
-    <div className={cn("rounded-lg border px-3 py-2.5 text-sm", alertTone[tone])}>
-      {props.title ? <p className="font-semibold">{props.title}</p> : null}
-      <p className={cn(props.title && "mt-1", "leading-relaxed")}>{props.body}</p>
+    <div className={cn("flex w-full min-w-0 gap-2.5 rounded-xl border px-3 py-2.5 text-sm text-foreground", alertTone[tone])}>
+      <span className={cn("mt-1.5 size-1.5 shrink-0 rounded-full", alertDot[tone])} aria-hidden />
+      <div className="min-w-0 flex-1">
+        {props.title ? (
+          <p className="text-[13px] font-semibold leading-snug">{props.title}</p>
+        ) : null}
+        {props.meta ? (
+          <p className="mt-0.5 text-xs font-medium tabular-nums text-muted-foreground">{props.meta}</p>
+        ) : null}
+        {props.body ? (
+          <p className={cn((props.title || props.meta) && "mt-1", "text-[13px] leading-relaxed text-muted-foreground")}>
+            {props.body}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -273,22 +377,56 @@ export function Separator() {
   return <hr className="border-border" />;
 }
 
+type ColumnTone = "default" | "muted" | "delta";
+
+type TableColumn = {
+  key: string;
+  label: string;
+  align?: "start" | "end" | null;
+  tone?: ColumnTone | null;
+};
+
 type TableProps = {
-  columns?: Array<{ key: string; label: string }> | null;
+  columns?: TableColumn[] | null;
   rows?: Array<Record<string, string | number>> | null;
 };
+
+const columnToneClass = {
+  default: "text-foreground",
+  muted: "text-muted-foreground",
+  delta: "",
+} as const;
+
+function signTone(value: string | number): string {
+  const text = String(value).trim();
+  if (text.startsWith("-")) return "text-danger";
+  if (text.startsWith("+")) return "text-success";
+  return "text-muted-foreground";
+}
+
+function cellClass(column: TableColumn, value: string | number): string {
+  const tone = column.tone ?? "default";
+  if (tone === "delta") return cn("font-medium tabular-nums", signTone(value));
+  return columnToneClass[tone];
+}
 
 export function Table({ props }: { props: TableProps }) {
   const columns = props.columns ?? [];
   const rows = props.rows ?? [];
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border">
-      <table className="min-w-full text-left text-sm">
-        <thead className="bg-muted/40 text-muted-foreground">
-          <tr>
+    <div className="w-full min-w-0 overflow-x-auto rounded-xl border border-border/70">
+      <table className="min-w-full border-collapse text-left text-[13px]">
+        <thead>
+          <tr className="border-b border-border/70 bg-muted/40">
             {columns.map((column) => (
-              <th key={column.key} className="px-2.5 py-1.5 font-medium">
+              <th
+                key={column.key}
+                className={cn(
+                  "whitespace-nowrap px-3 py-2 text-[11px] font-medium tracking-wide text-muted-foreground",
+                  column.align === "end" && "text-right",
+                )}
+              >
                 {column.label}
               </th>
             ))}
@@ -296,9 +434,16 @@ export function Table({ props }: { props: TableProps }) {
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={index} className="border-t border-border/60 text-foreground/85">
+            <tr key={index} className="border-t border-border/50 transition-colors first:border-t-0 hover:bg-muted/40">
               {columns.map((column) => (
-                <td key={column.key} className="px-2.5 py-1.5">
+                <td
+                  key={column.key}
+                  className={cn(
+                    "px-3 py-2 align-middle",
+                    column.align === "end" && "text-right tabular-nums",
+                    cellClass(column, row[column.key] ?? ""),
+                  )}
+                >
                   {row[column.key] ?? ""}
                 </td>
               ))}
@@ -307,6 +452,55 @@ export function Table({ props }: { props: TableProps }) {
         </tbody>
       </table>
     </div>
+  );
+}
+
+type RankItem = {
+  label: string;
+  value: string;
+  share?: number | null;
+  delta?: string | null;
+  trend?: MetricTrend | null;
+  tone?: MetricTone | null;
+  note?: string | null;
+};
+
+type RankListProps = {
+  items?: RankItem[] | null;
+  showRank?: boolean | null;
+};
+
+function barWidth(share: number | null | undefined): string {
+  if (typeof share !== "number" || Number.isNaN(share)) return "0%";
+  return `${Math.max(2, Math.min(100, share * 100))}%`;
+}
+
+export function RankList({ props }: { props: RankListProps }) {
+  const items = props.items ?? [];
+  const showRank = props.showRank ?? false;
+  return (
+    <ol className="flex w-full min-w-0 flex-col gap-2.5">
+      {items.map((item, index) => (
+        <li key={`${index}-${item.label}`} className="min-w-0">
+          <div className="flex min-w-0 items-baseline gap-2">
+            {showRank ? (
+              <span className="w-4 shrink-0 text-[11px] font-medium tabular-nums text-muted-foreground/70">
+                {index + 1}
+              </span>
+            ) : null}
+            <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">{item.label}</span>
+            <span className="shrink-0 text-[13px] font-semibold tabular-nums text-foreground">{item.value}</span>
+            {item.delta ? <DeltaPill delta={item.delta} trend={item.trend} tone={item.tone} size="sm" /> : null}
+          </div>
+          <div className={cn("mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted", showRank && "ml-6 w-[calc(100%-1.5rem)]")}>
+            <div className="h-full rounded-full bg-chart-1/80" style={{ width: barWidth(item.share) }} />
+          </div>
+          {item.note ? (
+            <p className={cn("mt-1 truncate text-[11px] text-muted-foreground/80", showRank && "ml-6")}>{item.note}</p>
+          ) : null}
+        </li>
+      ))}
+    </ol>
   );
 }
 
@@ -1854,7 +2048,7 @@ export function Row({
 /* ------------------------------------------------------------------ */
 
 type ChartFormat = "number" | "currency" | "percent";
-type ChartSeries = { name: string; values: number[] };
+type ChartSeries = { name: string; values: Array<number | null>; style?: "solid" | "dashed" | null };
 
 const SERIES_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
 const GRID_COLOR = "var(--border)";
@@ -1885,6 +2079,27 @@ function niceTicks(max: number, count = 4): number[] {
   for (let v = 0; v <= max + unit * 0.001; v += unit) ticks.push(Math.round(v * 1e6) / 1e6);
   if ((ticks[ticks.length - 1] ?? 0) < max) ticks.push((ticks[ticks.length - 1] ?? 0) + unit);
   return ticks;
+}
+
+type DrawnPoint = { index: number; x: number; y: number; value: number };
+
+function definedPoint(value: number | null | undefined, index: number, px: number, y: (value: number) => number): DrawnPoint | null {
+  if (typeof value !== "number" || Number.isNaN(value)) return null;
+  return { index, x: px, y: y(Math.max(0, value)), value };
+}
+
+function linePath(points: Array<DrawnPoint | null>): string {
+  const segments: string[] = [];
+  let open = false;
+  points.forEach((point) => {
+    if (!point) {
+      open = false;
+      return;
+    }
+    segments.push(`${open ? "L" : "M"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`);
+    open = true;
+  });
+  return segments.join(" ");
 }
 
 function seriesMax(series: ChartSeries[], stacked: boolean) {
@@ -2244,26 +2459,28 @@ export function LineChart({ props }: { props: LineChartProps }) {
           ))}
           {series.map((s, si) => {
             const stroke = series.length === 1 ? SERIES_COLORS[0] : SERIES_COLORS[si % SERIES_COLORS.length];
-            const pts = labels.map((_, i) => [x(i), y(Math.max(0, s.values[i] ?? 0))] as const);
-            const path = pts
-              .map(([px, py], i) => `${i === 0 ? "M" : "L"} ${px.toFixed(1)} ${py.toFixed(1)}`)
-              .join(" ");
-            const areaPath = `${path} L ${x(n - 1).toFixed(1)} ${plotH} L ${x(0).toFixed(1)} ${plotH} Z`;
+            const pts = labels.map((_, i) => definedPoint(s.values[i], i, x(i), y));
+            const drawn = pts.filter((point): point is DrawnPoint => point !== null);
+            const path = linePath(pts);
+            const first = drawn[0];
+            const last = drawn[drawn.length - 1];
+            const areaPath = first && last ? `${path} L ${last.x.toFixed(1)} ${plotH} L ${first.x.toFixed(1)} ${plotH} Z` : "";
             return (
               <g key={s.name}>
-                {props.area ? <path d={areaPath} fill={stroke} opacity={0.12} /> : null}
+                {props.area && areaPath ? <path d={areaPath} fill={stroke} opacity={0.12} /> : null}
                 <path
                   d={path}
                   fill="none"
                   stroke={stroke}
                   strokeWidth={2}
+                  strokeDasharray={s.style === "dashed" ? "5 4" : undefined}
                   strokeLinejoin="round"
                   strokeLinecap="round"
                 />
                 {dots
-                  ? pts.map(([px, py], i) => (
-                      <circle key={i} cx={px} cy={py} r={2.75} fill={stroke}>
-                        <title>{`${labels[i] ?? ""} · ${s.name}: ${fmt(s.values[i] ?? 0)}`}</title>
+                  ? drawn.map((point) => (
+                      <circle key={point.index} cx={point.x} cy={point.y} r={2.75} fill={stroke}>
+                        <title>{`${labels[point.index] ?? ""} · ${s.name}: ${fmt(point.value)}`}</title>
                       </circle>
                     ))
                   : null}

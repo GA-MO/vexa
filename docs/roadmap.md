@@ -82,7 +82,14 @@ Each phase ends with `bun run typecheck`, `bun run test`, the scenarios it names
 
 ### Phase 4 — host components (D4)
 
-- [ ] `defineComponent({ name, description, props: FlexibleSchema, render })` in `src/react/host.tsx`; `VexaProvider components={[...]}` registers them into a per-provider registry merged over `registry` at render time (json-render `Registry` is a plain map). The name is prefixed `host_` on the wire so the server can trust it like `admin_`.
+Partly built for Cop (2026-09-23), server-catalog-first rather than over the wire: a host defines its components once in a catalog it owns and passes that catalog to both ends.
+
+- [x] `extendCatalog({ components, actions })` (`src/core/catalog.ts`, which now exports `vexaComponents` / `vexaActions`); `createVexaHandler({ catalog })` threads it to `buildAgentInstructions({ catalog })`, so host components reach `catalog.prompt()` with their own descriptions and examples.
+- [x] `VexaProvider components` merges a host's renderers over `registry` for every `SpecView` (json-render `ComponentRegistry` is a plain map); `SpecView components` overrides per view.
+- [x] `VexaProvider normalizeSpec: (spec, { toolOutputs }) => spec` — the host rewrites a spec before it renders, which is how a host enforces its own card contract on a model that drew one by hand.
+- [x] `VexaProvider describeToolCall: (name, input) => { title, question?, details? }` — approval cards and button-press bubbles read as sentences, not as tool names and payloads.
+- [x] `VexaProvider renderApproval: ({ tool, input, state, approved, approve, reject }) => ReactNode` — the host draws the decision itself (Cop's CEO decision card: who gets the work, what it asks, what approving does) and returns null to keep Vexa's own approval card. Approvals also moved below the reply text in `AssistantMessage`: the decision reads after the explanation it follows from.
+- [ ] `defineComponent({ name, description, props: FlexibleSchema, render })` so one declaration feeds both the catalog and the registry; today the host writes the zod schema and the renderer separately. The name is prefixed `host_` on the wire so the server can trust it like `admin_`.
 - [ ] Body field `hostComponents: { name, description, schema }[]`, capped like `hostTools` (32, 300-character descriptions); `catalog.prompt()` gains a "Host components" section listing them after the built-in catalog with the rule "prefer a host component when one matches the data exactly".
 - [ ] Validation: a spec element whose type is a host component not in the request's list is rejected by the same path that rejects unknown actions.
 - [ ] Gallery: host components appear in the docs gallery under their own group only in the example that defines them (shop-admin defines `OrderCard` and `ProductThumb`).

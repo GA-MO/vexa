@@ -18,6 +18,7 @@ import {
 } from "ai";
 import { REASONING_METADATA_KEY } from "../protocol";
 import { buildAgentInstructions, type Persona, type PromptToolInfo, type ToolTier } from "./prompt";
+import type { Catalog } from "./catalog";
 import { downgradeNotice, fence, fenceAsData, scanValue, type GuardFinding, type GuardRule } from "./guard";
 import { connectMcp, type McpServerConfig } from "./mcp";
 import { ADMIN_TOOLS } from "../admin/names";
@@ -42,6 +43,7 @@ export type SecurityNotice = {
 
 export type StreamAgentChatOptions = {
   model: LanguageModel;
+  catalog?: Catalog;
   providerOptions?: Record<string, Record<string, unknown>>;
   context?: Record<string, unknown>;
   hostTools?: HostToolSchema[];
@@ -173,6 +175,7 @@ export async function streamAgentChat(
   const readOnly = Object.keys(tools).filter((name) => tiers[name] === "read");
 
   const system = buildAgentInstructions({
+    catalog: options.catalog,
     persona: options.persona,
     rules: options.rules,
     instructions: options.instructions,

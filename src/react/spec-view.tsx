@@ -10,6 +10,7 @@ import {
   Renderer,
 } from "@json-render/react";
 import { JsonRenderDevtools } from "@json-render/devtools-react";
+import type { ComponentRegistry } from "@json-render/react";
 import { registry } from "./registry";
 import { useVexaHostContext } from "./host";
 import {
@@ -27,11 +28,13 @@ export function SpecView({
   loading = false,
   messages,
   showDevtools = isDev,
+  components,
 }: {
   spec: Spec | null;
   loading?: boolean;
   messages?: UIMessage[];
   showDevtools?: boolean;
+  components?: ComponentRegistry;
 }) {
   if (!spec) return null;
 
@@ -42,6 +45,7 @@ export function SpecView({
           ? spec.root
           : JSON.stringify(spec.root ?? "spec")
       }
+      components={components}
       loading={loading}
       messages={messages}
       showDevtools={showDevtools}
@@ -54,18 +58,26 @@ function isHostToolResult(value: unknown): value is { ok: boolean; data?: unknow
   return typeof value === "object" && value !== null && typeof (value as { ok?: unknown }).ok === "boolean";
 }
 
+/** Host tools answer `{ ok, data, summary }`, so a spec binds to their `data`. A server tool's own shape is kept whole. */
 function storedToolValue(output: unknown) {
   if (!isHostToolResult(output)) return output;
   if (!output.ok) return output;
-  return output.data ?? { ok: true, summary: output.summary };
+  return "data" in output ? output.data : output;
 }
 
+/** `/tools/<name>` is the latest call; `/tools/<name>.1`, `.2`, ... are every call of that tool in order, so two cards in one turn can bind to different results. */
 function completedToolOutputs(messages: UIMessage[] | undefined) {
   const outputs: Record<string, unknown> = {};
+  const seen = new Map<string, number>();
   for (const message of messages ?? []) {
     for (const part of message.parts) {
       if (!isToolUIPart(part) || part.state !== "output-available") continue;
-      outputs[`/tools/${getToolName(part)}`] = storedToolValue(part.output);
+      const name = getToolName(part);
+      const value = storedToolValue(part.output);
+      const index = (seen.get(name) ?? 0) + 1;
+      seen.set(name, index);
+      outputs[`/tools/${name}`] = value;
+      outputs[`/tools/${name}.${index}`] = value;
     }
   }
   return outputs;
@@ -76,11 +88,13 @@ function SpecViewInner({
   loading,
   messages,
   showDevtools,
+  components,
 }: {
   spec: Spec;
   loading: boolean;
   messages?: UIMessage[];
   showDevtools: boolean;
+  components?: ComponentRegistry;
 }) {
   const host = useVexaHostContext();
   const initialState =
@@ -96,6 +110,13 @@ function SpecViewInner({
     [host],
   );
   const toolOutputs = useMemo(() => completedToolOutputs(messages), [messages]);
+  const normalize = host?.normalizeSpec ?? null;
+  const shown = useMemo(() => (normalize ? normalize(spec, { toolOutputs }) : spec), [normalize, spec, toolOutputs]);
+  const hostComponents = components ?? host?.components;
+  const specRegistry = useMemo(
+    () => (hostComponents && Object.keys(hostComponents).length > 0 ? { ...registry, ...hostComponents } : registry),
+    [hostComponents],
+  );
 
   useEffect(() => {
     if (!host) return;
@@ -115,20 +136,20 @@ function SpecViewInner({
 
   return (
     <JSONUIProvider
-      registry={registry}
+      registry={specRegistry}
       store={guardedStore}
       handlers={handlers}
       functions={functions}
       directives={vexaDirectives}
     >
       <div className="@container/vexa w-full min-w-0">
-        <Renderer spec={spec} registry={registry} loading={loading} />
+        <Renderer spec={shown} registry={specRegistry} loading={loading} />
       </div>
       {showDevtools ? (
         <JsonRenderDevtools
           catalog={catalog}
           messages={messages}
-          spec={spec}
+          spec={shown}
         />
       ) : null}
     </JSONUIProvider>
