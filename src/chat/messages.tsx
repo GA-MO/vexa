@@ -470,6 +470,12 @@ function ProcessSteps({
   );
 }
 
+function historyThrough(messages: VexaMessage[] | undefined, messageId: string): VexaMessage[] | undefined {
+  if (!messages) return messages;
+  const index = messages.findIndex((entry) => entry.id === messageId);
+  return index < 0 ? messages : messages.slice(0, index + 1);
+}
+
 export function AssistantMessage({
   message,
   isLast,
@@ -489,6 +495,7 @@ export function AssistantMessage({
 }) {
   const { spec: rawSpec, hasSpec } = useJsonRenderMessage(specPartsFor(message, messages));
   const spec = useMemo(() => normalizeSpec(rawSpec), [rawSpec]);
+  const history = useMemo(() => historyThrough(messages, message.id), [messages, message.id]);
   const sourceParts = message.parts.filter(
     (part) => part.type === "source-url" || part.type === "source-document",
   );
@@ -556,7 +563,7 @@ export function AssistantMessage({
         <SpecView
           key={`${message.id}-spec`}
           loading={isLast && isStreaming}
-          messages={messages}
+          messages={history}
           showDevtools={isLast}
           spec={spec}
         />
@@ -576,7 +583,7 @@ export function AssistantMessage({
       <SpecView
         key={`${message.id}-spec-fallback`}
         loading={isLast && isStreaming}
-        messages={messages}
+        messages={history}
         showDevtools={isLast}
         spec={spec}
       />,

@@ -65,11 +65,11 @@ function storedToolValue(output: unknown) {
   return "data" in output ? output.data : output;
 }
 
-/** `/tools/<name>` is the latest call; `/tools/<name>.1`, `.2`, ... are every call of that tool in order, so two cards in one turn can bind to different results. */
+/** `/tools/<name>` is the latest call up to this message; `/tools/<name>.1`, `.2`, ... are the calls of that tool within one turn, so two cards in one turn can bind to different results. */
 function completedToolOutputs(messages: UIMessage[] | undefined) {
   const outputs: Record<string, unknown> = {};
-  const seen = new Map<string, number>();
   for (const message of messages ?? []) {
+    const seen = new Map<string, number>();
     for (const part of message.parts) {
       if (!isToolUIPart(part) || part.state !== "output-available") continue;
       const name = getToolName(part);
