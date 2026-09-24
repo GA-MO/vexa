@@ -63,9 +63,14 @@ function wrapTool(tool: Tool, tier: ToolTier): Tool {
   } as unknown as Tool;
 }
 
+/** Opens one MCP client on a transport; for hosts that own permission and call tools themselves instead of handing them to the handler. */
+export async function openMcpClient(transport: McpTransportConfig, clientName = "vexa"): Promise<MCPClient> {
+  return createMCPClient({ transport: await transportFor(transport), clientName });
+}
+
 async function connectOne(config: McpServerConfig): Promise<{ client: MCPClient; tools: ToolSet; tiers: Record<string, ToolTier> }> {
   assertConfig(config);
-  const client = await createMCPClient({ transport: await transportFor(config.transport), clientName: "vexa" });
+  const client = await openMcpClient(config.transport);
   const available = await client.tools();
   const tools: ToolSet = {};
   const tiers: Record<string, ToolTier> = {};
