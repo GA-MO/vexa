@@ -156,6 +156,14 @@ function guardStep(
   };
 }
 
+const GENERIC_STREAM_ERROR = "An error occurred.";
+
+function streamErrorText(error: unknown): string {
+  console.error("[vexa] chat stream failed", error);
+  if (process.env.NODE_ENV === "production") return GENERIC_STREAM_ERROR;
+  return error instanceof Error ? error.message : String(error);
+}
+
 export async function streamAgentChat(
   messages: UIMessage[],
   options: StreamAgentChatOptions,
@@ -189,6 +197,7 @@ export async function streamAgentChat(
 
   const stream = createUIMessageStream({
     originalMessages: messages,
+    onError: streamErrorText,
     execute: async ({ writer }) => {
       let noticeSent = false;
       const result = streamText({
