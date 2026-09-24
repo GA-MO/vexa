@@ -589,6 +589,45 @@ export const GALLERY_SECTIONS: GallerySection[] = [
     }),
   },
   {
+    id: "list-item",
+    title: "ListItem",
+    component: "ListItem",
+    note: "Rows of people, places or things; the whole row presses instead of a button per row.",
+    spec: specFromTree({
+      type: "Stack",
+      props: { direction: "vertical", gap: "sm" },
+      children: [
+        {
+          type: "ListItem",
+          props: {
+            title: "Maya Chen",
+            subtitle: "Account manager, Berlin",
+            detail: "4 years",
+            src: null,
+            media: "avatar",
+            badges: [{ label: "Licence 16 days", tone: "warning" }],
+            trailing: null,
+            trailingTone: null,
+          },
+          on: { press: { action: "toast", params: { message: "Asked about Maya Chen" } } },
+        },
+        {
+          type: "ListItem",
+          props: {
+            title: "Hamburg warehouse",
+            subtitle: "Distribution centre",
+            detail: "No lost-time injury for 399 days",
+            src: null,
+            media: "thumb",
+            badges: [{ label: "Clear", tone: "success" }],
+            trailing: "160 staff",
+            trailingTone: null,
+          },
+        },
+      ],
+    }),
+  },
+  {
     id: "code",
     title: "Code",
     component: "Code",

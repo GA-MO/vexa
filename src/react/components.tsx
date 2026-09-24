@@ -43,7 +43,7 @@ import {
 } from "@json-render/react";
 import { CodeBlock } from "vexa/ai-elements/code-block";
 import { cn } from "./cn";
-import { useVexaFormat } from "./host";
+import { useVexaFormat, useVexaLabels } from "./host";
 import type { Formatter } from "./format";
 
 type StackProps = {
@@ -828,11 +828,12 @@ type ImageProps = {
   src: string;
   alt: string;
   caption?: string | null;
-  aspect?: "wide" | "square" | "tall" | null;
+  aspect?: "wide" | "banner" | "square" | "tall" | null;
 };
 
 const aspectClass = {
   wide: "aspect-[16/9]",
+  banner: "aspect-[21/9]",
   square: "aspect-square",
   tall: "aspect-[3/4]",
 } as const;
@@ -1173,6 +1174,94 @@ const avatarSize = {
   lg: "size-14 text-base",
 } as const;
 
+type ListItemBadge = { label: string; tone?: "neutral" | "success" | "warning" | "danger" | null };
+
+type ListItemProps = {
+  title: string;
+  subtitle?: string | null;
+  detail?: string | null;
+  src?: string | null;
+  media?: "avatar" | "thumb" | "none" | null;
+  badges?: ListItemBadge[] | null;
+  trailing?: string | null;
+  trailingTone?: "good" | "bad" | "neutral" | null;
+};
+
+const LIST_ITEM_TRAILING_TONE: Record<NonNullable<ListItemProps["trailingTone"]>, string> = {
+  good: "text-success",
+  bad: "text-danger",
+  neutral: "text-foreground",
+};
+
+const LIST_ITEM_BADGE_TONE: Record<NonNullable<ListItemBadge["tone"]>, string> = {
+  neutral: "bg-muted text-muted-foreground",
+  success: "bg-success/12 text-success",
+  warning: "bg-warning/12 text-warning",
+  danger: "bg-danger/10 text-danger",
+};
+
+function initialsOf(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function ListItemMedia({ props }: { props: ListItemProps }) {
+  const media = props.media ?? (props.src ? "avatar" : "none");
+  if (media === "none") return null;
+  const shape = media === "thumb" ? "h-11 w-16 rounded-lg" : "size-11 rounded-full";
+  if (props.src) return <img src={props.src} alt={props.title} className={cn("shrink-0 object-cover", shape)} />;
+  return (
+    <div className={cn("flex shrink-0 items-center justify-center bg-gradient-to-br from-primary to-brand-violet text-sm font-semibold text-white", shape)}>
+      {initialsOf(props.title) || "?"}
+    </div>
+  );
+}
+
+function ListItemBody({ props, pressable }: { props: ListItemProps; pressable: boolean }) {
+  const badges = props.badges ?? [];
+  return (
+    <>
+      <ListItemMedia props={props} />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+          <p className="min-w-0 max-w-full truncate text-sm font-semibold text-foreground">{props.title}</p>
+          {props.trailing ? <span className={cn("shrink-0 text-sm font-medium tabular-nums", LIST_ITEM_TRAILING_TONE[props.trailingTone ?? "neutral"])}>{props.trailing}</span> : null}
+        </div>
+        {props.subtitle ? <p className="truncate text-xs text-muted-foreground">{props.subtitle}</p> : null}
+        {props.detail ? <p className="truncate text-xs text-muted-foreground/80">{props.detail}</p> : null}
+        {badges.length > 0 ? (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {badges.map((badge) => (
+              <span key={badge.label} className={cn("rounded-full px-2 py-0.5 text-[11px] font-medium", LIST_ITEM_BADGE_TONE[badge.tone ?? "neutral"])}>
+                {badge.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      {pressable ? <ChevronRight aria-hidden className="size-4 shrink-0 self-center text-muted-foreground/60" /> : null}
+    </>
+  );
+}
+
+/** One row of a list: picture, title, lines, badges; the whole row is the press target when it has on.press. */
+export function ListItem({ props, onPress }: { props: ListItemProps; onPress?: (() => void) | null }) {
+  const frame = "flex w-full min-w-0 items-start gap-3 rounded-xl border border-border bg-card px-3 py-2.5 text-left";
+  if (!onPress) return <div className={frame}><ListItemBody props={props} pressable={false} /></div>;
+  return (
+    <button
+      type="button"
+      onClick={onPress}
+      className={cn(frame, "transition hover:border-foreground/25 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring")}
+    >
+      <ListItemBody props={props} pressable />
+    </button>
+  );
+}
+
 export function Avatar({ props }: { props: AvatarProps }) {
   const size = props.size ?? "md";
   const initials = props.name
@@ -1310,8 +1399,10 @@ type CarouselProps = {
   items?: CarouselItem[] | null;
 };
 
-export function Carousel({ props }: { props: CarouselProps }) {
+export function Carousel({ props, children }: { props: CarouselProps; children?: ReactNode }) {
   const items = props.items ?? [];
+  const slides = Children.toArray(children);
+  const labels = useVexaLabels();
   const variant =
     props.variant ??
     (items.some((item) => item.title || item.description) ? "card" : "image");
@@ -1321,13 +1412,18 @@ export function Carousel({ props }: { props: CarouselProps }) {
     dragFree: true,
   });
 
-  if (items.length === 0) return null;
+  const count = slides.length > 0 ? slides.length : items.length;
+  if (count === 0) return null;
 
   return (
     <div className="space-y-2">
       <div className="overflow-hidden" ref={emblaRef}>
-        <div className={cn("flex", variant === "card" ? "gap-3" : "gap-3")}>
-          {items.map((item, index) =>
+        <div className="flex gap-3">
+          {slides.length > 0 ? slides.map((slide, index) => (
+            <div key={index} className="min-w-0 shrink-0 grow-0 basis-[85%] @md/vexa:basis-[44%]">
+              {slide}
+            </div>
+          )) : items.map((item, index) =>
             variant === "card" ? (
               <div
                 key={`${item.title ?? item.src ?? "slide"}-${index}`}
@@ -1396,15 +1492,15 @@ export function Carousel({ props }: { props: CarouselProps }) {
           )}
         </div>
       </div>
-      {items.length > 1 ? (
+      {count > 1 ? (
         <div className="flex items-center justify-between gap-2 px-0.5">
           <p className="text-[11px] text-muted-foreground/70">
-            Swipe or drag to scroll freely
+            {labels.carouselHint}
           </p>
           <div className="flex gap-1.5">
             <button
               type="button"
-              aria-label="Scroll previous"
+              aria-label={labels.carouselPrevious}
               onClick={() => emblaApi?.scrollPrev()}
               className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
             >
@@ -1412,7 +1508,7 @@ export function Carousel({ props }: { props: CarouselProps }) {
             </button>
             <button
               type="button"
-              aria-label="Scroll next"
+              aria-label={labels.carouselNext}
               onClick={() => emblaApi?.scrollNext()}
               className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
             >

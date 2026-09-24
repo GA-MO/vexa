@@ -45,7 +45,7 @@ const SHARED_INTRO = [
 const CATALOG_RULES = [
   "Respond in the user's language.",
   "Put concrete numbers and labels in props, not vague placeholders.",
-  "Always populate array props with real content — never empty Timeline.items, Accordion.items, Tabs.items, Carousel.items, List.items, or Table.rows. When the rows live in the spec state, bind them: rows: { \"$state\": \"/orders\" }, never rows: [].",
+  "Always populate array props with real content — never empty Timeline.items, Accordion.items, Tabs.items, Carousel.items (unless the slides are its children), List.items, or Table.rows. When the rows live in the spec state, bind them: rows: { \"$state\": \"/orders\" }, never rows: [].",
   "Do not emit Card / Timeline / Accordion / Tabs shells with missing children or empty items.",
   "Use Grid columns='2' or columns='3' for side-by-side metrics when each cell stays readable; otherwise use columns='1' or Stack.",
   "Prefer Chart kind='bar' for comparisons, kind='line' for trends over time, kind='pie' for share of a total, kind='spark' for a compact inline trend.",
@@ -55,6 +55,7 @@ const CATALOG_RULES = [
   "Use Column / Row for tight layout: Row justify='between' for label + value, Row with Icon + Text for inline labels, Column gap='xs' for dense lists. Use Stack / Grid for section-level layout.",
   "Use KeyValue for details of one record, LineItems for receipts/orders with a total, FromTo for origin -> destination or old -> new, IconText for contact rows, Divider with a label to separate groups.",
   "Use Carousel variant='card' for plan/feature cards; variant='image' for photo galleries.",
+  "A list of people, places or things is a Stack or Grid of ListItem (picture, title, subtitle, badges); give a ListItem on.press when pressing it should do something, instead of a Button under every row.",
   "Bind inputs with value: { \"$bindState\": \"/ui/field\" }. Prefer Stack of Input + Button over Form when wiring actions.",
   "Use element visible conditions for conditional UI. Use repeat + $item for lists from state arrays.",
   "Use watch to cascade state (for example run a host tool when a bound value changes). Use checks on Input for validation.",

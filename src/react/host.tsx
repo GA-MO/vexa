@@ -794,6 +794,12 @@ export function useVexaHostContext(): VexaHostValue | null {
 
 const defaultFormatter = createFormatter(DEFAULT_FORMAT);
 
+/** The chat labels merged over Vexa's defaults, for catalog components that show fixed text. */
+export function useVexaLabels(): ChatLabels {
+  const labels = useContext(VexaHostContext)?.chat.labels;
+  return labels ? { ...DEFAULT_LABELS, ...labels } : DEFAULT_LABELS;
+}
+
 export function useVexaFormat(): Formatter {
   return useContext(VexaHostContext)?.formatter ?? defaultFormatter;
 }

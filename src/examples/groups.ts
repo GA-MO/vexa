@@ -20,6 +20,7 @@ export const CATALOG_TYPES = [
   "Input",
   "Form",
   "Avatar",
+  "ListItem",
   "Code",
   "Map",
   "Carousel",
@@ -52,5 +53,5 @@ export const PRIMITIVE_GROUPS: PrimitiveGroup[] = [
   { id: "data", label: "Data display", sections: ["metric", "table", "rank-list", "key-value", "line-items", "from-to", "progress", "timeline", "rating"] },
   { id: "charts", label: "Charts", sections: ["bar-chart", "line-chart", "chart"] },
   { id: "inputs", label: "Inputs", sections: ["input-form", "checkbox-switch", "radio-group", "select"] },
-  { id: "media", label: "Media & icons", sections: ["icon-icontext", "avatar", "image", "video", "map", "carousel", "carousel-cards"] },
+  { id: "media", label: "Media & icons", sections: ["icon-icontext", "avatar", "list-item", "image", "video", "map", "carousel", "carousel-cards"] },
 ];

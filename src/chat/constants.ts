@@ -64,6 +64,9 @@ export type ChatLabels = {
   toolOutput: string;
   toolState: (state: ChatToolState) => string;
   usedSources: (count: number) => string;
+  carouselHint: string;
+  carouselPrevious: string;
+  carouselNext: string;
 };
 
 const DEFAULT_TOOL_STATES: Record<ChatToolState, string> = {
@@ -131,6 +134,9 @@ export const DEFAULT_LABELS: ChatLabels = {
   toolOutput: "Result",
   toolState: (state) => DEFAULT_TOOL_STATES[state],
   usedSources: (count) => (count === 1 ? "Used 1 source" : `Used ${count} sources`),
+  carouselHint: "Swipe or drag to scroll freely",
+  carouselPrevious: "Scroll previous",
+  carouselNext: "Scroll next",
 };
 
 export type ChatModel = {

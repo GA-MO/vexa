@@ -37,6 +37,7 @@ import {
   Rating,
   Row,
   Select,
+  ListItem,
   Separator,
   Stack,
   Switch,
@@ -89,9 +90,12 @@ export const { registry } = defineRegistry(
       ),
       Form: ({ props, emit }) => <Form props={props as never} emit={emit} />,
       Avatar: ({ props }) => <Avatar props={props as never} />,
+      ListItem: ({ props, emit, on }) => (
+        <ListItem props={props as never} onPress={on("press").bound ? () => emit("press") : null} />
+      ),
       Code: ({ props }) => <Code props={props as never} />,
       Map: ({ props }) => <Map props={props as never} />,
-      Carousel: ({ props }) => <Carousel props={props as never} />,
+      Carousel: ({ props, children }) => <Carousel props={props as never} children={children} />,
       Callout: ({ props }) => <Callout props={props as never} />,
       Accordion: ({ props }) => <Accordion props={props as never} />,
       Video: ({ props }) => <Video props={props as never} />,

@@ -198,9 +198,9 @@ export const vexaComponents = {
       src: z.string(),
       alt: z.string(),
       caption: z.string().nullable(),
-      aspect: z.enum(["wide", "square", "tall"]).nullable(),
+      aspect: z.enum(["wide", "banner", "square", "tall"]).nullable(),
     }),
-    description: "Image with optional caption",
+    description: "Image with optional caption. `banner` (21:9) heads a card without pushing its numbers below the fold",
     example: {
       src: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80",
       alt: "Analytics dashboard",
@@ -322,6 +322,37 @@ export const vexaComponents = {
       ],
     },
   },
+  ListItem: {
+    props: z.object({
+      title: z.string(),
+      subtitle: z.string().nullable(),
+      detail: z.string().nullable(),
+      src: z.string().nullable(),
+      media: z.enum(["avatar", "thumb", "none"]).nullable(),
+      badges: z
+        .array(
+          z.object({
+            label: z.string(),
+            tone: z.enum(["neutral", "success", "warning", "danger"]).nullable(),
+          }),
+        )
+        .nullable(),
+      trailing: z.string().nullable(),
+      trailingTone: z.enum(["good", "bad", "neutral"]).nullable(),
+    }),
+    description:
+      "One row of a list of people, places or things: picture (avatar = round portrait, thumb = small photo), title, subtitle, a muted detail line, status badges and a trailing value (trailingTone colors it: good green, bad red). Give it on.press to make the whole row pressable (a follow-up question) instead of adding a Button per row. Stack several in a Stack or a Grid; replaces Avatar + Text + Badge + Button stacks.",
+    example: {
+      title: "Maya Chen",
+      subtitle: "Account manager, Berlin",
+      detail: "4 years",
+      src: null,
+      media: "avatar",
+      badges: [{ label: "Licence 16 days", tone: "warning" }],
+      trailing: null,
+      trailingTone: null,
+    },
+  },
   Avatar: {
     props: z.object({
       name: z.string(),
@@ -397,7 +428,7 @@ export const vexaComponents = {
       ),
     }),
     description:
-      "Free-scroll swipeable strip. Use variant='image' for galleries or variant='card' for plan/feature cards.",
+      "Free-scroll swipeable strip. Use variant='image' for galleries or variant='card' for plan/feature cards. Child elements, when given, become the slides instead of items (items: []), so any tile can be swiped.",
     example: {
       variant: "card",
       items: [
