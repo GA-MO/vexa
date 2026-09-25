@@ -226,7 +226,7 @@ export async function streamAgentChat(
         ...(options.providerOptions ? { providerOptions: options.providerOptions as never } : {}),
       });
       writer.merge(
-        pipeJsonRender(result.toUIMessageStream({ sendReasoning: true }).pipeThrough(stampReasoningSeconds())),
+        pipeJsonRender(result.toUIMessageStream({ sendReasoning: true, onError: streamErrorText }).pipeThrough(stampReasoningSeconds())),
       );
     },
   });
