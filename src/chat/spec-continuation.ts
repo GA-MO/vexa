@@ -49,3 +49,8 @@ export function specPartsFor(message: VexaMessage, messages: VexaMessage[] | und
   }
   return [...specParts(message), ...carried];
 }
+
+/** Copies of the spec parts whose patch values nothing else holds: json-render writes into the arrays a patch adds, so rebuilding from the stored parts would stack a copy of every row on each rebuild. */
+export function detachedSpecParts(parts: MessagePart[]): MessagePart[] {
+  return parts.map((part) => ({ ...part, data: structuredClone((part as { data?: unknown }).data) }) as MessagePart);
+}

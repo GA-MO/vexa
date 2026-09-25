@@ -83,6 +83,12 @@ function completedToolOutputs(messages: UIMessage[] | undefined) {
   return outputs;
 }
 
+function currentTurn(messages: UIMessage[] | undefined): UIMessage[] {
+  const list = messages ?? [];
+  const lastUser = list.map((message) => message.role).lastIndexOf("user");
+  return list.slice(lastUser + 1);
+}
+
 function SpecViewInner({
   spec,
   loading,
@@ -110,8 +116,12 @@ function SpecViewInner({
     [host],
   );
   const toolOutputs = useMemo(() => completedToolOutputs(messages), [messages]);
+  const turnToolOutputs = useMemo(() => completedToolOutputs(currentTurn(messages)), [messages]);
   const normalize = host?.normalizeSpec ?? null;
-  const shown = useMemo(() => (normalize ? normalize(spec, { toolOutputs }) : spec), [normalize, spec, toolOutputs]);
+  const shown = useMemo(
+    () => (normalize ? normalize(spec, { toolOutputs, turnToolOutputs }) : spec),
+    [normalize, spec, toolOutputs, turnToolOutputs],
+  );
   const hostComponents = components ?? host?.components;
   const specRegistry = useMemo(
     () => (hostComponents && Object.keys(hostComponents).length > 0 ? { ...registry, ...hostComponents } : registry),

@@ -29,7 +29,7 @@ import { DEFAULT_LABELS, humanizeToolName, type ChatLabels, type ChatStepsDispla
 import { normalizeSpec } from "vexa/core";
 import { SpecView, parseActionMessage, useVexaHostContext, type ToolCallDescription } from "vexa/react";
 import { ADMIN_TOOLS, describeSteps, type RunResult, type Step, type TraceItem } from "vexa/admin";
-import { specPartsFor } from "./spec-continuation";
+import { detachedSpecParts, specPartsFor } from "./spec-continuation";
 import {
   Attachment,
   AttachmentPreview,
@@ -398,13 +398,15 @@ function ReasoningBlock({
   parts,
   seconds,
   labels,
+  live,
 }: {
   parts: VexaMessage["parts"];
   seconds: ReasoningSeconds;
   labels: ChatLabels;
+  live: boolean;
 }) {
   const reasoningParts = parts.filter(isReasoningPart);
-  const isStreaming = reasoningParts.some((part) => part.state === "streaming");
+  const isStreaming = live && reasoningParts.some((part) => part.state === "streaming");
   const text = reasoningParts.map((part) => part.text).join("\n\n");
 
   return (
@@ -444,8 +446,8 @@ function ProcessSteps({
           isReasoningPart(part) ? (
             <ChainOfThoughtStep
               key={`${message.id}-cot-${index}`}
-              label={reasoningLabel(part.state === "streaming", undefined, labels)}
-              status={part.state === "streaming" ? "active" : "complete"}
+              label={reasoningLabel(isStreaming && part.state === "streaming", undefined, labels)}
+              status={isStreaming && part.state === "streaming" ? "active" : "complete"}
             >
               <MessageResponse className="text-muted-foreground">{part.text}</MessageResponse>
             </ChainOfThoughtStep>
@@ -493,7 +495,8 @@ export function AssistantMessage({
   labels?: ChatLabels;
   steps?: ChatStepsDisplay;
 }) {
-  const { spec: rawSpec, hasSpec } = useJsonRenderMessage(specPartsFor(message, messages));
+  const specParts = useMemo(() => detachedSpecParts(specPartsFor(message, messages)), [message, messages]);
+  const { spec: rawSpec, hasSpec } = useJsonRenderMessage(specParts);
   const spec = useMemo(() => normalizeSpec(rawSpec), [rawSpec]);
   const history = useMemo(() => historyThrough(messages, message.id), [messages, message.id]);
   const sourceParts = message.parts.filter(
@@ -591,6 +594,8 @@ export function AssistantMessage({
   }
 
   const showLoader = isLast && isStreaming && !hasVisibleContent;
+  const hasApproval = toolParts.some((part) => "approval" in part && part.approval !== undefined);
+  const unanswered = !(isLast && isStreaming) && lastTextIndex === -1 && !hasSpec && !hasApproval;
 
   return (
     <Message from="assistant">
@@ -629,7 +634,7 @@ export function AssistantMessage({
         ) : null}
 
         {steps === "collapsible" && toolParts.length === 0 && hasReasoning ? (
-          <ReasoningBlock labels={labels} parts={message.parts} seconds={reasoningSeconds} />
+          <ReasoningBlock labels={labels} live={isLast && isStreaming} parts={message.parts} seconds={reasoningSeconds} />
         ) : null}
 
         {steps === "collapsible" && toolParts.length > 0 ? (
@@ -662,6 +667,8 @@ export function AssistantMessage({
             {labels.thinking}
           </Shimmer>
         ) : null}
+
+        {unanswered ? <p className="text-sm text-muted-foreground">{labels.unanswered}</p> : null}
       </MessageContent>
     </Message>
   );

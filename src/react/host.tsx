@@ -109,7 +109,8 @@ export type VexaAdminValue = {
   clear: () => void;
 };
 
-export type SpecNormalizer = (spec: Spec, context: { toolOutputs: Record<string, unknown> }) => Spec;
+/** `toolOutputs` holds every completed call up to this reply; `turnToolOutputs` only the calls since the user last spoke. */
+export type SpecNormalizer = (spec: Spec, context: { toolOutputs: Record<string, unknown>; turnToolOutputs: Record<string, unknown> }) => Spec;
 
 export type ToolCallDescription = {
   title: string;
