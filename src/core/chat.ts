@@ -158,10 +158,18 @@ function guardStep(
 
 const GENERIC_STREAM_ERROR = "An error occurred.";
 
+const STREAM_ERROR_MAX_CHARS = 600;
+
 function streamErrorText(error: unknown): string {
   console.error("[vexa] chat stream failed", error);
   if (process.env.NODE_ENV === "production") return GENERIC_STREAM_ERROR;
-  return error instanceof Error ? error.message : String(error);
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  try {
+    return JSON.stringify(error).slice(0, STREAM_ERROR_MAX_CHARS);
+  } catch {
+    return String(error);
+  }
 }
 
 export async function streamAgentChat(
